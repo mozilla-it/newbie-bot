@@ -10,6 +10,7 @@ class Messages(mongoengine.Document):
     send_day = mongoengine.IntField(required=True)
     send_hour = mongoengine.IntField(required=True)
     frequency = mongoengine.StringField(required=True)
+    number_of_sends = mongoengine.IntField(required=True, default=1)
     text = mongoengine.StringField(required=True)
     created_date = mongoengine.DateTimeField(default=datetime.datetime.now)
 

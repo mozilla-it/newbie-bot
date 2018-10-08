@@ -7,7 +7,10 @@ Jinja2==2.10
 MarkupSafe==1.0
 mongoengine==0.15.3
 pymongo==3.7.1
+python-crontab==2.3.5
 python-dateutil==2.7.3
+python-dotenv==0.9.1
+pytz==2018.5
 six==1.11.0
 text-unidecode==1.2
 tinydb==3.11.1
