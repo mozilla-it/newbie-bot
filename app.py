@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, render_template, flash, redirect, url_for, session, logging
 import database.mongo_setup as mongo_setup
 from database.people import People
 from database.messages import Messages
@@ -7,6 +7,9 @@ from iam_profile_faker.factory import V2ProfileFactory
 import json
 import datetime
 import pytz
+from authzero import AuthZero
+import settings
+
 
 
 app = Flask(__name__)
@@ -14,14 +17,19 @@ app.secret_key = 'SeMO9wbRIu4mbm3zZlmwrNrQYNQd5jQC7wLXzmXh'
 
 message_frequency = {'day': 1, 'week': 7, 'month': 30, 'year': 365}
 
+client_id = settings.CLIENT_ID
+client_secret = settings.CLIENT_SECRET
+client_uri = settings.CLIENT_URI
+
 @app.before_first_request
 def main_start():
     mongo_setup.global_init()
 
 
+
 @app.route('/')
-def hello_world():
-    return 'Hello World!'
+def index():
+    return render_template('home.html')
 
 @app.route('/addMessage', methods=['GET', 'POST'])
 def add_new_message():
@@ -54,6 +62,8 @@ def add_new_message():
 
 @app.route('/addEmployee', methods=['GET', 'POST'])
 def add_new_employee():
+    clients = json.dumps(get_auth_zero(), sort_keys=True, indent=4)
+    print('clients = {}'.format(clients))
     factory = V2ProfileFactory()
     new_emp = factory.create()
     people = People()
@@ -93,6 +103,12 @@ def add_new_employee():
         print('{} {} {} {} {} {}'.format(p.first_name, p.last_name, p.emp_id, p.start_date, p.manager_id, p.picture))
         add_messages_to_send(p)
     return 'You added {}'.format(new_person)
+
+def get_auth_zero():
+    config = {'client_id': client_id, 'client_secret': client_secret, 'uri': client_uri}
+    az = AuthZero(config)
+    access_token = az.get_access_token()
+    return az.get_users()
 
 def find_slack_handle(socials: dict):
     """Search social media values for slack
