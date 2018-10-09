@@ -34,9 +34,9 @@ def add_new_message():
     send_day = request.values['send_day']
     send_time = request.values['send_time']
     frequency = request.values['frequency']
+    send_date = request.values['send_date']
+    send_once = True if request.values['send_once'] == 'True' else False
     text = request.values['text']
-    print(message_id)
-    print(message_type)
     message = Messages();
     message.message_id = message_id
     message.type = message_type
@@ -45,6 +45,8 @@ def add_new_message():
     message.title_link = title_link
     message.send_day = send_day
     message.send_hour = send_time
+    message.send_date = send_date
+    message.send_once = send_once
     message.frequency = frequency
     message.text = text
     message.save()
@@ -121,7 +123,10 @@ def add_messages_to_send(person: People):
                 print('add {}'.format(message_frequency[m.frequency]))
                 send_day = send_day + message_frequency[m.frequency]
 
-            send_date_time = start_date + datetime.timedelta(days=send_day)
+            if m.send_once:
+                send_date_time = m.send_date
+            else:
+                send_date_time = start_date + datetime.timedelta(days=send_day)
             send_date_time = my_timezone.localize(send_date_time)
             send_date_time = send_date_time.replace(hour=m.send_hour, minute=0, second=0)
             print('send date time = {}'.format(send_date_time))

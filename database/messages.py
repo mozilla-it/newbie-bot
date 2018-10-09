@@ -12,6 +12,8 @@ class Messages(mongoengine.Document):
     frequency = mongoengine.StringField(required=True)
     number_of_sends = mongoengine.IntField(required=True, default=1)
     text = mongoengine.StringField(required=True)
+    send_date = mongoengine.DateTimeField()
+    send_once = mongoengine.BooleanField(default=False)
     created_date = mongoengine.DateTimeField(default=datetime.datetime.now)
 
     meta = {
