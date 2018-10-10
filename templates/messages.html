@@ -1,0 +1,14 @@
+{%  extends 'layout.html' %}
+
+{%  block body %}
+    <div class="container">
+        <h1>Message List</h1>
+        <ul>
+        {%  for message in messages %}
+            <li>{{ message.id }} {{ message.type }} {{ message.category }} {{ message.title }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+
+
+{%  endblock %}

@@ -1,0 +1,101 @@
+{%  extends 'layout.html' %}
+
+{%  block body %}
+    <h1>Add Employee</h1>
+    <div class="container centered">
+        {% from "includes/_formhelpers.html" import render_field %}
+        <form action="" method="POST" class="form">
+            <div class="row">
+                <div class="col-md-4 col-sm-12 ">
+                    <div class="form-group">
+                        {{ render_field(form.first_name, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ render_field(form.last_name, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ render_field(form.email, class_="form_control") }}
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ render_field(form.city, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ render_field(form.state, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ render_field(form.country, class_="form_control") }}
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ render_field(form.timezone, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ render_field(form.emp_id, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ render_field(form.slack_handle, class_="form_control") }}
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <div><label for="start_date">Start Date</label></div>
+                        <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="start_date" type="date" value="{{ form.start_date.data }}" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ render_field(form.phone, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ render_field(form.manager_id, class_="form_control") }}
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ render_field(form.title, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ render_field(form.picture, class_="form_control") }}
+                    </div>
+                </div>
+            </div>
+            <p><input type="submit" class="btn btn-primary" value="Submit"></p>
+        </form>
+    </div>
+
+    <div class="container">
+        <h2>Employee List</h2>
+        <ul>
+            {% for emp in employees %}
+            <li>{{emp.first_name }} {{ emp.last_name }} {{ emp.email }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{%  endblock %}

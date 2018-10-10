@@ -16,6 +16,7 @@ class People(mongoengine.Document):
     title = mongoengine.StringField()
     manager_id = mongoengine.IntField()
     picture = mongoengine.StringField()
+    phone = mongoengine.StringField()
     user_opt_out = mongoengine.BooleanField(default=False)
     manager_opt_out = mongoengine.BooleanField(default=False)
     admin_opt_out = mongoengine.BooleanField(default=False)
