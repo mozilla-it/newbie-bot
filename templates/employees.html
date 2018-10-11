@@ -1,8 +1,11 @@
 {%  extends 'layout.html' %}
 
 {%  block body %}
-    <h1>Add Employee</h1>
-    <div class="container centered">
+    <h1>Employee Management</h1>
+    <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+        Add Employee
+      </button>
+    <div class="container collapse"  id="collapseExample">
         {% from "includes/_formhelpers.html" import render_field %}
         <form action="" method="POST" class="form">
             <div class="row">
@@ -60,7 +63,7 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <div><label for="start_date">Start Date</label></div>
-                        <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="start_date" type="date" value="{{ form.start_date.data }}" />
+                        <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="start_date" type="date" name="start_date"  />
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -86,7 +89,7 @@
                     </div>
                 </div>
             </div>
-            <p><input type="submit" class="btn btn-primary" value="Submit"></p>
+            <p><input type="submit" class="btn btn-primary" value="Submit" data-toggle="collapse" data-target="#collapseExample"></p>
         </form>
     </div>
 
@@ -98,4 +101,5 @@
             {% endfor %}
         </ul>
     </div>
+    <script src="{{ url_for('static', filename='employee.js') }}"></script>
 {%  endblock %}

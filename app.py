@@ -9,11 +9,11 @@ import datetime
 import pytz
 from authzero import AuthZero
 import settings
-from wtforms import Form, StringField, TextAreaField, PasswordField, validators, DateTimeField, IntegerField, RadioField
+from wtforms import Form, StringField, TextAreaField, PasswordField, validators, DateTimeField, IntegerField, RadioField, BooleanField
 
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 app.secret_key = 'SeMO9wbRIu4mbm3zZlmwrNrQYNQd5jQC7wLXzmXh'
 
 message_frequency = {'day': 1, 'week': 7, 'month': 30, 'year': 365}
@@ -21,47 +21,6 @@ message_frequency = {'day': 1, 'week': 7, 'month': 30, 'year': 365}
 client_id = settings.CLIENT_ID
 client_secret = settings.CLIENT_SECRET
 client_uri = settings.CLIENT_URI
-
-@app.before_first_request
-def main_start():
-    mongo_setup.global_init()
-
-
-
-@app.route('/')
-def index():
-    return render_template('home.html')
-
-@app.route('/addMessage', methods=['GET', 'POST'])
-def add_new_message():
-    # print(request.values)
-    # message_id = request.values['message_id']
-    # message_type = request.values['type']
-    # category = request.values['category']
-    # title = request.values['title']
-    # title_link = request.values['title_link']
-    # send_day = request.values['send_day']
-    # send_time = request.values['send_time']
-    # frequency = request.values['frequency']
-    # send_date = request.values['send_date']
-    # send_once = True if request.values['send_once'] == 'True' else False
-    # text = request.values['text']
-    # message = Messages();
-    # message.message_id = message_id
-    # message.type = message_type
-    # message.category = category
-    # message.title = title
-    # message.title_link = title_link
-    # message.send_day = send_day
-    # message.send_hour = send_time
-    # message.send_date = send_date
-    # message.send_once = send_once
-    # message.frequency = frequency
-    # message.text = text
-    # message.save()
-    # return 'added {} {}'.format(message_id, title)
-    messages = Messages.objects()
-    return render_template('messages.html', messages=messages)
 
 class AddEmployeeForm(Form):
     first_name = StringField('First Name', [validators.length(min=2, max=50)])
@@ -78,6 +37,58 @@ class AddEmployeeForm(Form):
     manager_id = IntegerField('Manager ID')
     title = StringField('Title', [validators.length(min=3, max=50)])
     picture = StringField('Picture URL')
+
+@app.before_first_request
+def main_start():
+    mongo_setup.global_init()
+
+@app.route('/')
+def index():
+    return render_template('home.html')
+
+class AddMessageForm(Form):
+    message_type = StringField('Message Type', [validators.required()])
+    category = StringField('Category', [validators.required()])
+    title = StringField('Title', [validators.required()])
+    title_link = StringField('Title Link')
+    send_day = IntegerField('Send Day', [validators.number_range(min=1, max=31, message='Must be valid day.')], default=1)
+    send_time = IntegerField('Send Hour', [validators.number_range(min=0, max=23, message='Must be valid hour (0 - 23).')], default=9)
+    frequency = StringField('Frequency')
+    send_date = StringField('Send Date')
+    send_once = BooleanField('Specific Date', default=False)
+    text = TextAreaField('Message Value')
+
+@app.route('/addMessage', methods=['GET', 'POST'])
+def add_new_message():
+    form = AddMessageForm(request.form)
+    print(request.values)
+    print('form errors ={}'.format(form.errors))
+    if request.method == 'POST':
+        if form.validate():
+            message = Messages()
+            message.type = form.message_type.data
+            message.category = form.category.data
+            message.title = form.title.data
+            message.title_link = form.title_link.data
+            message.send_day = form.send_day.data
+            message.send_hour = form.send_time.data
+            date_start = form.send_date.data.split('-')
+            sdate = datetime.datetime(int(date_start[0]), int(date_start[1]), int(date_start[2]), 0, 0, 0)
+            message.send_date = datetime.datetime.strftime(sdate, '%Y-%m-%dT%H:%M:%S')
+            message.send_once = True if form.send_once.data == True else False
+            message.frequency = form.frequency.data
+            message.text = form.text.data
+            message.save()
+            messages = Messages.objects()
+            return redirect(url_for('add_new_message'))
+        else:
+            print('errors = {}'.format(form.errors))
+            messages = Messages.objects()
+            return render_template('messages.html', messages=messages, form=form)
+    messages = Messages.objects()
+    return render_template('messages.html', messages=messages, form=form)
+
+
 
 @app.route('/addEmployee', methods=['GET', 'POST'])
 def add_new_employee():
@@ -144,6 +155,14 @@ def add_new_employee():
             people.user_opt_out = False
             people.manager_opt_out = False
             people.save()
+            newly_added_user = People.objects(emp_id=form.emp_id.data)
+            print('newly added user = {}'.format(newly_added_user[0].first_name))
+            new_person = {}
+            for p in newly_added_user:
+                new_person['first_name'] = p.first_name
+                new_person['last_name'] = p.last_name
+                print('{} {} {} {} {} {}'.format(p.first_name, p.last_name, p.emp_id, p.start_date, p.manager_id, p.picture))
+                add_messages_to_send(p)
             employees = People.objects()
 
             return redirect(url_for('add_new_employee'))
@@ -180,10 +199,9 @@ def add_messages_to_send(person: People):
     """
     employee_id = person.emp_id
     start_date = person.start_date
-    print('start date ={}'.format(start_date))
     my_timezone = pytz.timezone(person.timezone)
     for m in Messages.objects:
-        print(m)
+        mobject = json.loads(m.to_json())
         for x in range(0, m.number_of_sends):
             if x == 0:
                 send_day = m.send_day
@@ -197,10 +215,9 @@ def add_messages_to_send(person: People):
                 send_date_time = start_date + datetime.timedelta(days=send_day)
             send_date_time = my_timezone.localize(send_date_time)
             send_date_time = send_date_time.replace(hour=m.send_hour, minute=0, second=0)
-            print('send date time = {}'.format(send_date_time))
             to_send = Send()
             to_send.emp_id = employee_id
-            to_send.message_id = m.message_id
+            to_send.message_id = mobject['_id']['$oid']
             to_send.send_order = x
             to_send.send_dttm = send_date_time
             to_send.last_updated = datetime.datetime.now()

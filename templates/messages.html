@@ -3,12 +3,162 @@
 {%  block body %}
     <div class="container">
         <h1>Message List</h1>
-        <ul>
-        {%  for message in messages %}
-            <li>{{ message.id }} {{ message.type }} {{ message.category }} {{ message.title }}</li>
-        {% endfor %}
-        </ul>
+    <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+        Add Message
+      </button>
+    <div class="container collapse"  id="collapseExample" style="margin-top: 25px; margin-bottom: 25px;">
+        {% from "includes/_formhelpers.html" import render_field %}
+        <form action="" method="POST" class="form">
+            <div class="row">
+                <div class="col-md-4 col-sm-12 ">
+                    <div class="form-group">
+                        <div class="input-group">
+                          <div class="input-group-prepend">
+                            <label class="input-group-text" for="inputGroupSelect01">Message Type</label>
+                          </div>
+                          <select name="message_type" class="custom-select" id="inputGroupSelect01">
+                            <option selected>Choose...</option>
+                            <option value="Reminder: Best Practices">Reminder: Best Practices</option>
+                            <option value="Reminder: Deadline">Reminder: Deadline</option>
+                            <option value="Instruction: How-to">Instruction: How-to</option>
+                            <option value="Informational: Awareness">Informational: Awareness</option>
+                          </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <div class="input-group mb-3">
+                          <div class="input-group-prepend">
+                            <label class="input-group-text" for="inputGroupSelect01">Message Category</label>
+                          </div>
+                          <select name="category" class="custom-select" id="inputGroupSelect01">
+                            <option selected>Choose...</option>
+                            <option  value="Procedural">Procedural</option>
+                            <option value="Welcome">Welcome</option>
+                            <option value="Failure / fallback">Failure / fallback</option>
+                            <option value="Help">Help</option>
+                            <option value="Rating request">Rating request</option>
+                            <option value="Opt-out">Opt-out</option>
+                            <option value="Cultural">Cultural</option>
+                            <option value="Orientation">Orientation</option>
+                          </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <p>
+                            <div><label for="send_once">Send on Specific Date</label></div>
+                            <input type="checkbox" data-toggle="collapse" data-target=".multi-collapse" aria-expanded="false" aria-controls="multiCollapseNo multiCollapseNo1 multiCollapseNo2 multiCollapseYes" value="send_once" name="send_once"> </input>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        <div class="row " >
+                <div class="col-md-4 col-sm-12 ">
+                    <div class="form-group">
+                        {{ render_field(form.title, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ render_field(form.title_link, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group multi-collapse collapse" id="multiCollapseYes">
+                        <div><label for="start_date">Send Date</label></div>
+                        <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="send_date" type="date" name="send_date"  />
+                    </div>
+                </div>
+            </div>
+        <div class="row " >
+                <div class="col-md-4 col-sm-12 ">
+                    <div class="form-group multi-collapse collapse show" id="multiCollapseNo">
+                        {{ render_field(form.send_day, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group multi-collapse collapse show" id="multiCollapseNo1">
+                        {{ render_field(form.send_time, class_="form_control") }}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group multi-collapse collapse show" id="multiCollapseNo2">
+{#                        {{ render_field(form.frequency, class_="form_control") }}#}
+                        <div class="input-group mb-3">
+                          <div class="input-group-prepend">
+                            <label class="input-group-text" for="frequency">Frequency</label>
+                          </div>
+                          <select name="frequency" class="custom-select" id="frequency">
+                            <option selected>Choose...</option>
+                            <option selected value="day">Day</option>
+                            <option value="week">Week</option>
+                            <option value="month">Month</option>
+                            <option value="year">Year</option>
+                          </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <div class="row">
+                <div class="col-md-4 col-sm-12 ">
+                    <div class="form-group">
+                        {{ render_field(form.text, class_="form_control") }}
+                    </div>
+                </div>
+
+            </div>
+        <p><input type="submit" class="btn btn-primary" value="Submit" data-toggle="collapse" data-target="#collapseExample"></p>
+
+        </form>
+    </div>
+    <div class="row" style="overflow: scroll; height: 600px; margin-top: 25px">
+        <table class="table fixed_header">
+            <thead>
+                <tr >
+                    <th scope="col" >Type</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Title Link</th>
+                    <th scope="col">Send Day</th>
+                    <th scope="col">Send Hour</th>
+                    <th scope="col">Frequency</th>
+                    <th scope="col">Number of Sends</th>
+                    <th scope="col">Message Text</th>
+                    <th scope="col">Specific Date</th>
+                    <th scope="col">Send Once</th>
+                    <th scope="col">Created Date</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                {%  for message in messages %}
+                    <tr  >
+                        <td >{{ message.type }}</td>
+                        <td >{{ message.category }}</td>
+                        <td >{{ message.title }}</td>
+                        <td >{{ message.title_link }}</td>
+                        <td >{{ message.send_day }}</td>
+                        <td >{{ message.send_hour }}</td>
+                        <td >{{ message.frequency }}</td>
+                        <td >{{ message.number_of_sends }}</td>
+                        <td >{{ message.text }}</td>
+                        <td >{{ message.send_date }}</td>
+                        <td >{{ message.send_once }}</td>
+                        <td >{{ message.created_date }}</td>
+                    </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
     </div>
 
+
+    </div>
+
+    <script src="{{ url_for('static', filename='myscript.js') }}"></script>
 
 {%  endblock %}
