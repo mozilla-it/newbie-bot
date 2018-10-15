@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, flash, redirect, url_for, session, logging
+from flask import Flask, request, render_template, flash, redirect, url_for, session, logging, make_response
 import database.mongo_setup as mongo_setup
 from database.people import People
 from database.messages import Messages
@@ -10,17 +10,30 @@ import pytz
 from authzero import AuthZero
 import settings
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators, DateTimeField, IntegerField, RadioField, BooleanField
+import slackclient
+import time
+import atexit
+from apscheduler.schedulers.background import BackgroundScheduler
+from mongoengine.queryset.visitor import Q
 
 
+scheduler = BackgroundScheduler()
 
 app = Flask(__name__, static_url_path='/static')
-app.secret_key = 'SeMO9wbRIu4mbm3zZlmwrNrQYNQd5jQC7wLXzmXh'
+app.secret_key = settings.MONGODB_SECRET
 
 message_frequency = {'day': 1, 'week': 7, 'month': 30, 'year': 365}
 
 client_id = settings.CLIENT_ID
 client_secret = settings.CLIENT_SECRET
 client_uri = settings.CLIENT_URI
+slack_verification_token = settings.SLACK_VERIFICATION_TOKEN
+
+slack_client = slackclient.SlackClient(settings.SLACK_BOT_TOKEN)
+
+def print_date_time():
+    print(time.strftime("%A, %d. %B %Y %I:%M:%S %p"))
+
 
 class AddEmployeeForm(Form):
     first_name = StringField('First Name', [validators.length(min=2, max=50)])
@@ -38,25 +51,42 @@ class AddEmployeeForm(Form):
     title = StringField('Title', [validators.length(min=3, max=50)])
     picture = StringField('Picture URL')
 
-@app.before_first_request
-def main_start():
-    mongo_setup.global_init()
-
-@app.route('/')
-def index():
-    return render_template('home.html')
 
 class AddMessageForm(Form):
     message_type = StringField('Message Type', [validators.required()])
     category = StringField('Category', [validators.required()])
     title = StringField('Title', [validators.required()])
     title_link = StringField('Title Link')
-    send_day = IntegerField('Send Day', [validators.number_range(min=1, max=31, message='Must be valid day.')], default=1)
-    send_time = IntegerField('Send Hour', [validators.number_range(min=0, max=23, message='Must be valid hour (0 - 23).')], default=9)
+    send_day = IntegerField(
+        'Send Day',
+        [validators.number_range(min=1, max=31, message='Must be valid day.')],
+        default=1)
+    send_time = IntegerField(
+        'Send Hour',
+        [validators.number_range(min=0, max=23, message='Must be valid hour (0 - 23).')],
+        default=9)
     frequency = StringField('Frequency')
     send_date = StringField('Send Date')
     send_once = BooleanField('Specific Date', default=False)
     text = TextAreaField('Message Value')
+
+
+class SlackDirectMessage(Form):
+    message_text = TextAreaField('Message Value')
+    message_user = StringField('To User')
+
+
+@app.before_first_request
+def main_start():
+    mongo_setup.global_init()
+    scheduler.add_job(func=send_newhire_messages, trigger="interval", minutes=1)
+    scheduler.start()
+
+
+@app.route('/')
+def index():
+    return render_template('home.html')
+
 
 @app.route('/addMessage', methods=['GET', 'POST'])
 def add_new_message():
@@ -87,7 +117,6 @@ def add_new_message():
             return render_template('messages.html', messages=messages, form=form)
     messages = Messages.objects()
     return render_template('messages.html', messages=messages, form=form)
-
 
 
 @app.route('/addEmployee', methods=['GET', 'POST'])
@@ -175,11 +204,13 @@ def add_new_employee():
 
         return render_template('employees.html', employees=employees, form=form)
 
+
 def get_auth_zero():
     config = {'client_id': client_id, 'client_secret': client_secret, 'uri': client_uri}
     az = AuthZero(config)
     access_token = az.get_access_token()
     return az.get_users()
+
 
 def find_slack_handle(socials: dict):
     """Search social media values for slack
@@ -190,6 +221,7 @@ def find_slack_handle(socials: dict):
         return socials['slack']
     else:
         return 'marty331'
+
 
 def add_messages_to_send(person: People):
     """
@@ -223,6 +255,89 @@ def add_messages_to_send(person: People):
             to_send.last_updated = datetime.datetime.now()
             to_send.save()
 
+
+def verify_slack_token(request_token):
+    if slack_verification_token != request_token:
+        print('Error: Invalid verification token')
+        print('Received {}'.format(request_token))
+        return make_response('Request contains invalid Slack verification token', 403)
+
+
+def search(dict_list, key, value):
+    for item in dict_list:
+        if item[key] == value:
+            return item
+
+
+@app.route('/slack/newhirehelp', methods=['POST'])
+def new_hire_help():
+    print('newhirehelp headers = {}'.format(request.headers))
+    print('newhirehelp values = {}'.format(request.values))
+    incoming_message = json.dumps(request.values['text'])
+    incoming_message = incoming_message.replace('"', '')
+    print(incoming_message)
+    print('weather')
+    if incoming_message == 'opt-in':
+        message_response = "We'll sign you back up!"
+    elif incoming_message == 'help':
+        message_response = 'Help will soon arrive!'
+    elif incoming_message == 'opt-out':
+        message_response = 'You can\'t leave!'
+    else:
+        message_response = 'Sorry, I don\'t know what you want.'
+    return make_response(message_response, 200)
+
+
+@app.route('/slackMessage', methods=['GET', 'POST'])
+def send_slack_message():
+    form = SlackDirectMessage(request.form)
+    slack_client.rtm_connect()
+    users = slack_client.api_call('users.list')['members']
+    if request.method == 'POST':
+        if form.validate():
+            message_text = form.message_text.data
+            message_user = form.message_user.data
+            user = search(users, 'name', message_user)
+            dm = slack_client.api_call('im.open', user=user['id'])['channel']['id']
+            slack_client.rtm_send_message(dm, message_text)
+            return redirect(url_for('send_slack_message'))
+        else:
+            print('errors = {}'.format(form.errors))
+            return render_template('senddm.html', form=form, users=users)
+    else:
+        return render_template('senddm.html', form=form, users=users)
+
+
+def send_newhire_messages():
+    print('send newhire messages')
+    now = datetime.datetime.utcnow()
+    lasthour = now - datetime.timedelta(minutes=59, seconds=59, days=7)
+    print('now {}'.format(now))
+    print('lasthour {}'.format(lasthour))
+    send = Send.objects(Q(send_dttm__lte=now) & Q(send_dttm__gte=lasthour) & Q(send_status__exact=False))
+    slack_client.rtm_connect()
+    users = slack_client.api_call('users.list')['members']
+    for s in send:
+        print('new hire messages ={}'.format(s['send_status']))
+        emp = People.objects(Q(emp_id=s['emp_id'])).get().to_mongo()
+        message = Messages.objects(Q(id=s['message_id'])).get().to_mongo()
+        print('emp = {}'.format(emp))
+        print('message = {}'.format(message))
+
+        message_text = message['text']
+        message_user = emp['slack_handle']
+        user = search(users, 'name', message_user)
+        dm = slack_client.api_call('im.open', user=user['id'])['channel']['id']
+        slack_client.rtm_send_message(dm, message_text)
+        s.update(set__send_status=True)
+
+
+@atexit.register
+def shutdown():
+    """
+    Register the function to be called on exit
+    """
+    atexit.register(lambda: scheduler.shutdown())
 
 
 if __name__ == '__main__':
