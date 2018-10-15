@@ -119,6 +119,12 @@ def add_new_message():
     return render_template('messages.html', messages=messages, form=form)
 
 
+@app.route('/deleteMessage/<string:id>')
+def delete_message(id):
+    Messages.objects(id=id).delete()
+    return redirect(url_for('add_new_message'))
+
+
 @app.route('/addEmployee', methods=['GET', 'POST'])
 def add_new_employee():
     # clients = json.dumps(get_auth_zero(), sort_keys=True, indent=4)
@@ -197,13 +203,18 @@ def add_new_employee():
             return redirect(url_for('add_new_employee'))
         else:
             print('errors = {}'.format(form.errors))
-            return render_template('employees.html', employees=None, form=form)
+            return render_template('employees.html', employees=None, form=form, selectedEmp=None)
     else:
         print('get route')
         employees = People.objects()
 
         return render_template('employees.html', employees=employees, form=form)
 
+
+@app.route('/deleteEmployee/<string:id>')
+def delete_employee(id):
+    People.objects(id=id).delete()
+    return redirect(url_for('add_new_employee'))
 
 def get_auth_zero():
     config = {'client_id': client_id, 'client_secret': client_secret, 'uri': client_uri}
@@ -269,6 +280,14 @@ def search(dict_list, key, value):
             return item
 
 
+@app.route('/slack/message_actions', methods=['POST'])
+def message_actions():
+    print('message actions route')
+    form_json = json.loads(request.form['payload'])
+    print('message actions = {}'.format(json.dumps(form_json, indent=4)))
+    return make_response('', 200)
+
+
 @app.route('/slack/newhirehelp', methods=['POST'])
 def new_hire_help():
     print('newhirehelp headers = {}'.format(request.headers))
@@ -323,12 +342,40 @@ def send_newhire_messages():
         message = Messages.objects(Q(id=s['message_id'])).get().to_mongo()
         print('emp = {}'.format(emp))
         print('message = {}'.format(message))
-
         message_text = message['text']
         message_user = emp['slack_handle']
         user = search(users, 'name', message_user)
-        dm = slack_client.api_call('im.open', user=user['id'])['channel']['id']
-        slack_client.rtm_send_message(dm, message_text)
+        print('link = {}'.format(len(message['title_link'])))
+        if(len(message['title_link'])> 1):
+
+            message_attach = {
+                "fallback": "You need to upgrade your Slack client to receive this message.",
+                "actions": [{
+                    "type": "button",
+                    "text": message['title'],
+                    "url": message['title_link'],
+                }]
+            }
+            dm = slack_client.api_call(
+                'im.open',
+                user=user['id'],
+                # attachments=[message_attach],
+                # text=message_text
+            )['channel']['id']
+            slack_client.api_call(
+                'chat.postMessage',
+                channel=dm,
+                text=message_text,
+                attachments=[message_attach]
+            )
+        else:
+            dm = slack_client.api_call(
+                'im.open',
+                user=user['id'],
+                attachments=[message_attach],
+                text=message_text
+            )['channel']['id']
+            slack_client.rtm_send_message(dm, message_text)
         s.update(set__send_status=True)
 
 

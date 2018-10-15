@@ -115,45 +115,16 @@
 
         </form>
     </div>
-    <div class="row" style="overflow: scroll; height: 600px; margin-top: 25px">
-        <table class="table fixed_header">
-            <thead>
-                <tr >
-                    <th scope="col" >Type</th>
-                    <th scope="col">Category</th>
-                    <th scope="col">Title</th>
-                    <th scope="col">Title Link</th>
-                    <th scope="col">Send Day</th>
-                    <th scope="col">Send Hour</th>
-                    <th scope="col">Frequency</th>
-                    <th scope="col">Number of Sends</th>
-                    <th scope="col">Message Text</th>
-                    <th scope="col">Specific Date</th>
-                    <th scope="col">Send Once</th>
-                    <th scope="col">Created Date</th>
-                </tr>
-            </thead>
-            <tbody>
-
-                {%  for message in messages %}
-                    <tr  >
-                        <td >{{ message.type }}</td>
-                        <td >{{ message.category }}</td>
-                        <td >{{ message.title }}</td>
-                        <td >{{ message.title_link }}</td>
-                        <td >{{ message.send_day }}</td>
-                        <td >{{ message.send_hour }}</td>
-                        <td >{{ message.frequency }}</td>
-                        <td >{{ message.number_of_sends }}</td>
-                        <td >{{ message.text }}</td>
-                        <td >{{ message.send_date }}</td>
-                        <td >{{ message.send_once }}</td>
-                        <td >{{ message.created_date }}</td>
-                    </tr>
-                {% endfor %}
-
-            </tbody>
-        </table>
+    <div style="margin-top: 25px">
+        <h1>Messages</h1>
+        <div style="overflow: scroll; height: 600px; margin-top: 25px">
+            <ul>
+            {%  for message in messages %}
+                <li class="list-group-item"><a style="text-decoration: none;" href="/editMessage/{{ message.id }}"><i class="fas fa-edit" style="color: #000000"></i></a> <a style="margin-left: 20px; margin-right: 20px; text-decoration: none;"
+                        href="/deleteMessage/{{ message.id }}"><i class="fas fa-times" style="color:red"></i></a> {{ message.title }}</li>
+            {% endfor %}
+            </ul>
+        </div>
     </div>
 
 

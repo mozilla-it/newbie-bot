@@ -96,56 +96,117 @@
     <div class="container">
         <h2>Employee List</h2>
         <div class="row" style="overflow: scroll; height: 600px; margin-top: 25px">
-        <table class="table fixed_header">
-            <thead>
-                <tr >
-                    <th scope="col" >Emp ID</th>
-                    <th scope="col">First Name</th>
-                    <th scope="col">Last Name</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Start Date</th>
-                    <th scope="col">Slack Handle</th>
-                    <th scope="col">Timezone</th>
-                    <th scope="col">City</th>
-                    <th scope="col">State</th>
-                    <th scope="col">Country</th>
-                    <th scope="col">Title</th>
-                    <th scope="col">Mgr ID</th>
-                    <th scope="col">Picture</th>
-                    <th scope="col">Phone</th>
-                    <th scope="col">User Opt Out</th>
-                    <th scope="col">Mgr Opt Out</th>
-                    <th scope="col">Admin Opt Out</th>
-                    <th scope="col">Created Date</th>
-                </tr>
-            </thead>
-            <tbody>
+                <ul>
                 {% for emp in employees %}
-                    <tr>
-                        <td>{{ emp.emp_id }}</td>
-                        <td>{{ emp.first_name }}</td>
-                        <td>{{ emp.last_name }}</td>
-                        <td>{{ emp.email }}</td>
-                        <td>{{ emp.slack_handle }}</td>
-                        <td>{{ emp.start_date }}</td>
-                        <td>{{ emp.timezone }}</td>
-                        <td>{{ emp.city }}</td>
-                        <td>{{ emp.state }}</td>
-                        <td>{{ emp.country }}</td>
-                        <td>{{ emp.title }}</td>
-                        <td>{{ emp.manager_id }}</td>
-                        <td>{{ emp.picture }}</td>
-                        <td>{{ emp.phone }}</td>
-                        <td>{{ emp.user_opt_out }}</td>
-                        <td>{{ emp.manager_opt_out }}</td>
-                        <td>{{ emp.admin_opt_out }}</td>
-                        <td>{{ emp.created_date }}</td>
-                    </tr>
-                {% endfor %}
+                    <li class="list-group-item">
+                        <a style="text-decoration: none;" href="/editEmployee/{{ emp.id }}"><i class="fas fa-edit" style="color: #000000"></i></a>
+                        <a style="margin-left: 20px; margin-right: 20px; text-decoration: none;" href="/deleteEmployee/{{ emp.id }}"><i class="fas fa-times" style="color:red"></i></a>
+                        <a href='{% set selectedEmp = emp %}' data-toggle="modal" data-target="#exampleModal">{{ emp.first_name }} {{ emp.last_name }}</a>
+                        <button style="margin-left: 20px;" class="btn btn-primary btn-sm" type="button" data-toggle="collapse" data-target="#{{ emp.id }}" aria-expanded="false" aria-controls="collapseExample">Details</button> </li>
+                    <div class="container collapse"  id="{{ emp.id }}">
+                        <div class="row">
+                            <div class="col-md-4 col-sm-12 ">
+                                <div class="form-group">
+                                    <div><label for="first">First Name</label></div>
+                                    <input type="text" disabled value="{{ emp.first_name }}">
 
-            </tbody>
-        </table>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <div><label for="last_name">Last Name</label></div>
+                                    <input type="text" disabled value="{{ emp.last_name }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <div><label for="email">Email</label></div>
+                                    <input type="text" disabled value="{{ emp.email}}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <div><label for="city">City</label></div>
+                                    <input type="text" disabled value="{{ emp.city }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <div><label for="state">State</label></div>
+                                    <input type="text" disabled value="{{ emp.state }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <div><label for="country">Country</label></div>
+                                    <input type="text" disabled value="{{ emp.country }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <div><label for="timezone">Timezone</label></div>
+                                    <input type="text" disabled value="{{ emp.timezone }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <div><label for="emp_id">Emp ID</label></div>
+                                    <input type="text" disabled value="{{ emp.emp_id }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <div><label for="slack_handle">Slack Handle</label></div>
+                                    <input type="text" disabled value="{{ emp.slack_handle }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <div><label for="start_date">Start Date</label></div>
+                                    <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="start_date" type="date" disabled value="{{ emp.start_date }}" name="start_date"  />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <div><label for="phone">Phone</label></div>
+                                    <input type="text" disabled value="{{ emp.phone }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <div><label for="manager_id">Manager ID</label></div>
+                                    <input type="text" disabled value="{{ emp.manager_id }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <div><label for="title">First Name</label></div>
+                                    <input type="text" disabled value="{{ emp.title }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <div><label for="picture">Picture</label></div>
+                                    <input type="text" disabled value="{{ emp.picture }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                </ul>
+
+
+
     </div>
     </div>
+
     <script src="{{ url_for('static', filename='employee.js') }}"></script>
 {%  endblock %}
