@@ -31,8 +31,7 @@ slack_verification_token = settings.SLACK_VERIFICATION_TOKEN
 
 slack_client = slackclient.SlackClient(settings.SLACK_BOT_TOKEN)
 
-def print_date_time():
-    print(time.strftime("%A, %d. %B %Y %I:%M:%S %p"))
+all_timezones = settings.all_timezones
 
 
 class AddEmployeeForm(Form):
@@ -203,12 +202,12 @@ def add_new_employee():
             return redirect(url_for('add_new_employee'))
         else:
             print('errors = {}'.format(form.errors))
-            return render_template('employees.html', employees=None, form=form, selectedEmp=None)
+            return render_template('employees.html', employees=None, form=form, selectedEmp=None,  timezones=all_timezones)
     else:
         print('get route')
         employees = People.objects()
 
-        return render_template('employees.html', employees=employees, form=form)
+        return render_template('employees.html', employees=employees, form=form, timezones=all_timezones)
 
 
 @app.route('/deleteEmployee/<string:id>')
@@ -346,6 +345,16 @@ def send_newhire_messages():
         message_user = emp['slack_handle']
         user = search(users, 'name', message_user)
         print('link = {}'.format(len(message['title_link'])))
+        help_attach = {
+            "fallback": "You need to upgrade your Slack client to receive this message.",
+            "actions": [{
+                "type": "button",
+                "text": 'Help',
+                "url": 'https://mozilla.com',
+            }]
+        }
+        message_attachments = [help_attach]
+
         if(len(message['title_link'])> 1):
 
             message_attach = {
@@ -356,26 +365,27 @@ def send_newhire_messages():
                     "url": message['title_link'],
                 }]
             }
-            dm = slack_client.api_call(
-                'im.open',
-                user=user['id'],
-                # attachments=[message_attach],
-                # text=message_text
-            )['channel']['id']
-            slack_client.api_call(
-                'chat.postMessage',
-                channel=dm,
-                text=message_text,
-                attachments=[message_attach]
-            )
-        else:
-            dm = slack_client.api_call(
-                'im.open',
-                user=user['id'],
-                attachments=[message_attach],
-                text=message_text
-            )['channel']['id']
-            slack_client.rtm_send_message(dm, message_text)
+            message_attachments.insert(0, message_attach)
+        dm = slack_client.api_call(
+            'im.open',
+            user=user['id'],
+            # attachments=[message_attach],
+            # text=message_text
+        )['channel']['id']
+        slack_client.api_call(
+            'chat.postMessage',
+            channel=dm,
+            text=message_text,
+            attachments=message_attachments
+        )
+        # else:
+        #     dm = slack_client.api_call(
+        #         'im.open',
+        #         user=user['id'],
+        #         attachments=[message_attach],
+        #         text=message_text
+        #     )['channel']['id']
+        #     slack_client.rtm_send_message(dm, message_text)
         s.update(set__send_status=True)
 
 

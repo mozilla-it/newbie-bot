@@ -45,7 +45,18 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
-                        {{ render_field(form.timezone, class_="form_control") }}
+                        <div class="input-group">
+                          <div class="input-group-prepend">
+                            <label class="input-group-text" for="inputGroupSelect01">Timezone</label>
+                          </div>
+                          <select name="timezone" class="custom-select" id="inputGroupSelect01">
+                            <option selected>Choose...</option>
+                              {% for timezone in timezones %}
+                            <option value="{{ timezone.zone }}">{{ timezone.name }}</option>
+
+                              {%  endfor %}
+                          </select>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -169,7 +180,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <div><label for="start_date">Start Date</label></div>
-                                    <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="start_date" type="date" disabled value="{{ emp.start_date }}" name="start_date"  />
+                                    <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="start_date" type="text" disabled value="{{ emp.start_date }}" name="start_date"  />
                                 </div>
                             </div>
                             <div class="col-md-4">
