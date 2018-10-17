@@ -68,6 +68,11 @@ class AddMessageForm(Form):
     send_date = StringField('Send Date')
     send_once = BooleanField('Specific Date', default=False)
     text = TextAreaField('Message Value')
+    number_of_sends = IntegerField(
+        'Number of Sends',
+        [validators.number_range(min=1, max=10, message='Must be between 1 and 10.'), validators.required()],
+        default=1)
+    country = StringField('Country', [validators.required()])
 
 
 class SlackDirectMessage(Form):
@@ -107,8 +112,10 @@ def add_new_message():
             message.send_once = True if form.send_once.data == True else False
             message.frequency = form.frequency.data
             message.text = form.text.data
+            message.number_of_sends = form.number_of_sends.data
+            message.country = form.country.data
             message.save()
-            messages = Messages.objects()
+            messages = Messages()
             return redirect(url_for('add_new_message'))
         else:
             print('errors = {}'.format(form.errors))
@@ -207,13 +214,14 @@ def add_new_employee():
         print('get route')
         employees = People.objects()
 
-        return render_template('employees.html', employees=employees, form=form, timezones=all_timezones)
+        return render_template('employees.html', employees=employees, form=form, selectedEmp=None,  timezones=all_timezones)
 
 
 @app.route('/deleteEmployee/<string:id>')
 def delete_employee(id):
     People.objects(id=id).delete()
     return redirect(url_for('add_new_employee'))
+
 
 def get_auth_zero():
     config = {'client_id': client_id, 'client_secret': client_secret, 'uri': client_uri}
@@ -242,8 +250,10 @@ def add_messages_to_send(person: People):
     employee_id = person.emp_id
     start_date = person.start_date
     my_timezone = pytz.timezone(person.timezone)
+    my_country = person.country
     for m in Messages.objects:
         mobject = json.loads(m.to_json())
+        print('messages to send = {}'.format(mobject))
         for x in range(0, m.number_of_sends):
             if x == 0:
                 send_day = m.send_day
@@ -257,14 +267,30 @@ def add_messages_to_send(person: People):
                 send_date_time = start_date + datetime.timedelta(days=send_day)
             send_date_time = my_timezone.localize(send_date_time)
             send_date_time = send_date_time.replace(hour=m.send_hour, minute=0, second=0)
-            to_send = Send()
-            to_send.emp_id = employee_id
-            to_send.message_id = mobject['_id']['$oid']
-            to_send.send_order = x
-            to_send.send_dttm = send_date_time
-            to_send.last_updated = datetime.datetime.now()
-            to_send.save()
+            if m.country == 'US' and my_country == 'US':
+                save_send_message(employee_id, mobject['_id']['$oid'], x, send_date_time)
+            elif m.country == 'CA' and my_country == 'CA':
+                save_send_message(employee_id, mobject['_id']['$oid'], x, send_date_time)
+            else:
+                save_send_message(employee_id, mobject['_id']['$oid'], x, send_date_time)
 
+
+def save_send_message(emp_id, message_id, send_order, send_dttm):
+    """
+    Save to Messages to Send table
+    :param emp_id:
+    :param message_id:
+    :param send_order:
+    :param send_dttm:
+    :return:
+    """
+    to_send = Send()
+    to_send.emp_id = emp_id
+    to_send.message_id = message_id
+    to_send.send_order = send_order
+    to_send.send_dttm = send_dttm
+    to_send.last_updated = datetime.datetime.now()
+    to_send.save()
 
 def verify_slack_token(request_token):
     if slack_verification_token != request_token:
@@ -300,7 +326,7 @@ def new_hire_help():
     elif incoming_message == 'help':
         message_response = 'Help will soon arrive!'
     elif incoming_message == 'opt-out':
-        message_response = 'You can\'t leave!'
+        message_response = 'Okay, we\'ll stop sending you important tips and reminders. Hope you don\'t miss any deadlines!'
     else:
         message_response = 'Sorry, I don\'t know what you want.'
     return make_response(message_response, 200)
@@ -341,7 +367,8 @@ def send_newhire_messages():
         message = Messages.objects(Q(id=s['message_id'])).get().to_mongo()
         print('emp = {}'.format(emp))
         print('message = {}'.format(message))
-        message_text = message['text']
+        message_text = message['text'].split('button:')
+
         message_user = emp['slack_handle']
         user = search(users, 'name', message_user)
         print('link = {}'.format(len(message['title_link'])))
@@ -355,7 +382,7 @@ def send_newhire_messages():
         }
         message_attachments = [help_attach]
 
-        if(len(message['title_link'])> 1):
+        if len(message['title_link']) > 1 and len(message_text) == 1:
 
             message_attach = {
                 "fallback": "You need to upgrade your Slack client to receive this message.",
@@ -366,6 +393,24 @@ def send_newhire_messages():
                 }]
             }
             message_attachments.insert(0, message_attach)
+        elif len(message_text) > 1:
+            message_actions = []
+            for x in range(1, len(message_text)):
+                action = {
+                    "type": "button",
+                    "text": message_text[x],
+                    "name": message['title'],
+                    "value": message_text[x]
+                }
+                message_actions.insert(0, action)
+            message_attach = {
+                "fallback": "You need to upgrade your Slack client to receive this message.",
+                "actions": message_actions
+            }
+            message_attachments.insert(0, message_attach)
+        else:
+            app.logger.info('No message attachments.')
+
         dm = slack_client.api_call(
             'im.open',
             user=user['id'],
@@ -375,7 +420,7 @@ def send_newhire_messages():
         slack_client.api_call(
             'chat.postMessage',
             channel=dm,
-            text=message_text,
+            text=message_text[0],
             attachments=message_attachments
         )
         # else:

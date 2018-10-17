@@ -3,3 +3,7 @@
         margin-left: auto !important;
         margin-right: auto !important;
     }
+
+.moz-drop {
+    margin-top: 26px;
+}

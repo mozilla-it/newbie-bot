@@ -9,11 +9,12 @@ class Messages(mongoengine.Document):
     send_day = mongoengine.IntField(required=True)
     send_hour = mongoengine.IntField(required=True)
     frequency = mongoengine.StringField(required=True)
-    number_of_sends = mongoengine.IntField(required=True, default=1)
+    number_of_sends = mongoengine.IntField(required=True)
     text = mongoengine.StringField(required=True)
     send_date = mongoengine.DateTimeField()
     send_once = mongoengine.BooleanField(default=False)
     created_date = mongoengine.DateTimeField(default=datetime.datetime.now)
+    country = mongoengine.StringField(required=True)
 
     meta = {
         'db_alias': 'core',
