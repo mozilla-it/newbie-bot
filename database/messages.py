@@ -15,6 +15,7 @@ class Messages(mongoengine.Document):
     send_once = mongoengine.BooleanField(default=False)
     created_date = mongoengine.DateTimeField(default=datetime.datetime.now)
     country = mongoengine.StringField(required=True)
+    callback_id = mongoengine.StringField()
 
     meta = {
         'db_alias': 'core',

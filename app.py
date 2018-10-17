@@ -271,8 +271,10 @@ def add_messages_to_send(person: People):
                 save_send_message(employee_id, mobject['_id']['$oid'], x, send_date_time)
             elif m.country == 'CA' and my_country == 'CA':
                 save_send_message(employee_id, mobject['_id']['$oid'], x, send_date_time)
-            else:
+            elif m.country == 'ALL':
                 save_send_message(employee_id, mobject['_id']['$oid'], x, send_date_time)
+            else:
+                app.logger.info('No message to be sent, user country {} and message country {}'.format(my_country, m.country))
 
 
 def save_send_message(emp_id, message_id, send_order, send_dttm):
@@ -305,12 +307,37 @@ def search(dict_list, key, value):
             return item
 
 
+def slack_call_api(call_type, channel, ts, text, attachments):
+    slack_client.api_call(
+        call_type,
+        channel=channel,
+        ts=ts,
+        text=text,
+        attachments=attachments
+    )
+
+
 @app.route('/slack/message_actions', methods=['POST'])
 def message_actions():
     print('message actions route')
     form_json = json.loads(request.form['payload'])
     print('message actions = {}'.format(json.dumps(form_json, indent=4)))
-    return make_response('', 200)
+    callback_id = form_json['callback_id']
+    print('callback_id ={}'.format(callback_id))
+    actions = form_json['actions'][0]['value']
+    print('actions = {}'.format(actions))
+    user = form_json['user']['name']
+    if callback_id == 'opt_out':
+        if 'keep' in actions.lower():
+            message_text = 'We\'ll keep sending you onboarding messages!'
+            People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
+        elif 'stop' in actions.lower():
+            message_text = 'We\'ve unsubscribed you from onboarding messages.'
+            People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
+        else:
+            message_text = 'Sorry, we\'re having trouble understanding you.'
+        slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text, '')
+    return make_response(message_text, 200)
 
 
 @app.route('/slack/newhirehelp', methods=['POST'])
@@ -320,7 +347,6 @@ def new_hire_help():
     incoming_message = json.dumps(request.values['text'])
     incoming_message = incoming_message.replace('"', '')
     print(incoming_message)
-    print('weather')
     if incoming_message == 'opt-in':
         message_response = "We'll sign you back up!"
     elif incoming_message == 'help':
@@ -404,6 +430,7 @@ def send_newhire_messages():
                 }
                 message_actions.insert(0, action)
             message_attach = {
+                "callback_id": message['callback_id'] if message['callback_id'] else '',
                 "fallback": "You need to upgrade your Slack client to receive this message.",
                 "actions": message_actions
             }
@@ -414,8 +441,6 @@ def send_newhire_messages():
         dm = slack_client.api_call(
             'im.open',
             user=user['id'],
-            # attachments=[message_attach],
-            # text=message_text
         )['channel']['id']
         slack_client.api_call(
             'chat.postMessage',
