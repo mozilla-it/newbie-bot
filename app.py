@@ -389,74 +389,78 @@ def send_newhire_messages():
     users = slack_client.api_call('users.list')['members']
     for s in send:
         print('new hire messages ={}'.format(s['send_status']))
-        emp = People.objects(Q(emp_id=s['emp_id'])).get().to_mongo()
-        message = Messages.objects(Q(id=s['message_id'])).get().to_mongo()
-        print('emp = {}'.format(emp))
-        print('message = {}'.format(message))
-        message_text = message['text'].split('button:')
+        emp = People.objects(Q(emp_id=s['emp_id'])).get()
+        if emp.user_opt_out is False and emp.manager_opt_out is False and emp.admin_opt_out is False:
+            message = Messages.objects(Q(id=s['message_id'])).get().to_mongo()
+            print('emp = {}'.format(emp))
+            print('message = {}'.format(message))
+            message_text = message['text'].split('button:')
 
-        message_user = emp['slack_handle']
-        user = search(users, 'name', message_user)
-        print('link = {}'.format(len(message['title_link'])))
-        help_attach = {
-            "fallback": "You need to upgrade your Slack client to receive this message.",
-            "actions": [{
-                "type": "button",
-                "text": 'Help',
-                "url": 'https://mozilla.com',
-            }]
-        }
-        message_attachments = [help_attach]
-
-        if len(message['title_link']) > 1 and len(message_text) == 1:
-
-            message_attach = {
+            message_user = emp['slack_handle']
+            user = search(users, 'name', message_user)
+            print('link = {}'.format(len(message['title_link'])))
+            help_attach = {
                 "fallback": "You need to upgrade your Slack client to receive this message.",
                 "actions": [{
                     "type": "button",
-                    "text": message['title'],
-                    "url": message['title_link'],
+                    "text": 'Help',
+                    "url": 'https://mozilla.com',
                 }]
             }
-            message_attachments.insert(0, message_attach)
-        elif len(message_text) > 1:
-            message_actions = []
-            for x in range(1, len(message_text)):
-                action = {
-                    "type": "button",
-                    "text": message_text[x],
-                    "name": message['title'],
-                    "value": message_text[x]
-                }
-                message_actions.insert(0, action)
-            message_attach = {
-                "callback_id": message['callback_id'] if message['callback_id'] else '',
-                "fallback": "You need to upgrade your Slack client to receive this message.",
-                "actions": message_actions
-            }
-            message_attachments.insert(0, message_attach)
-        else:
-            app.logger.info('No message attachments.')
+            message_attachments = [help_attach]
 
-        dm = slack_client.api_call(
-            'im.open',
-            user=user['id'],
-        )['channel']['id']
-        slack_client.api_call(
-            'chat.postMessage',
-            channel=dm,
-            text=message_text[0],
-            attachments=message_attachments
-        )
-        # else:
-        #     dm = slack_client.api_call(
-        #         'im.open',
-        #         user=user['id'],
-        #         attachments=[message_attach],
-        #         text=message_text
-        #     )['channel']['id']
-        #     slack_client.rtm_send_message(dm, message_text)
-        s.update(set__send_status=True)
+            if len(message['title_link']) > 1 and len(message_text) == 1:
+
+                message_attach = {
+                    "fallback": "You need to upgrade your Slack client to receive this message.",
+                    "actions": [{
+                        "type": "button",
+                        "text": message['title'],
+                        "url": message['title_link'],
+                    }]
+                }
+                message_attachments.insert(0, message_attach)
+            elif len(message_text) > 1:
+                message_actions = []
+                for x in range(1, len(message_text)):
+                    action = {
+                        "type": "button",
+                        "text": message_text[x],
+                        "name": message['title'],
+                        "value": message_text[x]
+                    }
+                    message_actions.insert(0, action)
+                message_attach = {
+                    "callback_id": message['callback_id'] if message['callback_id'] else '',
+                    "fallback": "You need to upgrade your Slack client to receive this message.",
+                    "actions": message_actions
+                }
+                message_attachments.insert(0, message_attach)
+            else:
+                app.logger.info('No message attachments.')
+
+            dm = slack_client.api_call(
+                'im.open',
+                user=user['id'],
+            )['channel']['id']
+            slack_client.api_call(
+                'chat.postMessage',
+                channel=dm,
+                text=message_text[0],
+                attachments=message_attachments
+            )
+            # else:
+            #     dm = slack_client.api_call(
+            #         'im.open',
+            #         user=user['id'],
+            #         attachments=[message_attach],
+            #         text=message_text
+            #     )['channel']['id']
+            #     slack_client.rtm_send_message(dm, message_text)
+            s.update(set__send_status=True)
+        else:
+            s.update(set__cancel_status=True)
+            print('User has opted out of notifications')
 
 
 @atexit.register
