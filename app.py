@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, flash, redirect, url_for, session, logging, make_response
+from flask import Flask, request, render_template, flash, redirect, url_for, session, make_response, jsonify, _request_ctx_stack
 import database.mongo_setup as mongo_setup
 from database.people import People
 from database.messages import Messages
@@ -17,21 +17,69 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from mongoengine.queryset.visitor import Q
 
 
+#auth
+from flask_cors import CORS as cors
+
+from flask_environ import get, collect, word_for_true
+from authlib.flask.client import OAuth
+from functools import wraps
+
+#endauth
+
 scheduler = BackgroundScheduler()
 
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = settings.MONGODB_SECRET
-
-message_frequency = {'day': 1, 'week': 7, 'month': 30, 'year': 365}
+cors(app)
 
 client_id = settings.CLIENT_ID
 client_secret = settings.CLIENT_SECRET
 client_uri = settings.CLIENT_URI
+client_audience = settings.CLIENT_AUDIENCE
+
+
 slack_verification_token = settings.SLACK_VERIFICATION_TOKEN
 
 slack_client = slackclient.SlackClient(settings.SLACK_BOT_TOKEN)
 
 all_timezones = settings.all_timezones
+
+
+message_frequency = {'day': 1, 'week': 7, 'month': 30, 'year': 365}
+
+#auth
+oauth = OAuth(app)
+auth0 = oauth.register(
+    'auth0',
+    client_id=settings.AUTH_ID,
+    client_secret=settings.AUTH_SECRET,
+    api_base_url='https://' + settings.AUTH_HOST,
+    access_token_url='https://' + settings.AUTH_HOST + '/oauth/token',
+    authorize_url='https://' + settings.AUTH_HOST + '/authorize',
+    client_kwargs={
+        'scope': 'openid profile',
+    },
+)
+
+app.config.update(collect(
+    get('DEBUG', default=True, convert=word_for_true),
+    get('HOST', default='localhost'),
+    get('PORT', default=5000, convert=int),
+    get('AUTH_ID', default=settings.AUTH_ID),
+    get('AUTH_SECRET', default=settings.AUTH_SECRET),
+    get('AUTH_HOST', default=settings.AUTH_HOST),
+    get('AUTH_SCOPE', default='openid email profile'),
+    get('AUTH_AUDIENCE', default=settings.AUTH_AUDIENCE),
+    get('AUTH_SECRET_KEY', default=settings.AUTH_SECRET_KEY)))
+
+AUTH_AUDIENCE = settings.AUTH_AUDIENCE
+if AUTH_AUDIENCE is '':
+    AUTH_AUDIENCE = 'https://' + app.config.get('HOST') + '/userinfo'
+
+# This will be the callback URL Auth0 returns the authenticatee to.
+app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
+
+#endauth
 
 
 class AddEmployeeForm(Form):
@@ -80,11 +128,64 @@ class SlackDirectMessage(Form):
     message_user = StringField('To User')
 
 
+def requires_auth(f):
+  @wraps(f)
+  def decorated(*args, **kwargs):
+    if 'profile' not in session:
+      # Redirect to Login page here
+      return redirect('/')
+    return f(*args, **kwargs)
+
+  return decorated
+
+
+@app.route('/dashboard')
+@requires_auth
+def dashboard():
+    return render_template('dashboard.html',
+                           userinfo=session['profile'],
+                           userinfo_pretty=json.dumps(session['jwt_payload'], indent=4))
+
+@app.route('/autologin-settings', methods=['GET', 'POST'])
+def showautologinsettings():
+    """
+    Redirect to NLX Auto-login Settings page
+    """
+    autologin_settings_url = "https://{}/login?client={}&action=autologin_settings".format(
+        settings.AUTH_HOST, settings.AUTH_ID
+    )
+    return redirect(autologin_settings_url, code=302)
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    return auth0.authorize_redirect(redirect_uri=app.config.get('AUTH_URL'), audience=app.config.get('AUTH_AUDIENCE'))
+
+
+@app.route('/callback/auth', methods=['GET', 'POST'])
+def callback_handling():
+    # Handles response from token endpoint
+    auth0.authorize_access_token()
+    resp = auth0.get('userinfo')
+    userinfo = resp.json()
+    # Store the user information in flask session.
+    session['jwt_payload'] = userinfo
+    session['profile'] = {
+        'user_id': userinfo['sub'],
+        'name': userinfo['name'],
+        'picture': userinfo['picture']
+    }
+    return redirect('/')
+
+
 @app.before_first_request
 def main_start():
     mongo_setup.global_init()
-    scheduler.add_job(func=send_newhire_messages, trigger="interval", minutes=1)
-    scheduler.start()
+    print('scheduler = {}'.format(scheduler.running))
+    if scheduler.running == False:
+        # scheduler.add_job(func=send_newhire_messages, trigger="interval", hours=1)
+        scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute=0)
+        scheduler.start()
 
 
 @app.route('/')
@@ -95,8 +196,6 @@ def index():
 @app.route('/addMessage', methods=['GET', 'POST'])
 def add_new_message():
     form = AddMessageForm(request.form)
-    print(request.values)
-    print('form errors ={}'.format(form.errors))
     if request.method == 'POST':
         if form.validate():
             message = Messages()
@@ -133,14 +232,8 @@ def delete_message(id):
 
 @app.route('/addEmployee', methods=['GET', 'POST'])
 def add_new_employee():
-    # clients = json.dumps(get_auth_zero(), sort_keys=True, indent=4)
-    # print('clients = {}'.format(clients))
-    print(request.method)
     form = AddEmployeeForm(request.form)
-    print(request.values)
-    print('form errors ={}'.format(form.errors))
     if request.method == 'POST':
-        print('Post route')
         if form.validate():
             people = People()
             # factory = V2ProfileFactory()
@@ -227,7 +320,8 @@ def get_auth_zero():
     config = {'client_id': client_id, 'client_secret': client_secret, 'uri': client_uri}
     az = AuthZero(config)
     access_token = az.get_access_token()
-    return az.get_users()
+    app.logger.info(json.dumps(access_token))
+    return az.get_users(fields="username,user_id,name,email,identities,groups,picture,nickname,_HRData")
 
 
 def find_slack_handle(socials: dict):
@@ -238,7 +332,7 @@ def find_slack_handle(socials: dict):
     if 'slack' in socials:
         return socials['slack']
     else:
-        return 'marty331'
+        return 'mballard'
 
 
 def add_messages_to_send(person: People):
@@ -294,6 +388,7 @@ def save_send_message(emp_id, message_id, send_order, send_dttm):
     to_send.last_updated = datetime.datetime.now()
     to_send.save()
 
+
 def verify_slack_token(request_token):
     if slack_verification_token != request_token:
         print('Error: Invalid verification token')
@@ -315,6 +410,15 @@ def slack_call_api(call_type, channel, ts, text, attachments):
         text=text,
         attachments=attachments
     )
+
+
+@app.route('/slack/message_events', methods=['POST', 'GET'])
+def message_events():
+    print('message events')
+    # form_json = json.loads(request.form.get('challenge'))
+    print(json.dumps(request.get_json()))
+    message_response = json.dumps(request.get_json())
+    return make_response(message_response, 200)
 
 
 @app.route('/slack/message_actions', methods=['POST'])
@@ -475,4 +579,4 @@ if __name__ == '__main__':
     print('starting app')
     main_start()
     app.debug = True
-    app.run()
+    app.run(ssl_context=('cert.pem', 'key.pem'))
