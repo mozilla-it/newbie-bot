@@ -15,6 +15,7 @@ import time
 import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 from mongoengine.queryset.visitor import Q
+import holidays
 
 
 #auth
@@ -51,6 +52,8 @@ slack_verification_token = settings.SLACK_VERIFICATION_TOKEN
 slack_client = slackclient.SlackClient(settings.SLACK_BOT_TOKEN)
 
 all_timezones = settings.all_timezones
+us_holidays = holidays.US()
+ca_holidays = holidays.CA()
 
 
 message_frequency = {'day': 1, 'week': 7, 'month': 30, 'year': 365}
@@ -114,9 +117,9 @@ class AddEmployeeForm(Form):
 
 
 class AddMessageForm(Form):
-    message_type = StringField('Message Type', [validators.required()])
-    category = StringField('Category', [validators.required()])
-    title = StringField('Title', [validators.required()])
+    message_type = StringField('Message Type', [validators.data_required()])
+    category = StringField('Category', [validators.data_required()])
+    title = StringField('Title', [validators.data_required()])
     title_link = StringField('Title Link')
     send_day = IntegerField(
         'Send Day',
@@ -132,9 +135,9 @@ class AddMessageForm(Form):
     text = TextAreaField('Message Value')
     number_of_sends = IntegerField(
         'Number of Sends',
-        [validators.number_range(min=1, max=10, message='Must be between 1 and 10.'), validators.required()],
+        [validators.number_range(min=1, max=10, message='Must be between 1 and 10.'), validators.data_required()],
         default=1)
-    country = StringField('Country', [validators.required()])
+    country = StringField('Country', [validators.data_required()])
 
 
 class SlackDirectMessage(Form):
@@ -186,6 +189,10 @@ def callback_handling():
 
 @app.route('/logout')
 def logout():
+    """
+    Logout and clear session
+    :return:
+    """
     # Clear session stored data
     session.clear()
     return redirect('/')
@@ -193,6 +200,10 @@ def logout():
 
 @app.before_first_request
 def main_start():
+    """
+    Setup processes to be ran before serving the first page.
+    :return:
+    """
     mongo_setup.global_init()
     print('scheduler = {}'.format(scheduler.running))
     if scheduler.running == False:
@@ -203,12 +214,20 @@ def main_start():
 
 @app.route('/')
 def index():
+    """
+    Home page route
+    :return: Home page
+    """
     print('session {}'.format(session.get('profile')))
     user = get_user_info()
     return render_template('home.html', user=user)
 
 @app.route('/help')
 def help():
+    """
+    Help page route
+    :return: Help page
+    """
     print('session {}'.format(session.get('profile')))
     user = get_user_info()
     return render_template('help.html', user=user)
@@ -217,6 +236,10 @@ def help():
 @app.route('/addMessage', methods=['GET', 'POST'])
 @requires_auth
 def add_new_message():
+    """
+    Add new message to be sent to new hire employees
+    :return:
+    """
     user = get_user_info()
     form = AddMessageForm(request.form)
     if request.method == 'POST':
@@ -250,6 +273,11 @@ def add_new_message():
 @app.route('/deleteMessage/<string:id>')
 @requires_auth
 def delete_message(id):
+    """
+    Delete message from database
+    :param id:
+    :return:
+    """
     Messages.objects(id=id).delete()
     return redirect(url_for('add_new_message'))
 
@@ -257,6 +285,10 @@ def delete_message(id):
 @app.route('/addEmployee', methods=['GET', 'POST'])
 @requires_auth
 def add_new_employee():
+    """
+    Add new employee to database
+    :return:
+    """
     user = get_user_info()
     form = AddEmployeeForm(request.form)
     if request.method == 'POST':
@@ -339,11 +371,20 @@ def add_new_employee():
 @app.route('/deleteEmployee/<string:id>')
 @requires_auth
 def delete_employee(id):
+    """
+    Delete employee from database
+    :param id:
+    :return:
+    """
     People.objects(id=id).delete()
     return redirect(url_for('add_new_employee'))
 
 
 def get_auth_zero():
+    """
+    Get Auth0 users
+    :return: Auth0 user list
+    """
     config = {'client_id': client_id, 'client_secret': client_secret, 'uri': client_uri}
     az = AuthZero(config)
     access_token = az.get_access_token()
@@ -381,13 +422,13 @@ def add_messages_to_send(person: People):
             else:
                 print('add {}'.format(message_frequency[m.frequency]))
                 send_day = send_day + message_frequency[m.frequency]
-
             if m.send_once:
                 send_date_time = m.send_date
             else:
                 send_date_time = start_date + datetime.timedelta(days=send_day)
             send_date_time = my_timezone.localize(send_date_time)
             send_date_time = send_date_time.replace(hour=m.send_hour, minute=0, second=0)
+            send_date_time = adjust_send_date_for_holidays_and_weekends(send_date_time, my_country)
             if m.country == 'US' and my_country == 'US':
                 save_send_message(employee_id, mobject['_id']['$oid'], x, send_date_time)
             elif m.country == 'CA' and my_country == 'CA':
@@ -396,6 +437,36 @@ def add_messages_to_send(person: People):
                 save_send_message(employee_id, mobject['_id']['$oid'], x, send_date_time)
             else:
                 app.logger.info('No message to be sent, user country {} and message country {}'.format(my_country, m.country))
+
+
+def adjust_send_date_for_holidays_and_weekends(send_date_time, country):
+    """"
+    Adjust date to non-holiday or weekend
+    :param send_date_time
+    :param country
+    :return send_date_teime
+    """
+    print('day num {}'.format(send_date_time.weekday()))
+    weekday = send_date_time.weekday()
+    if weekday > 4:
+        if weekday == 6:
+            send_date_time = send_date_time + datetime.timedelta(days=1)
+        else:
+            send_date_time = send_date_time + datetime.timedelta(days=2)
+        print('weekday {}'.format(send_date_time))
+        adjust_send_date_for_holidays_and_weekends(send_date_time, country)
+    if country == 'US':
+        print('US holiday {}'.format(send_date_time in us_holidays))
+        if send_date_time in us_holidays:
+            send_date_time = send_date_time + datetime.timedelta(days=1)
+            adjust_send_date_for_holidays_and_weekends(send_date_time, country)
+    if country == 'CA':
+        print('CA holiday {}'.format(send_date_time in ca_holidays))
+        if send_date_time in ca_holidays:
+            send_date_time = send_date_time + datetime.timedelta(days=1)
+            adjust_send_date_for_holidays_and_weekends(send_date_time, country)
+    print('final send date {}'.format(send_date_time))
+    return send_date_time
 
 
 def save_send_message(emp_id, message_id, send_order, send_dttm):
@@ -417,6 +488,11 @@ def save_send_message(emp_id, message_id, send_order, send_dttm):
 
 
 def verify_slack_token(request_token):
+    """
+    Verity Slack token is valid
+    :param request_token:
+    :return: None if valid, otherwise error message
+    """
     if slack_verification_token != request_token:
         print('Error: Invalid verification token')
         print('Received {}'.format(request_token))
@@ -430,6 +506,15 @@ def search(dict_list, key, value):
 
 
 def slack_call_api(call_type, channel, ts, text, attachments):
+    """
+    Slack API call to send message and attachements
+    :param call_type:
+    :param channel:
+    :param ts:
+    :param text:
+    :param attachments:
+    :return:
+    """
     slack_client.api_call(
         call_type,
         channel=channel,
@@ -441,6 +526,10 @@ def slack_call_api(call_type, channel, ts, text, attachments):
 
 @app.route('/slack/message_events', methods=['POST', 'GET'])
 def message_events():
+    """
+    Slack message events
+    :return: send Slack message events to server
+    """
     print('message events')
     # form_json = json.loads(request.form.get('challenge'))
     print(json.dumps(request.get_json()))
@@ -450,6 +539,10 @@ def message_events():
 
 @app.route('/slack/message_actions', methods=['POST'])
 def message_actions():
+    """
+    Slack message actions - performs action based on button message commands
+    :return: Message sent to update user on action of button command
+    """
     print('message actions route')
     form_json = json.loads(request.form['payload'])
     print('message actions = {}'.format(json.dumps(form_json, indent=4)))
@@ -473,6 +566,10 @@ def message_actions():
 
 @app.route('/slack/newhirehelp', methods=['POST'])
 def new_hire_help():
+    """
+    Slack slash newhirehelp - performs action based on slash message commands
+    :return: Message sent to update user on action of slash command
+    """
     print('newhirehelp headers = {}'.format(request.headers))
     print('newhirehelp values = {}'.format(request.values))
     incoming_message = json.dumps(request.values['text'])
@@ -492,7 +589,11 @@ def new_hire_help():
 @app.route('/slackMessage', methods=['GET', 'POST'])
 @requires_auth
 def send_slack_message():
-    user= get_user_info()
+    """
+    Send user a test message
+    :return:
+    """
+    user = get_user_info()
     form = SlackDirectMessage(request.form)
     slack_client.rtm_connect()
     users = slack_client.api_call('users.list')['members']
@@ -512,6 +613,10 @@ def send_slack_message():
 
 
 def send_newhire_messages():
+    """
+    Send new hires messages, this process is ran on a schedule
+    :return:
+    """
     print('send newhire messages')
     now = datetime.datetime.utcnow()
     lasthour = now - datetime.timedelta(minutes=59, seconds=59, days=7)
@@ -596,6 +701,10 @@ def send_newhire_messages():
             print('User has opted out of notifications')
 
 def get_user_info():
+    """
+    Get user session for browser
+    :return:
+    """
     user = None
     if (session.get('profile')):
         user = {'userid': session.get('profile')['user_id'], 'username': session.get('profile')['name'],
