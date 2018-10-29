@@ -18,12 +18,20 @@ from mongoengine.queryset.visitor import Q
 
 
 #auth
+
+import logging.config
+logging.basicConfig(level=logging.INFO)
 from flask_cors import CORS as cors
 
 from flask_environ import get, collect, word_for_true
 from authlib.flask.client import OAuth
 from functools import wraps
+from six.moves.urllib.parse import urlencode
 
+import auth
+import config
+
+logger = logging.getLogger('nhobot')
 #endauth
 
 scheduler = BackgroundScheduler()
@@ -79,6 +87,12 @@ if AUTH_AUDIENCE is '':
 # This will be the callback URL Auth0 returns the authenticatee to.
 app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
 
+
+oidc_config = config.OIDCConfig()
+authentication = auth.OpenIDConnect(
+    oidc_config
+)
+oidc = authentication.auth(app)
 #endauth
 
 
@@ -139,22 +153,14 @@ def requires_auth(f):
   return decorated
 
 
-@app.route('/dashboard')
+@app.route('/profile')
 @requires_auth
-def dashboard():
-    return render_template('dashboard.html',
+def profile():
+    logger.info("User: {} authenticated proceeding to dashboard.".format(session.get('profile')['user_id']))
+    user = get_user_info()
+    return render_template('profile.html',
                            userinfo=session['profile'],
-                           userinfo_pretty=json.dumps(session['jwt_payload'], indent=4))
-
-@app.route('/autologin-settings', methods=['GET', 'POST'])
-def showautologinsettings():
-    """
-    Redirect to NLX Auto-login Settings page
-    """
-    autologin_settings_url = "https://{}/login?client={}&action=autologin_settings".format(
-        settings.AUTH_HOST, settings.AUTH_ID
-    )
-    return redirect(autologin_settings_url, code=302)
+                           userinfo_pretty=json.dumps(session['jwt_payload'], indent=4), user=user)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -178,6 +184,13 @@ def callback_handling():
     return redirect('/')
 
 
+@app.route('/logout')
+def logout():
+    # Clear session stored data
+    session.clear()
+    return redirect('/')
+
+
 @app.before_first_request
 def main_start():
     mongo_setup.global_init()
@@ -190,11 +203,21 @@ def main_start():
 
 @app.route('/')
 def index():
-    return render_template('home.html')
+    print('session {}'.format(session.get('profile')))
+    user = get_user_info()
+    return render_template('home.html', user=user)
+
+@app.route('/help')
+def help():
+    print('session {}'.format(session.get('profile')))
+    user = get_user_info()
+    return render_template('help.html', user=user)
 
 
 @app.route('/addMessage', methods=['GET', 'POST'])
+@requires_auth
 def add_new_message():
+    user = get_user_info()
     form = AddMessageForm(request.form)
     if request.method == 'POST':
         if form.validate():
@@ -219,19 +242,22 @@ def add_new_message():
         else:
             print('errors = {}'.format(form.errors))
             messages = Messages.objects()
-            return render_template('messages.html', messages=messages, form=form)
+            return render_template('messages.html', messages=messages, form=form, user=user)
     messages = Messages.objects()
-    return render_template('messages.html', messages=messages, form=form)
+    return render_template('messages.html', messages=messages, form=form, user=user)
 
 
 @app.route('/deleteMessage/<string:id>')
+@requires_auth
 def delete_message(id):
     Messages.objects(id=id).delete()
     return redirect(url_for('add_new_message'))
 
 
 @app.route('/addEmployee', methods=['GET', 'POST'])
+@requires_auth
 def add_new_employee():
+    user = get_user_info()
     form = AddEmployeeForm(request.form)
     if request.method == 'POST':
         if form.validate():
@@ -302,15 +328,16 @@ def add_new_employee():
             return redirect(url_for('add_new_employee'))
         else:
             print('errors = {}'.format(form.errors))
-            return render_template('employees.html', employees=None, form=form, selectedEmp=None,  timezones=all_timezones)
+            return render_template('employees.html', employees=None, form=form, selectedEmp=None,  timezones=all_timezones, user=user)
     else:
         print('get route')
         employees = People.objects()
 
-        return render_template('employees.html', employees=employees, form=form, selectedEmp=None,  timezones=all_timezones)
+        return render_template('employees.html', employees=employees, form=form, selectedEmp=None,  timezones=all_timezones, user=user)
 
 
 @app.route('/deleteEmployee/<string:id>')
+@requires_auth
 def delete_employee(id):
     People.objects(id=id).delete()
     return redirect(url_for('add_new_employee'))
@@ -463,7 +490,9 @@ def new_hire_help():
 
 
 @app.route('/slackMessage', methods=['GET', 'POST'])
+@requires_auth
 def send_slack_message():
+    user= get_user_info()
     form = SlackDirectMessage(request.form)
     slack_client.rtm_connect()
     users = slack_client.api_call('users.list')['members']
@@ -477,9 +506,9 @@ def send_slack_message():
             return redirect(url_for('send_slack_message'))
         else:
             print('errors = {}'.format(form.errors))
-            return render_template('senddm.html', form=form, users=users)
+            return render_template('senddm.html', form=form, users=users, user=user)
     else:
-        return render_template('senddm.html', form=form, users=users)
+        return render_template('senddm.html', form=form, users=users, user=user)
 
 
 def send_newhire_messages():
@@ -566,6 +595,12 @@ def send_newhire_messages():
             s.update(set__cancel_status=True)
             print('User has opted out of notifications')
 
+def get_user_info():
+    user = None
+    if (session.get('profile')):
+        user = {'userid': session.get('profile')['user_id'], 'username': session.get('profile')['name'],
+                'picture': session.get('profile')['picture']}
+    return user
 
 @atexit.register
 def shutdown():

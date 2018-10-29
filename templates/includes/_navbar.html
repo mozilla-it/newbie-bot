@@ -8,12 +8,35 @@
     <div id="navbarSupportedContent" class="collapse navbar-collapse">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active"><a class="nav-link" href="/">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="/help">Help</a></li>
+            {% if user is not none %}
             <li class="nav-item"><a class="nav-link" href="/addEmployee">Add Employee</a></li>
             <li class="nav-item"><a class="nav-link" href="/addMessage">Add Message</a></li>
             <li class="nav-item"><a class="nav-link" href="/slackMessage">Send Slack Message</a></li>
+            {% endif %}
         </ul>
         <ul class="navbar-nav ml-auto">
+            {% if user is not none %}
+
+                {%  if user.username %}
+                    <span class="nav-item username">{{ user.username }}</span>
+                {% endif %}
+                {% if user.picture %}
+                    <li class="loggedin">
+                        <img class="profile-icon" src="{{ user.picture }}">
+                        <ul class="dropdown">
+                            <li class="nav-item"><a class="nav-link" href="/profile">Profile</a></li>
+                            <li class="nav-item "><a class="nav-link" href="/logout">Logout</a></li>
+                        </ul>
+                    </li>
+
+                {% endif %}
+
+
+            {% else %}
             <li class="nav-item "><a class="nav-link" href="/login">Login</a></li>
+            {% endif %}
+
         </ul>
     </div>
 </nav>
