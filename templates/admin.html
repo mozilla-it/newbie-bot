@@ -1,0 +1,10 @@
+{%  extends 'layout.html' %}
+
+{%  block body %}
+    <div class="container">
+        <h1>Admin</h1>
+    {%  include 'admin_roles.html' %}
+
+    {% include 'admin_users.html' %}
+    </div>
+{%  endblock %}

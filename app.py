@@ -3,13 +3,14 @@ import database.mongo_setup as mongo_setup
 from database.people import People
 from database.messages import Messages
 from database.messages_to_send import MessagesToSend as Send
+from database.admin import Admin
+from database.admin_roles import AdminRoles
 from iam_profile_faker.factory import V2ProfileFactory
 import json
 import datetime
 import pytz
 from authzero import AuthZero
 import settings
-from wtforms import Form, StringField, TextAreaField, PasswordField, validators, DateTimeField, IntegerField, RadioField, BooleanField
 import slackclient
 import time
 import atexit
@@ -17,8 +18,15 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from mongoengine.queryset.visitor import Q
 import holidays
 
+# form imports
+from forms.slack_direct_message import SlackDirectMessage
+from forms.add_employee_form import AddEmployeeForm
+from forms.add_message_form import AddMessageForm
+from forms.add_admin_role_form import AddAdminRoleForm
+from forms.add_admin_form import AddAdminForm
+# end form imports
 
-#auth
+# auth
 
 import logging.config
 logging.basicConfig(level=logging.INFO)
@@ -33,7 +41,7 @@ import auth
 import config
 
 logger = logging.getLogger('nhobot')
-#endauth
+# endauth
 
 scheduler = BackgroundScheduler()
 
@@ -58,7 +66,7 @@ ca_holidays = holidays.CA()
 
 message_frequency = {'day': 1, 'week': 7, 'month': 30, 'year': 365}
 
-#auth
+# auth
 oauth = OAuth(app)
 auth0 = oauth.register(
     'auth0',
@@ -96,64 +104,32 @@ authentication = auth.OpenIDConnect(
     oidc_config
 )
 oidc = authentication.auth(app)
-#endauth
+# endauth
 
 
-class AddEmployeeForm(Form):
-    first_name = StringField('First Name', [validators.length(min=2, max=50)])
-    last_name = StringField('Last Name', [validators.length(min=3, max=50)])
-    email = StringField('Email', [validators.email(message="not a valid email")])
-    city = StringField('City', [validators.length(min=2, max=50)])
-    state = StringField('State', [validators.length(min=2, max=2)])
-    country = StringField('Country', [validators.length(min=2, max=2)])
-    timezone = StringField('Timezone')
-    emp_id = IntegerField('Employee Id')
-    slack_handle = StringField('Slack Handle', [validators.length(min=4, max=25)])
-    start_date = StringField('Start Date')
-    phone = StringField('Phone', [validators.length(min=10, max=15)])
-    manager_id = IntegerField('Manager ID')
-    title = StringField('Title', [validators.length(min=3, max=50)])
-    picture = StringField('Picture URL')
 
-
-class AddMessageForm(Form):
-    message_type = StringField('Message Type', [validators.data_required()])
-    category = StringField('Category', [validators.data_required()])
-    title = StringField('Title', [validators.data_required()])
-    title_link = StringField('Title Link')
-    send_day = IntegerField(
-        'Send Day',
-        [validators.number_range(min=1, max=31, message='Must be valid day.')],
-        default=1)
-    send_time = IntegerField(
-        'Send Hour',
-        [validators.number_range(min=0, max=23, message='Must be valid hour (0 - 23).')],
-        default=9)
-    frequency = StringField('Frequency')
-    send_date = StringField('Send Date')
-    send_once = BooleanField('Specific Date', default=False)
-    text = TextAreaField('Message Value')
-    number_of_sends = IntegerField(
-        'Number of Sends',
-        [validators.number_range(min=1, max=10, message='Must be between 1 and 10.'), validators.data_required()],
-        default=1)
-    country = StringField('Country', [validators.data_required()])
-
-
-class SlackDirectMessage(Form):
-    message_text = TextAreaField('Message Value')
-    message_user = StringField('To User')
+@app.before_first_request
+def main_start():
+    """
+    Setup processes to be ran before serving the first page.
+    :return:
+    """
+    mongo_setup.global_init()
+    print('scheduler = {}'.format(scheduler.running))
+    if scheduler.running is False:
+        # scheduler.add_job(func=send_newhire_messages, trigger="interval", hours=1)
+        scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute=0)
+        scheduler.start()
 
 
 def requires_auth(f):
-  @wraps(f)
-  def decorated(*args, **kwargs):
-    if 'profile' not in session:
-      # Redirect to Login page here
-      return redirect('/')
-    return f(*args, **kwargs)
-
-  return decorated
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'profile' not in session:
+            # Redirect to Login page here
+            return redirect('/')
+        return f(*args, **kwargs)
+    return decorated
 
 
 @app.route('/profile')
@@ -161,8 +137,10 @@ def requires_auth(f):
 def profile():
     logger.info("User: {} authenticated proceeding to dashboard.".format(session.get('profile')['user_id']))
     user = get_user_info()
+    print(json.dumps(session['jwt_payload']["https://sso.mozilla.com/claim/groups"]))
     return render_template('profile.html',
                            userinfo=session['profile'],
+                           usergroups=session['jwt_payload']["https://sso.mozilla.com/claim/groups"],
                            userinfo_pretty=json.dumps(session['jwt_payload'], indent=4), user=user)
 
 
@@ -175,9 +153,11 @@ def login():
 def callback_handling():
     # Handles response from token endpoint
     auth0.authorize_access_token()
+    # auth0.
     resp = auth0.get('userinfo')
     userinfo = resp.json()
     # Store the user information in flask session.
+    print('userinfo {}'.format(userinfo))
     session['jwt_payload'] = userinfo
     session['profile'] = {
         'user_id': userinfo['sub'],
@@ -198,19 +178,6 @@ def logout():
     return redirect('/')
 
 
-@app.before_first_request
-def main_start():
-    """
-    Setup processes to be ran before serving the first page.
-    :return:
-    """
-    mongo_setup.global_init()
-    print('scheduler = {}'.format(scheduler.running))
-    if scheduler.running == False:
-        # scheduler.add_job(func=send_newhire_messages, trigger="interval", hours=1)
-        scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute=0)
-        scheduler.start()
-
 
 @app.route('/')
 def index():
@@ -222,8 +189,9 @@ def index():
     user = get_user_info()
     return render_template('home.html', user=user)
 
+
 @app.route('/help')
-def help():
+def help_page():
     """
     Help page route
     :return: Help page
@@ -254,13 +222,13 @@ def add_new_message():
             date_start = form.send_date.data.split('-')
             sdate = datetime.datetime(int(date_start[0]), int(date_start[1]), int(date_start[2]), 0, 0, 0)
             message.send_date = datetime.datetime.strftime(sdate, '%Y-%m-%dT%H:%M:%S')
-            message.send_once = True if form.send_once.data == True else False
+            message.send_once = True if form.send_once.data is True else False
             message.frequency = form.frequency.data
             message.text = form.text.data
             message.number_of_sends = form.number_of_sends.data
             message.country = form.country.data
             message.save()
-            messages = Messages()
+            # messages = Messages()
             return redirect(url_for('add_new_message'))
         else:
             print('errors = {}'.format(form.errors))
@@ -270,15 +238,27 @@ def add_new_message():
     return render_template('messages.html', messages=messages, form=form, user=user)
 
 
-@app.route('/deleteMessage/<string:id>')
+@app.route('/editMessage/<string:id>')
 @requires_auth
-def delete_message(id):
+def edit_message(message_id):
     """
-    Delete message from database
-    :param id:
+    Update message
+    :param message_id:
     :return:
     """
-    Messages.objects(id=id).delete()
+    print('edit message {}'.format(message_id))
+    return redirect(url_for('add_new_message'))
+
+
+@app.route('/deleteMessage/<string:id>')
+@requires_auth
+def delete_message(message_id):
+    """
+    Delete message from database
+    :param message_id:
+    :return:
+    """
+    Messages.objects(id=message_id).delete()
     return redirect(url_for('add_new_message'))
 
 
@@ -355,7 +335,6 @@ def add_new_employee():
                 new_person['last_name'] = p.last_name
                 print('{} {} {} {} {} {}'.format(p.first_name, p.last_name, p.emp_id, p.start_date, p.manager_id, p.picture))
                 add_messages_to_send(p)
-            employees = People.objects()
 
             return redirect(url_for('add_new_employee'))
         else:
@@ -378,6 +357,95 @@ def delete_employee(id):
     """
     People.objects(id=id).delete()
     return redirect(url_for('add_new_employee'))
+
+
+@app.route('/admin', methods=['GET', 'POST'])
+@requires_auth
+def admin_page():
+    """
+    Manage Admin users and roles
+    :param :
+    :return:
+    """
+    form = AddAdminRoleForm(request.form)
+    admin_form = AddAdminForm(request.form)
+    admin_roles = AdminRoles.objects()
+    role_names = [(role.role_name, role.role_description) for role in admin_roles]
+    role_names = role_names[1:]
+    print('role names = {}'.format(role_names))
+    admin_form.roles.choices = role_names
+    # TODO connect users to database after Person API is connected
+    for role in admin_roles:
+        print('role {}'.format(role.role_name))
+    admins = Admin.objects()
+    user = get_user_info()
+    return render_template('admin.html', user=user, admin_roles=admin_roles, admins=admins, form=form, admin_form=admin_form)
+
+
+@app.route('/adminRole', methods=['POST'])
+@requires_auth
+def admin_role():
+    form = AddAdminRoleForm(request.form)
+    admin_form = AddAdminForm(request.form)
+    roles = AdminRoles.objects()
+    admins = Admin.objects()
+    user = get_user_info()
+    if request.method == 'POST':
+        if form.validate():
+            current_roles = AdminRoles()
+            current_roles.role_name = form.role_name.data
+            current_roles.role_description = form.role_description.data
+            current_roles.save()
+            return render_template('admin.html', user=user, roles=roles, admins=admins, form=form,
+                                   admin_form=admin_form)
+
+
+@app.route('/deleteRole/<string:role_name>')
+def delete_role(role_name):
+    """
+    Delete employee from database
+    :param role_name:
+    :return:
+    """
+    AdminRoles.objects(role_name=role_name).delete()
+    return redirect(url_for('admin_page'))
+
+
+@app.route('/adminUser', methods=['POST'])
+@requires_auth
+def admin_user():
+    form = AddAdminRoleForm(request.form)
+    admin_form = AddAdminForm(request.form)
+    roles = AdminRoles.objects()
+    admins = Admin.objects()
+    user = get_user_info()
+    if request.method == 'POST':
+        print('admin form {}'.format(admin_form.roles.data))
+        if admin_form.validate():
+            admin = Admin()
+            admin.emp_id = admin_form.emp_id.data
+            admin.name = admin_form.name.data
+            admin.super_admin = admin_form.super_admin.data
+            admin.roles = admin_form.roles.data
+            admin.save()
+            return render_template('admin.html', user=user, roles=roles, admins=admins, form=form,
+                                   admin_form=admin_form)
+    else:
+        print('errors = {}'.format(admin_form.errors))
+        return render_template('admin.html', user=user, roles=roles, admins=admins, form=form,
+                               admin_form=admin_form)
+
+
+@app.route('/deleteAdmin/<string:emp_id>')
+def delete_admin(emp_id):
+    """
+    Delete employee from database
+    :param emp_id:
+    :return:
+    """
+    Admin.objects(emp_id=emp_id).delete()
+    return redirect(url_for('admin_page'))
+
 
 
 def get_auth_zero():
@@ -530,7 +598,6 @@ def message_events():
     Slack message events
     :return: send Slack message events to server
     """
-    print('message events')
     # form_json = json.loads(request.form.get('challenge'))
     print(json.dumps(request.get_json()))
     message_response = json.dumps(request.get_json())
@@ -543,14 +610,11 @@ def message_actions():
     Slack message actions - performs action based on button message commands
     :return: Message sent to update user on action of button command
     """
-    print('message actions route')
     form_json = json.loads(request.form['payload'])
-    print('message actions = {}'.format(json.dumps(form_json, indent=4)))
     callback_id = form_json['callback_id']
-    print('callback_id ={}'.format(callback_id))
     actions = form_json['actions'][0]['value']
-    print('actions = {}'.format(actions))
     user = form_json['user']['name']
+    message_text = ''
     if callback_id == 'opt_out':
         if 'keep' in actions.lower():
             message_text = 'We\'ll keep sending you onboarding messages!'
@@ -570,17 +634,17 @@ def new_hire_help():
     Slack slash newhirehelp - performs action based on slash message commands
     :return: Message sent to update user on action of slash command
     """
-    print('newhirehelp headers = {}'.format(request.headers))
-    print('newhirehelp values = {}'.format(request.values))
-    incoming_message = json.dumps(request.values['text'])
-    incoming_message = incoming_message.replace('"', '')
-    print(incoming_message)
+    incoming_message = json.dumps(request.values['text']).replace('"', '')
+    user = json.dumps(request.values['user_name'])
     if incoming_message == 'opt-in':
         message_response = "We'll sign you back up!"
+        People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
     elif incoming_message == 'help':
         message_response = 'Help will soon arrive!'
     elif incoming_message == 'opt-out':
-        message_response = 'Okay, we\'ll stop sending you important tips and reminders. Hope you don\'t miss any deadlines!'
+        message_response = 'Okay, we\'ll stop sending you important tips and reminders. ' \
+                           'Hope you don\'t miss any deadlines!'
+        People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
     else:
         message_response = 'Sorry, I don\'t know what you want.'
     return make_response(message_response, 200)
