@@ -1,29 +1,46 @@
-<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-    Add Role
-  </button>
-<div class="container collapse"  id="collapseExample" style="margin-top: 25px; margin-bottom: 25px;">
-    {% from "includes/_formhelpers.html" import render_field %}
-    <form action="{{ url_for('admin_role') }}" method="POST" class="form">
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+  Add Role
+</button>
 
-    <div class="row " >
-            <div class="col-md-4 col-sm-12 ">
-                <div class="form-group multi-collapse collapse show" id="multiCollapseNo">
-                    {{ render_field(form.role_name, class_="form_control") }}
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Add Role</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        {% from "includes/_formhelpers.html" import render_field %}
+        <form action="{{ url_for('admin_role') }}" method="POST" class="form">
+
+        <div class="row " >
+                <div class="col-md-4 col-sm-12 ">
+                    <div class="form-group multi-collapse collapse show" id="multiCollapseNo">
+                        {{ render_field(form.role_name, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group multi-collapse collapse show" id="multiCollapseNo1">
+                        {{ render_field(form.role_description, class_="form_control") }}
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="form-group multi-collapse collapse show" id="multiCollapseNo1">
-                    {{ render_field(form.role_description, class_="form_control") }}
-                </div>
-            </div>
-        </div>
 
-    <p><input type="submit" class="btn btn-primary" value="Submit" data-toggle="collapse" data-target="#collapseExample"></p>
+        <p><input type="submit" class="btn btn-primary" value="Submit" data-toggle="collapse" data-target="#collapseExample"></p>
 
-    </form>
-
-
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
 </div>
+<!-- End Modal -->
 <div style="margin-top: 25px">
     <h1>Roles</h1>
     <div style="overflow: scroll; margin-top: 25px">

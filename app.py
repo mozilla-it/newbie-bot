@@ -386,18 +386,23 @@ def admin_page():
 @requires_auth
 def admin_role():
     form = AddAdminRoleForm(request.form)
-    admin_form = AddAdminForm(request.form)
-    roles = AdminRoles.objects()
-    admins = Admin.objects()
-    user = get_user_info()
+    # admin_form = AddAdminForm(request.form)
+    # admin_roles = AdminRoles.objects()
+    # roles = AdminRoles.objects()
+    # admins = Admin.objects()
+    # user = get_user_info()
     if request.method == 'POST':
         if form.validate():
             current_roles = AdminRoles()
             current_roles.role_name = form.role_name.data
             current_roles.role_description = form.role_description.data
             current_roles.save()
-            return render_template('admin.html', user=user, roles=roles, admins=admins, form=form,
-                                   admin_form=admin_form)
+            # roles = AdminRoles.objects()
+            return redirect(url_for('admin_page'))
+        else:
+            return redirect(url_for('admin_page'))
+    else:
+        return redirect(url_for('admin_page'))
 
 
 @app.route('/deleteRole/<string:role_name>')
