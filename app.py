@@ -132,6 +132,34 @@ def requires_auth(f):
     return decorated
 
 
+def requires_super(f):
+    @wraps(f)
+    def decorated_super(*args, **kwargs):
+        if 'profile' not in session:
+            return redirect('/')
+        userid = session.get('profile')['user_id']
+        admin = Admin.objects(emp_id=userid).first()
+        if admin is None or admin.super_admin is not True:
+            return redirect('/')
+        return f(*args, **kwargs)
+    return decorated_super
+
+
+def requires_admin(f):
+    @wraps(f)
+    def decorated_admin(*args, **kwargs):
+        if 'profile' not in session:
+            return redirect('/')
+        userid = session.get('profile')['user_id']
+        admin = Admin.objects(emp_id=userid).first()
+        if admin.super_admin:
+            return f(*args, **kwargs)
+        elif admin is None or 'Admin' not in admin.roles:
+            return redirect('/')
+        return f(*args, **kwargs)
+    return decorated_admin
+
+
 @app.route('/profile')
 @requires_auth
 def profile():
@@ -202,7 +230,7 @@ def help_page():
 
 
 @app.route('/addMessage', methods=['GET', 'POST'])
-@requires_auth
+@requires_admin
 def add_new_message():
     """
     Add new message to be sent to new hire employees
@@ -239,7 +267,7 @@ def add_new_message():
 
 
 @app.route('/editMessage/<string:id>')
-@requires_auth
+@requires_admin
 def edit_message(message_id):
     """
     Update message
@@ -251,7 +279,7 @@ def edit_message(message_id):
 
 
 @app.route('/deleteMessage/<string:id>')
-@requires_auth
+@requires_admin
 def delete_message(message_id):
     """
     Delete message from database
@@ -348,7 +376,7 @@ def add_new_employee():
 
 
 @app.route('/deleteEmployee/<string:id>')
-@requires_auth
+@requires_super
 def delete_employee(id):
     """
     Delete employee from database
@@ -360,7 +388,7 @@ def delete_employee(id):
 
 
 @app.route('/admin', methods=['GET', 'POST'])
-@requires_auth
+@requires_super
 def admin_page():
     """
     Manage Admin users and roles
@@ -383,7 +411,7 @@ def admin_page():
 
 
 @app.route('/adminRole', methods=['POST'])
-@requires_auth
+@requires_super
 def admin_role():
     """
     Add admin role to database
@@ -405,6 +433,7 @@ def admin_role():
 
 
 @app.route('/deleteRole/<string:role_name>')
+@requires_super
 def delete_role(role_name):
     """
     Delete employee from database
@@ -416,7 +445,7 @@ def delete_role(role_name):
 
 
 @app.route('/adminUser', methods=['POST'])
-@requires_auth
+@requires_super
 def admin_user():
     """
     Add admin user to database
@@ -447,6 +476,7 @@ def admin_user():
 
 
 @app.route('/deleteAdmin/<string:emp_id>')
+@requires_super
 def delete_admin(emp_id):
     """
     Delete employee from database
