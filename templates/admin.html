@@ -2,9 +2,14 @@
 
 {%  block body %}
     <div class="container">
-        <h1>Admin</h1>
-    {%  include 'admin_roles.html' %}
-
-    {% include 'admin_users.html' %}
+        <h1>Administration Page</h1>
+        <div class="row">
+            <div class="col-6-sm mx-auto">
+                {%  include 'admin_roles.html' %}
+            </div>
+            <div class="col-6-sm mx-auto">
+                {% include 'admin_users.html' %}
+            </div>
+        </div>
     </div>
 {%  endblock %}

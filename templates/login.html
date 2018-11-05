@@ -2,14 +2,8 @@
 <head>
 
   <title>Log in</title></head><body><div>
-{#    <script src="https://cdn.auth0.com/js/lock/10.5/lock.min.js"></script>#}
-{#    <script src="https://cdn.auth0.com/w2/auth0-7.4.min.js"></script>#}
     <script src="https://cdn.auth0.com/js/auth0/9.5.1/auth0.min.js"></script>
     <script type="text/javascript">
-
-
-    console.log('{{ app.config.get('AUTH_ID') }}');
-    {#var config = JSON.parse(decodeURIComponent(escape(window.atob('@@config@@'))));#}
 
     var params = Object.assign({
       domain: '{{ app.config.get('AUTH_HOST') }}',
@@ -19,27 +13,6 @@
     });
     var webAuth = new auth0.WebAuth(params);
     webAuth.authorize();
-
-
-    {#var auth0 = new auth0.WebAuth({#}
-    {#  clientID: '{{ app.config.get('AUTH_ID') }}',#}
-    {#  domain: '{{ app.config.get('AUTH_HOST') }}',#}
-    {#  responseType: 'token id_token',#}
-    {#  audience: '{{ app.config.get('AUTH_AUDIENCE') }}',#}
-    {#  redirectUri: '{{ app.config.get('AUTH_URL') }}',#}
-    {#  scope: 'openid profile '#}
-
-
-    {#auth0.authorize();#}
-    {#this.auth0.parseHash((err, authResult) => {#}
-    {#  if (authResult && authResult.accessToken && authResult.idToken) {#}
-    {#    window.location.hash = '';#}
-    {#    // Store the authResult in local storage and redirect the user elsewhere#}
-    {#    localStorage.setItem('access_token', authResult.accessToken);#}
-    {#    localStorage.setItem('id_token', authResult.idToken);#}
-    {#  } else if (err) {#}
-    {#    // Handle authentication error, for example by displaying a notification to the user#}
-    {#  }#}
 
 
     </script>

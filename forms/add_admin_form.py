@@ -7,5 +7,4 @@ class AddAdminForm(Form):
     emp_id = StringField('Employee ID', [validators.required()])
     name = StringField('Employee Name', [validators.required()])
     super_admin = BooleanField('Super Admin', default=False)
-    roles = SelectMultipleField('Roles', [validators.required()])
-    # roles = FieldList(FormField(AddAdminRoleForm), min_entries=2)
+    roles = SelectMultipleField('Roles')

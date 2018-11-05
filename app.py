@@ -385,12 +385,11 @@ def admin_page():
 @app.route('/adminRole', methods=['POST'])
 @requires_auth
 def admin_role():
+    """
+    Add admin role to database
+    :return:
+    """
     form = AddAdminRoleForm(request.form)
-    # admin_form = AddAdminForm(request.form)
-    # admin_roles = AdminRoles.objects()
-    # roles = AdminRoles.objects()
-    # admins = Admin.objects()
-    # user = get_user_info()
     if request.method == 'POST':
         if form.validate():
             current_roles = AdminRoles()
@@ -419,11 +418,16 @@ def delete_role(role_name):
 @app.route('/adminUser', methods=['POST'])
 @requires_auth
 def admin_user():
-    form = AddAdminRoleForm(request.form)
+    """
+    Add admin user to database
+    :return:
+    """
     admin_form = AddAdminForm(request.form)
-    roles = AdminRoles.objects()
-    admins = Admin.objects()
-    user = get_user_info()
+    admin_roles = AdminRoles.objects()
+    role_names = [(role.role_name, role.role_description) for role in admin_roles]
+    role_names = role_names[1:]
+    print('role names = {}'.format(role_names))
+    admin_form.roles.choices = role_names
     if request.method == 'POST':
         print('admin form {}'.format(admin_form.roles.data))
         if admin_form.validate():
@@ -433,12 +437,13 @@ def admin_user():
             admin.super_admin = admin_form.super_admin.data
             admin.roles = admin_form.roles.data
             admin.save()
-            return render_template('admin.html', user=user, roles=roles, admins=admins, form=form,
-                                   admin_form=admin_form)
+            return redirect(url_for('admin_page'))
+        else:
+            print('errors = {}'.format(admin_form.errors))
+            return redirect(url_for('admin_page'))
     else:
         print('errors = {}'.format(admin_form.errors))
-        return render_template('admin.html', user=user, roles=roles, admins=admins, form=form,
-                               admin_form=admin_form)
+        return redirect(url_for('admin_page'))
 
 
 @app.route('/deleteAdmin/<string:emp_id>')

@@ -50,7 +50,7 @@
                 <a style="text-decoration: none;" href="/admin"><i class="fas fa-edit" style="color: #000000"></i></a> {# href="/editRole/{{ role.role_name }}" #}
                 <a style="margin-left: 20px; margin-right: 20px; text-decoration: none;" href="/deleteRole/{{ role.role_name }}"><i class="fas fa-times" style="color:red"></i></a>
                 {{ role.role_name }}
-            <button style="margin-left: 20px;" class="btn btn-primary btn-sm" type="button" data-toggle="collapse" data-target="#{{ role.role_name }}" aria-expanded="false" aria-controls="collapseExample">Details</button>
+            <button style="margin-left: 20px;" class="btn btn-primary btn-sm float-right" type="button" data-toggle="collapse" data-target="#{{ role.role_name }}" aria-expanded="false" aria-controls="collapseExample">Details</button>
             </li>
             <div class="container collapse"  id="{{ role.role_name }}">
                     <div class="row">
