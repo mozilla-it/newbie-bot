@@ -17,6 +17,8 @@ import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 from mongoengine.queryset.visitor import Q
 import holidays
+import pymongo.errors as pymongo_errors
+import mongoengine.errors as mongoengine_errors
 
 # form imports
 from forms.slack_direct_message import SlackDirectMessage
@@ -26,23 +28,25 @@ from forms.add_admin_role_form import AddAdminRoleForm
 from forms.add_admin_form import AddAdminForm
 # end form imports
 
-# auth
 
 import logging.config
 logging.basicConfig(level=logging.INFO)
-from flask_cors import CORS as cors
+logger = logging.getLogger('nhobot')
 
+# auth
+from flask_cors import CORS as cors
 from flask_environ import get, collect, word_for_true
 from authlib.flask.client import OAuth
 from functools import wraps
-from six.moves.urllib.parse import urlencode
-
 import auth
 import config
-
-logger = logging.getLogger('nhobot')
 # endauth
 
+# job_defaults = {
+#     'coalesce': False,
+#     'max_instances': 3
+# }
+# scheduler = BackgroundScheduler(job_defaults=job_defaults)
 scheduler = BackgroundScheduler()
 
 app = Flask(__name__, static_url_path='/static')
@@ -115,10 +119,13 @@ def main_start():
     :return:
     """
     mongo_setup.global_init()
+    # slack_client.rtm_connect()
     print('scheduler = {}'.format(scheduler.running))
-    if scheduler.running is False:
-        # scheduler.add_job(func=send_newhire_messages, trigger="interval", hours=1)
-        scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute=0)
+    if scheduler.running is not True:
+        # scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*')
+        scheduler.add_job(func=get_auth_zero, trigger='cron', hour='*', minute='*/2')
+        # scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute='*/3')
+        scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute='*')
         scheduler.start()
 
 
@@ -166,6 +173,7 @@ def profile():
     logger.info("User: {} authenticated proceeding to dashboard.".format(session.get('profile')['user_id']))
     user = get_user_info()
     print(json.dumps(session['jwt_payload']["https://sso.mozilla.com/claim/groups"]))
+    print(json.dumps(session['jwt_payload']))
     return render_template('profile.html',
                            userinfo=session['profile'],
                            usergroups=session['jwt_payload']["https://sso.mozilla.com/claim/groups"],
@@ -181,11 +189,9 @@ def login():
 def callback_handling():
     # Handles response from token endpoint
     auth0.authorize_access_token()
-    # auth0.
     resp = auth0.get('userinfo')
     userinfo = resp.json()
     # Store the user information in flask session.
-    print('userinfo {}'.format(userinfo))
     session['jwt_payload'] = userinfo
     session['profile'] = {
         'user_id': userinfo['sub'],
@@ -487,17 +493,87 @@ def delete_admin(emp_id):
     return redirect(url_for('admin_page'))
 
 
+def connect_slack_client():
+    slack_client.rtm_connect()
+
 
 def get_auth_zero():
     """
     Get Auth0 users
     :return: Auth0 user list
     """
+    print('get auth zero')
+    actual_one_day_ago = measure_date()
     config = {'client_id': client_id, 'client_secret': client_secret, 'uri': client_uri}
     az = AuthZero(config)
-    access_token = az.get_access_token()
-    app.logger.info(json.dumps(access_token))
-    return az.get_users(fields="username,user_id,name,email,identities,groups,picture,nickname,_HRData")
+    az.get_access_token()
+    users = az.get_users(fields="username,user_id,name,email,identities,groups,picture,nickname,_HRData,created_at,user_metadata.groups,userinfo,app_metadata.groups,app_metadata.hris")
+    for user in users:
+        connection = user['identities'][0]['connection']
+        if 'Mozilla-LDAP' in connection:
+            user_id = user['user_id']
+            current_user = People.objects(emp_id=user_id)
+            if not current_user:
+                name = user['name'].split()
+                try:
+                    manager_email = user['_HRData']['manager_email']
+                except:
+                    manager_email = ''
+                first_name = name[0]
+                last_name = name[-1]
+                person = People()
+                person.emp_id = user_id
+                person.first_name = first_name
+                person.last_name = last_name
+                person.manager_id = manager_email
+                country = [item for item in user['groups'] if item[:7] == 'egencia']
+                if country:
+                    person.country = country[0][8:].upper()
+                person.email = user['email']
+                person.start_date = user['created_at']
+                try:
+                    person.save()
+                except pymongo_errors.DuplicateKeyError as error:
+                    print('DuplicateKeyError {}'.format(error))
+                except mongoengine_errors.NotUniqueError as error:
+                    print('NotUniqueError {}'.format(error))
+                # print(actual_one_day_ago)
+                # print(person.start_date[:10])
+                # start_date = datetime.datetime.strptime(person.start_date[:10], '%Y-%m-%d')
+                # print(start_date)
+                # if start_date > actual_one_day_ago:
+                #     print('start date within 30 days {}'.format(start_date > actual_one_day_ago))
+
+
+def updates_from_slack():
+    print('updates from slack')
+    slack_users = slack_client.api_call('users.list')['members']
+    print(len(slack_users))
+    people = People.objects(slack_handle=None)
+    for person in people:
+        slackinfo = searchemail(slack_users, 'email', person.email)
+        print(slackinfo)
+        if slackinfo:
+            try:
+                slack_handle = slackinfo['name']
+                person.slack_handle = slack_handle
+            except:
+                slack_handle = None
+            try:
+                timezone = slackinfo['tz']
+            except:
+                timezone = 'US/Pacific'
+            person.timezone = timezone
+            person.save()
+            add_messages_to_send(person)
+
+
+def measure_date():
+    current_day = datetime.datetime.today()
+    thirty_days_ago = datetime.timedelta(days=30)
+    actual_thirty_days_ago = datetime.datetime.strptime(
+        datetime.datetime.strftime(current_day - thirty_days_ago, '%Y-%m-%d'), '%Y-%m-%d')
+    return actual_thirty_days_ago
 
 
 def find_slack_handle(socials: dict):
@@ -611,6 +687,17 @@ def search(dict_list, key, value):
     for item in dict_list:
         if item[key] == value:
             return item
+
+
+
+def searchemail(dict_list, key, value):
+    for item in dict_list:
+        try:
+            if item['profile'][key] == value:
+                return item
+        except:
+            pass
+
 
 
 def slack_call_api(call_type, channel, ts, text, attachments):
@@ -827,4 +914,5 @@ if __name__ == '__main__':
     print('starting app')
     main_start()
     app.debug = True
+    app.use_reloader=False
     app.run(ssl_context=('cert.pem', 'key.pem'))

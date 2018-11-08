@@ -2,7 +2,7 @@ import mongoengine
 import datetime
 
 class People(mongoengine.Document):
-    emp_id = mongoengine.IntField(required=True, unique=True)
+    emp_id = mongoengine.StringField(required=True, unique=True)
     first_name = mongoengine.StringField(required=True)
     last_name = mongoengine.StringField(required=True)
     email = mongoengine.StringField()
@@ -14,7 +14,7 @@ class People(mongoengine.Document):
     state = mongoengine.StringField()
     country = mongoengine.StringField()
     title = mongoengine.StringField()
-    manager_id = mongoengine.IntField()
+    manager_id = mongoengine.StringField()
     picture = mongoengine.StringField()
     phone = mongoengine.StringField()
     user_opt_out = mongoengine.BooleanField(default=False)
