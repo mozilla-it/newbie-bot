@@ -20,7 +20,13 @@
         <div class="row " >
             <div class="col-md-4 col-sm-12 ">
                 <div class="form-group multi-collapse collapse show" id="multiCollapseNo">
-                    {{ render_field(admin_form.emp_id, class_="form_control") }}
+{#                    {{ render_field(admin_form.emp_id, class_="form_control") }}#}
+                    <select name="emp_id" id="emp_id">
+                                    <option selected>Choose...</option>
+                                    {% for person in people %}
+                                        <option value="{{ person.emp_id }}">{{ person.first_name }} {{ person.last_name }}</option>
+                                    {% endfor %}
+                                </select>
                 </div>
             </div>
             <div class="col-md-4 col-sm-12 ">
@@ -69,7 +75,6 @@
                             <div class="form-group">
                                 <div><label for="first">ID</label></div>
                                 <input type="text" disabled value="{{ admin.emp_id }}">
-
                             </div>
                         </div>
                         <div class="col-md-4 ">

@@ -42,11 +42,7 @@ import auth
 import config
 # endauth
 
-# job_defaults = {
-#     'coalesce': False,
-#     'max_instances': 3
-# }
-# scheduler = BackgroundScheduler(job_defaults=job_defaults)
+current_host = 'https://nhobot.ngrok.io'
 scheduler = BackgroundScheduler()
 
 app = Flask(__name__, static_url_path='/static')
@@ -100,7 +96,8 @@ if AUTH_AUDIENCE is '':
     AUTH_AUDIENCE = 'https://' + app.config.get('HOST') + '/userinfo'
 
 # This will be the callback URL Auth0 returns the authenticatee to.
-app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
+# app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
+app.config['AUTH_URL'] = 'https://nhobot.ngrok.io/callback/auth'
 
 
 oidc_config = config.OIDCConfig()
@@ -118,14 +115,15 @@ def main_start():
     Setup processes to be ran before serving the first page.
     :return:
     """
+    print('main start')
     mongo_setup.global_init()
     # slack_client.rtm_connect()
     print('scheduler = {}'.format(scheduler.running))
     if scheduler.running is not True:
-        # scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*')
-        scheduler.add_job(func=get_auth_zero, trigger='cron', hour='*', minute='*/2')
+        scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*')
+        scheduler.add_job(func=get_auth_zero, trigger='cron', hour='*', minute=20)
         # scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute='*/3')
-        scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute='*')
+        scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute=25)
         scheduler.start()
 
 
@@ -134,7 +132,7 @@ def requires_auth(f):
     def decorated(*args, **kwargs):
         if 'profile' not in session:
             # Redirect to Login page here
-            return redirect('/')
+            return redirect(current_host)
         return f(*args, **kwargs)
     return decorated
 
@@ -143,11 +141,11 @@ def requires_super(f):
     @wraps(f)
     def decorated_super(*args, **kwargs):
         if 'profile' not in session:
-            return redirect('/')
+            return redirect(current_host)
         userid = session.get('profile')['user_id']
         admin = Admin.objects(emp_id=userid).first()
         if admin is None or admin.super_admin is not True:
-            return redirect('/')
+            return redirect(current_host)
         return f(*args, **kwargs)
     return decorated_super
 
@@ -156,15 +154,34 @@ def requires_admin(f):
     @wraps(f)
     def decorated_admin(*args, **kwargs):
         if 'profile' not in session:
-            return redirect('/')
+            return redirect(current_host)
         userid = session.get('profile')['user_id']
+        print(f'requires admin {userid}')
         admin = Admin.objects(emp_id=userid).first()
         if admin.super_admin:
             return f(*args, **kwargs)
         elif admin is None or 'Admin' not in admin.roles:
-            return redirect('/')
+            print('not admin')
+            return redirect(current_host)
         return f(*args, **kwargs)
     return decorated_admin
+
+
+def requires_manager(f):
+    @wraps(f)
+    def decorated_manager(*args, **kwargs):
+        if 'profile' not in session:
+            return redirect(current_host)
+        userid = session.get('profile')['user_id']
+        print(f'requires admin {userid}')
+        admin = Admin.objects(emp_id=userid).first()
+        if admin.super_admin:
+            return f(*args, **kwargs)
+        elif admin is None or 'Manager' not in admin.roles:
+            print('not manager')
+            return redirect(current_host)
+        return f(*args, **kwargs)
+    return decorated_manager
 
 
 @app.route('/profile')
@@ -198,10 +215,10 @@ def callback_handling():
         'name': userinfo['name'],
         'picture': userinfo['picture']
     }
-    return redirect('/')
+    return redirect(current_host)
 
 
-@app.route('/logout')
+@app.route('/logout', host='https://nhobot.ngrok.io')
 def logout():
     """
     Logout and clear session
@@ -209,11 +226,11 @@ def logout():
     """
     # Clear session stored data
     session.clear()
-    return redirect('/')
+    return redirect('https://nhobot.ngrok.io/')
 
 
 
-@app.route('/')
+@app.route('/', host='https://nhobot.ngrok.io')
 def index():
     """
     Home page route
@@ -221,6 +238,7 @@ def index():
     """
     print('session {}'.format(session.get('profile')))
     user = get_user_info()
+    print(f'user {user}')
     return render_template('home.html', user=user)
 
 
@@ -263,7 +281,7 @@ def add_new_message():
             message.country = form.country.data
             message.save()
             # messages = Messages()
-            return redirect(url_for('add_new_message'))
+            return redirect(current_host + 'addMessage')
         else:
             print('errors = {}'.format(form.errors))
             messages = Messages.objects()
@@ -297,7 +315,7 @@ def delete_message(message_id):
 
 
 @app.route('/addEmployee', methods=['GET', 'POST'])
-@requires_auth
+@requires_manager
 def add_new_employee():
     """
     Add new employee to database
@@ -404,6 +422,7 @@ def admin_page():
     form = AddAdminRoleForm(request.form)
     admin_form = AddAdminForm(request.form)
     admin_roles = AdminRoles.objects()
+    people = People.objects()
     role_names = [(role.role_name, role.role_description) for role in admin_roles]
     role_names = role_names[1:]
     print('role names = {}'.format(role_names))
@@ -413,7 +432,7 @@ def admin_page():
         print('role {}'.format(role.role_name))
     admins = Admin.objects()
     user = get_user_info()
-    return render_template('admin.html', user=user, admin_roles=admin_roles, admins=admins, form=form, admin_form=admin_form)
+    return render_template('admin.html', user=user, admin_roles=admin_roles, admins=admins, form=form, admin_form=admin_form, people=people)
 
 
 @app.route('/adminRole', methods=['POST'])
@@ -503,7 +522,7 @@ def get_auth_zero():
     :return: Auth0 user list
     """
     print('get auth zero')
-    actual_one_day_ago = measure_date()
+
     config = {'client_id': client_id, 'client_secret': client_secret, 'uri': client_uri}
     az = AuthZero(config)
     az.get_access_token()
@@ -536,17 +555,12 @@ def get_auth_zero():
                 except pymongo_errors.DuplicateKeyError as error:
                     print('DuplicateKeyError {}'.format(error))
                 except mongoengine_errors.NotUniqueError as error:
-                    print('NotUniqueError {}'.format(error))
-                # print(actual_one_day_ago)
-                # print(person.start_date[:10])
-                # start_date = datetime.datetime.strptime(person.start_date[:10], '%Y-%m-%d')
-                # print(start_date)
-                # if start_date > actual_one_day_ago:
-                #     print('start date within 30 days {}'.format(start_date > actual_one_day_ago))
+                    pass
 
 
 def updates_from_slack():
     print('updates from slack')
+    actual_one_day_ago = measure_date()
     slack_users = slack_client.api_call('users.list')['members']
     print(len(slack_users))
     people = People.objects(slack_handle=None)
@@ -565,7 +579,14 @@ def updates_from_slack():
                 timezone = 'US/Pacific'
             person.timezone = timezone
             person.save()
-            add_messages_to_send(person)
+            print(actual_one_day_ago)
+            start_date = person.start_date
+            # .strptime('%Y-%m-%d')
+            print('start_date {}'.format(start_date))
+            print(start_date > actual_one_day_ago)
+            if start_date > actual_one_day_ago:
+                print('start date within 30 days {}'.format(start_date > actual_one_day_ago))
+                add_messages_to_send(person)
 
 
 def measure_date():
@@ -599,12 +620,10 @@ def add_messages_to_send(person: People):
     my_country = person.country
     for m in Messages.objects:
         mobject = json.loads(m.to_json())
-        print('messages to send = {}'.format(mobject))
         for x in range(0, m.number_of_sends):
             if x == 0:
                 send_day = m.send_day
             else:
-                print('add {}'.format(message_frequency[m.frequency]))
                 send_day = send_day + message_frequency[m.frequency]
             if m.send_once:
                 send_date_time = m.send_date
@@ -913,6 +932,7 @@ def shutdown():
 if __name__ == '__main__':
     print('starting app')
     main_start()
-    app.debug = True
+    app.debug = False
     app.use_reloader=False
-    app.run(ssl_context=('cert.pem', 'key.pem'))
+    app.jinja_env.cache = {}
+    app.run(ssl_context=('cert.pem', 'key.pem'), host='0.0.0.0')
