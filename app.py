@@ -120,7 +120,7 @@ def main_start():
     # slack_client.rtm_connect()
     print('scheduler = {}'.format(scheduler.running))
     if scheduler.running is not True:
-        scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*')
+        scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute=0)
         scheduler.add_job(func=get_auth_zero, trigger='cron', hour='*', minute=20)
         # scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute='*/3')
         scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute=25)
@@ -153,12 +153,16 @@ def requires_super(f):
 def requires_admin(f):
     @wraps(f)
     def decorated_admin(*args, **kwargs):
-        if 'profile' not in session:
+        if session is None:
+            return redirect(current_host)
+        elif 'profile' not in session:
             return redirect(current_host)
         userid = session.get('profile')['user_id']
         print(f'requires admin {userid}')
         admin = Admin.objects(emp_id=userid).first()
-        if admin.super_admin:
+        if admin is None:
+            return redirect(current_host)
+        elif admin.super_admin:
             return f(*args, **kwargs)
         elif admin is None or 'Admin' not in admin.roles:
             print('not admin')
@@ -175,7 +179,9 @@ def requires_manager(f):
         userid = session.get('profile')['user_id']
         print(f'requires admin {userid}')
         admin = Admin.objects(emp_id=userid).first()
-        if admin.super_admin:
+        if admin is None:
+            return redirect(current_host)
+        elif admin.super_admin:
             return f(*args, **kwargs)
         elif admin is None or 'Manager' not in admin.roles:
             print('not manager')
@@ -797,7 +803,7 @@ def new_hire_help():
 
 
 @app.route('/slackMessage', methods=['GET', 'POST'])
-@requires_auth
+@requires_admin
 def send_slack_message():
     """
     Send user a test message
@@ -932,7 +938,7 @@ def shutdown():
 if __name__ == '__main__':
     print('starting app')
     main_start()
-    app.debug = False
+    app.debug = True
     app.use_reloader=False
     app.jinja_env.cache = {}
     app.run(ssl_context=('cert.pem', 'key.pem'), host='0.0.0.0')
