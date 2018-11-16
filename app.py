@@ -32,6 +32,7 @@ from forms.add_admin_form import AddAdminForm
 import logging.config
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('nhobot')
+scheduler = BackgroundScheduler()
 
 # auth
 from flask_cors import CORS as cors
@@ -43,7 +44,6 @@ import config
 # endauth
 
 current_host = 'https://nhobot.ngrok.io'
-scheduler = BackgroundScheduler()
 
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = settings.MONGODB_SECRET
@@ -109,7 +109,7 @@ oidc = authentication.auth(app)
 
 
 
-@app.before_first_request
+# @app.before_first_request
 def main_start():
     """
     Setup processes to be ran before serving the first page.
@@ -118,13 +118,13 @@ def main_start():
     print('main start')
     mongo_setup.global_init()
     # slack_client.rtm_connect()
-    print('scheduler = {}'.format(scheduler.running))
-    if scheduler.running is not True:
-        scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute=0)
-        scheduler.add_job(func=get_auth_zero, trigger='cron', hour='*', minute=20)
-        # scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute='*/3')
-        scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute=25)
-        scheduler.start()
+    # if scheduler.running is False:
+    #     scheduler.start()
+    # print('scheduler = {}'.format(scheduler.running))
+    # scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*')
+    # scheduler.add_job(func=get_auth_zero, trigger='cron', hour='*', minute=31)
+    # scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute=33)
+
 
 
 def requires_auth(f):
@@ -153,6 +153,8 @@ def requires_super(f):
 def requires_admin(f):
     @wraps(f)
     def decorated_admin(*args, **kwargs):
+        print(f'args {args}')
+        print(f'kwargs {kwargs}')
         if session is None:
             return redirect(current_host)
         elif 'profile' not in session:
@@ -160,6 +162,8 @@ def requires_admin(f):
         userid = session.get('profile')['user_id']
         print(f'requires admin {userid}')
         admin = Admin.objects(emp_id=userid).first()
+        print(f'Admin {admin.emp_id}')
+        print(f'Super {admin.super_admin}')
         if admin is None:
             return redirect(current_host)
         elif admin.super_admin:
@@ -287,7 +291,7 @@ def add_new_message():
             message.country = form.country.data
             message.save()
             # messages = Messages()
-            return redirect(current_host + 'addMessage')
+            return redirect(current_host + '/addMessage')
         else:
             print('errors = {}'.format(form.errors))
             messages = Messages.objects()
@@ -296,7 +300,7 @@ def add_new_message():
     return render_template('messages.html', messages=messages, form=form, user=user)
 
 
-@app.route('/editMessage/<string:id>')
+@app.route('/editMessage/<string:message_id>')
 @requires_admin
 def edit_message(message_id):
     """
@@ -305,10 +309,10 @@ def edit_message(message_id):
     :return:
     """
     print('edit message {}'.format(message_id))
-    return redirect(url_for('add_new_message'))
+    return redirect(current_host + '/addMessage')
 
 
-@app.route('/deleteMessage/<string:id>')
+@app.route('/deleteMessage/<string:message_id>')
 @requires_admin
 def delete_message(message_id):
     """
@@ -317,7 +321,7 @@ def delete_message(message_id):
     :return:
     """
     Messages.objects(id=message_id).delete()
-    return redirect(url_for('add_new_message'))
+    return redirect(current_host + '/addMessage')
 
 
 @app.route('/addEmployee', methods=['GET', 'POST'])
@@ -763,6 +767,7 @@ def message_actions():
     :return: Message sent to update user on action of button command
     """
     form_json = json.loads(request.form['payload'])
+    print(f'form json {form_json}')
     callback_id = form_json['callback_id']
     actions = form_json['actions'][0]['value']
     user = form_json['user']['name']
@@ -776,6 +781,14 @@ def message_actions():
             People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
         else:
             message_text = 'Sorry, we\'re having trouble understanding you.'
+        slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text, '')
+    elif callback_id == 'rating':
+        if 'thumbsup' in actions.lower():
+            message_text = 'I\'m glad you like me! :blush:'
+        elif 'thumbsdown' in actions.lower():
+            message_text = 'I\'ll try to do better'
+        else:
+            message_text = 'Sorry, I didn\'t understand'
         slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text, '')
     return make_response(message_text, 200)
 
@@ -861,7 +874,8 @@ def send_newhire_messages():
                     "url": 'https://mozilla.com',
                 }]
             }
-            message_attachments = [help_attach]
+            # message_attachments = [help_attach]
+            message_attachments = []
 
             if len(message['title_link']) > 1 and len(message_text) == 1:
 
@@ -938,7 +952,14 @@ def shutdown():
 if __name__ == '__main__':
     print('starting app')
     main_start()
-    app.debug = True
+
+    print('scheduler = {}'.format(scheduler.running))
+    scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*')
+    scheduler.add_job(func=get_auth_zero, trigger='cron', hour='*', minute=4)
+    scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute=6)
+    if scheduler.running is False:
+        scheduler.start()
+    app.debug = False
     app.use_reloader=False
     app.jinja_env.cache = {}
     app.run(ssl_context=('cert.pem', 'key.pem'), host='0.0.0.0')
