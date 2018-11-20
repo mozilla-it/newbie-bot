@@ -1,10 +1,11 @@
-from flask import Flask, request, render_template, flash, redirect, url_for, session, make_response, jsonify, _request_ctx_stack
+from flask import Flask, request, render_template, flash, redirect, url_for, session, make_response, Response
 import database.mongo_setup as mongo_setup
 from database.people import People
 from database.messages import Messages
 from database.messages_to_send import MessagesToSend as Send
 from database.admin import Admin
 from database.admin_roles import AdminRoles
+from database.user_feedback import UserFeedback
 from iam_profile_faker.factory import V2ProfileFactory
 import json
 import datetime
@@ -19,6 +20,7 @@ from mongoengine.queryset.visitor import Q
 import holidays
 import pymongo.errors as pymongo_errors
 import mongoengine.errors as mongoengine_errors
+import requests
 
 # form imports
 from forms.slack_direct_message import SlackDirectMessage
@@ -601,7 +603,7 @@ def updates_from_slack():
 
 def measure_date():
     current_day = datetime.datetime.today()
-    thirty_days_ago = datetime.timedelta(days=30)
+    thirty_days_ago = datetime.timedelta(days=31)
     actual_thirty_days_ago = datetime.datetime.strptime(
         datetime.datetime.strftime(current_day - thirty_days_ago, '%Y-%m-%d'), '%Y-%m-%d')
     return actual_thirty_days_ago
@@ -754,11 +756,48 @@ def message_events():
     Slack message events
     :return: send Slack message events to server
     """
+    print('message events')
     # form_json = json.loads(request.form.get('challenge'))
     print(json.dumps(request.get_json()))
     message_response = json.dumps(request.get_json())
     return make_response(message_response, 200)
 
+
+@app.route('/slack/message_options', methods=['POST'])
+def message_options():
+    print('message options')
+    form_json = json.loads(request.form['payload'])
+    print(form_json)
+    verify_slack_token(form_json['token'])
+    message_attachments = []
+    if form_json['name'] == 'comment':
+        message_attachments = {
+            'trigger_id': form_json['trigger_id'],
+            'response_url': form_json['response_url'],
+            'token': form_json['token'],
+            'attachment_id': form_json['attachment_id'],
+            'user': form_json['user'],
+
+            'message_ts': form_json['message_ts'],
+            'action_ts': form_json['action_ts'],
+            'dialog': {
+                'callback_id': form_json['callback_id'],
+                'title': 'Comment',
+                'submit_label': 'Request',
+                'notify_on_cancel': True,
+                'state': 'Potato',
+                'elements': [
+                    {
+                        "label": "Additional information",
+                        "name": "comment",
+                        "type": "textarea",
+                        "hint": "Provide additional information if needed."
+                    }
+                ],
+
+            },
+        }
+    return Response(json.dumps(message_attachments), mimetype='application/json')
 
 @app.route('/slack/message_actions', methods=['POST'])
 def message_actions():
@@ -767,30 +806,84 @@ def message_actions():
     :return: Message sent to update user on action of button command
     """
     form_json = json.loads(request.form['payload'])
-    print(f'form json {form_json}')
+    # print(f'form json {json.dumps(form_json, indent=4)}')
     callback_id = form_json['callback_id']
-    actions = form_json['actions'][0]['value']
-    user = form_json['user']['name']
-    message_text = ''
-    if callback_id == 'opt_out':
-        if 'keep' in actions.lower():
-            message_text = 'We\'ll keep sending you onboarding messages!'
-            People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
-        elif 'stop' in actions.lower():
-            message_text = 'We\'ve unsubscribed you from onboarding messages.'
-            People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
-        else:
-            message_text = 'Sorry, we\'re having trouble understanding you.'
-        slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text, '')
-    elif callback_id == 'rating':
-        if 'thumbsup' in actions.lower():
-            message_text = 'I\'m glad you like me! :blush:'
-        elif 'thumbsdown' in actions.lower():
-            message_text = 'I\'ll try to do better'
-        else:
-            message_text = 'Sorry, I didn\'t understand'
-        slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text, '')
-    return make_response(message_text, 200)
+    if form_json['type'] == 'interactive_message':
+        actions = form_json['actions'][0]['value']
+        user = form_json['user']['name']
+        message_text = ''
+        if callback_id == 'opt_out':
+            if 'keep' in actions.lower():
+                message_text = 'We\'ll keep sending you onboarding messages!'
+                People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
+            elif 'stop' in actions.lower():
+                message_text = 'We\'ve unsubscribed you from onboarding messages.'
+                People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
+            else:
+                message_text = 'Sorry, we\'re having trouble understanding you.'
+            slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text, '')
+        elif callback_id == 'rating':
+            message_attachments = {
+                    "callback_id": form_json['callback_id'],
+                    "title": 'Comment',
+                    "submit_label": "Submit",
+                    "elements": [
+                        {
+                            "label": "Add comments",
+                            "name": "comment",
+                            "type": "textarea",
+                            "hint": "We would love to hear your thoughts."
+                        }
+                    ],
+
+                }
+            if 'thumbsup' in actions.lower():
+                print('thumbsup')
+                message_attachments['state'] = 'thumbsup'
+                feedback = UserFeedback()
+                feedback.emp_id = form_json['user']['name']
+                feedback.rating = 'thumbsup'
+                feedback.comment = ''
+                feedback.save()
+                slack_client.api_call(
+                    "dialog.open",
+                    trigger_id=form_json["trigger_id"],
+                    dialog=message_attachments
+                )
+
+                return make_response('', 200)
+            elif 'thumbsdown' in actions.lower():
+                print('thumbsdown')
+                message_attachments['state'] = 'thumbsdown'
+                feedback = UserFeedback()
+                feedback.emp_id = form_json['user']['name']
+                feedback.rating = 'thumbsdown'
+                feedback.comment = ''
+                feedback.save()
+                slack_client.api_call(
+                    "dialog.open",
+                    trigger_id=form_json["trigger_id"],
+                    dialog=message_attachments
+                )
+
+                return make_response('', 200)
+            else:
+                message_text = 'Sorry, I didn\'t understand'
+                slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text, '')
+        return make_response(message_text, 200)
+    elif form_json['type'] == 'dialog_submission':
+        feedback = UserFeedback.objects(emp_id=form_json['user']['name'])
+        created = feedback[len(feedback) - 1].created_date
+        for feed in feedback:
+            if feed.created_date == created:
+                feed.comment = form_json['submission']['comment']
+                feed.save()
+        slack_client.api_call(
+            'chat.postMessage',
+            channel=form_json['channel']['id'],
+            text='Thanks for your feedback!',
+            )
+        return make_response('', 200)
 
 
 @app.route('/slack/newhirehelp', methods=['POST'])
@@ -865,18 +958,11 @@ def send_newhire_messages():
 
             message_user = emp['slack_handle']
             user = search(users, 'name', message_user)
-            print('link = {}'.format(len(message['title_link'])))
-            help_attach = {
-                "fallback": "You need to upgrade your Slack client to receive this message.",
-                "actions": [{
-                    "type": "button",
-                    "text": 'Help',
-                    "url": 'https://mozilla.com',
-                }]
-            }
-            # message_attachments = [help_attach]
             message_attachments = []
-
+            dm = slack_client.api_call(
+                'im.open',
+                user=user['id'],
+            )['channel']['id']
             if len(message['title_link']) > 1 and len(message_text) == 1:
 
                 message_attach = {
@@ -904,27 +990,17 @@ def send_newhire_messages():
                     "actions": message_actions
                 }
                 message_attachments.insert(0, message_attach)
+                print(message_attachments)
             else:
                 app.logger.info('No message attachments.')
 
-            dm = slack_client.api_call(
-                'im.open',
-                user=user['id'],
-            )['channel']['id']
+
             slack_client.api_call(
                 'chat.postMessage',
                 channel=dm,
                 text=message_text[0],
                 attachments=message_attachments
             )
-            # else:
-            #     dm = slack_client.api_call(
-            #         'im.open',
-            #         user=user['id'],
-            #         attachments=[message_attach],
-            #         text=message_text
-            #     )['channel']['id']
-            #     slack_client.rtm_send_message(dm, message_text)
             s.update(set__send_status=True)
         else:
             s.update(set__cancel_status=True)
@@ -955,8 +1031,8 @@ if __name__ == '__main__':
 
     print('scheduler = {}'.format(scheduler.running))
     scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*')
-    scheduler.add_job(func=get_auth_zero, trigger='cron', hour='*', minute=4)
-    scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute=6)
+    scheduler.add_job(func=get_auth_zero, trigger='cron', hour='*', minute=23)
+    scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute=58)
     if scheduler.running is False:
         scheduler.start()
     app.debug = False

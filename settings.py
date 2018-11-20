@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-CLIENT_ID= os.getenv("CLIENT_ID")
+CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 CLIENT_URI = os.getenv("CLIENT_URI")
 CLIENT_CALLBACK_URL = os.getenv("AUTH0_CALLBACK_URL")
