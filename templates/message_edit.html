@@ -1,0 +1,143 @@
+{%  extends 'layout.html' %}
+
+{%  block body %}
+    <div class="container">
+        <h1>Edit Message</h1>
+    <div class="container "   style="margin-top: 25px; margin-bottom: 25px;">
+        {% from "includes/_formhelpers.html" import render_field %}
+        <form action="" method="POST" class="form">
+            <div class="row">
+                <div class="col-md-4 col-sm-12 ">
+                    <div class="form-group moz-drop">
+                        <div class="input-group">
+                          <div class="input-group-prepend">
+                            <label class="input-group-text" for="inputGroupSelect01">Message Type</label>
+                          </div>
+                          <select name="message_type" class="custom-select" id="inputGroupSelect01">
+                            <option selected>Choose...</option>
+                            <option value="Reminder: Best Practices">Reminder: Best Practices</option>
+                            <option value="Reminder: Deadline">Reminder: Deadline</option>
+                            <option value="Instruction: How-to">Instruction: How-to</option>
+                            <option value="Informational: Awareness">Informational: Awareness</option>
+                          </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group moz-drop">
+                        <div class="input-group mb-3">
+                          <div class="input-group-prepend">
+                            <label class="input-group-text" for="inputGroupSelect01">Message Category</label>
+                          </div>
+                          <select name="category" class="custom-select" id="inputGroupSelect01">
+                              <option selected>Choose...</option>
+                              <option value="Procedural">Procedural</option>
+                              <option value="Welcome">Welcome</option>
+                              <option value="Failure / fallback">Failure / fallback</option>
+                              <option value="Help">Help</option>
+                              <option value="Rating request">Rating request</option>
+                              <option value="Opt-out">Opt-out</option>
+                              <option value="Cultural">Cultural</option>
+                              <option value="Orientation">Orientation</option>
+                          </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <p>
+                            <div class="row" style="padding: 15px;">
+                                <input type="checkbox" data-toggle="collapse" data-target=".multi-collapse" aria-expanded="false" aria-controls="multiCollapseNo multiCollapseNo1 multiCollapseNo2 multiCollapseYes" value="send_once" name="send_once">
+                                <label style="margin-left: 25px;" for="send_once">Send on Specific Date</label>
+                            </div>
+
+                        </p>
+                    </div>
+                </div>
+            </div>
+        <div class="row " >
+                <div class="col-md-4 col-sm-12 ">
+                    <div class="form-group">
+                        {{ render_field(form.title, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {{ render_field(form.title_link, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group multi-collapse collapse" id="multiCollapseYes">
+                        <div><label for="start_date">Send Date</label></div>
+                        <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="send_date" type="date" name="send_date"  />
+                    </div>
+                </div>
+            </div>
+        <div class="row " >
+                <div class="col-md-4 col-sm-12 ">
+                    <div class="form-group multi-collapse collapse show" id="multiCollapseNo">
+                        {{ render_field(form.send_day, class_="form_control") }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group multi-collapse collapse show" id="multiCollapseNo1">
+                        {{ render_field(form.send_time, class_="form_control") }}
+                    </div>
+                </div>
+
+
+            </div>
+        <div class="row">
+            <div class="col-md-4">
+                    <div class="form-group multi-collapse collapse show moz-drop" id="multiCollapseNo2">
+                        <div class="input-group mb-3">
+                          <div class="input-group-prepend">
+                            <label class="input-group-text" for="frequency">Frequency</label>
+                          </div>
+                          <select name="frequency" class="custom-select" id="frequency">
+                            <option selected>Choose...</option>
+                            <option selected value="day">Day</option>
+                            <option value="week">Week</option>
+                            <option value="month">Month</option>
+                            <option value="year">Year</option>
+                          </select>
+                        </div>
+                    </div>
+                </div>
+            <div class="col-md-4 col-sm-12 ">
+                <div class="form-group multi-collapse collapse show">
+                    {{ render_field(form.number_of_sends, class_="form_control") }}
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 col-sm-12 ">
+                <div class="form-group">
+                    {{ render_field(form.text, class_="form_control") }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                    <div class="form-group moz-drop" id="multiCollapseNo2">
+                        <div class="input-group mb-3">
+                          <div class="input-group-prepend">
+                            <label class="input-group-text" for="country">Country</label>
+                          </div>
+                          <select name="country" class="custom-select" id="county">
+                            <option selected>Choose...</option>
+                            <option value="ALL">Any</option>
+                            <option value="US">US</option>
+                            <option value="CA">CA</option>
+                          </select>
+                        </div>
+                    </div>
+                </div>
+        </div>
+        <p><input type="submit" class="btn btn-primary" value="Submit" data-toggle="collapse" data-target="#collapseExample"></p>
+
+        </form>
+    </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='myscript.js') }}"></script>
+
+{%  endblock %}

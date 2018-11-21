@@ -302,7 +302,7 @@ def add_new_message():
     return render_template('messages.html', messages=messages, form=form, user=user)
 
 
-@app.route('/editMessage/<string:message_id>')
+@app.route('/editMessage/<string:message_id>', methods=['GET', 'POST'])
 @requires_admin
 def edit_message(message_id):
     """
@@ -311,7 +311,46 @@ def edit_message(message_id):
     :return:
     """
     print('edit message {}'.format(message_id))
-    return redirect(current_host + '/addMessage')
+    user = get_user_info()
+    form = AddMessageForm(request.form)
+    if request.method == 'GET':
+        messages = Messages.objects(Q(id=message_id)).get()
+        print(messages.type)
+        form.message_type.data = messages.type
+        form.category.data = messages.category
+        form.title.data = messages.title
+        form.title_link.data = messages.title_link
+        form.send_day.data = messages.send_day
+        form.send_time.data = messages.send_hour
+        form.send_date.data = messages.send_date
+        form.send_once.data = messages.send_once
+        form.frequency.data = messages.frequency
+        form.text.data = messages.text
+        form.number_of_sends.data = messages.number_of_sends
+        form.country.data = messages.country
+        return render_template('message_edit.html', form=form, user=user)
+    elif request.method == 'POST':
+        if form.validate():
+            message = Messages.objects(Q(id=message_id)).get()
+            message.type = form.message_type.data
+            message.category = form.category.data
+            message.title = form.title.data
+            message.title_link = form.title_link.data
+            message.send_day = form.send_day.data
+            message.send_hour = form.send_time.data
+            date_start = form.send_date.data.split('-')
+            sdate = datetime.datetime(int(date_start[0]), int(date_start[1]), int(date_start[2]), 0, 0, 0)
+            message.send_date = datetime.datetime.strftime(sdate, '%Y-%m-%dT%H:%M:%S')
+            message.send_once = True if form.send_once.data is True else False
+            message.frequency = form.frequency.data
+            message.text = form.text.data
+            message.number_of_sends = form.number_of_sends.data
+            message.country = form.country.data
+            message.save()
+            return redirect(current_host + '/addMessage')
+        else:
+            print('errors = {}'.format(form.errors))
+            return redirect(current_host + '/addMessage')
 
 
 @app.route('/deleteMessage/<string:message_id>')
@@ -462,11 +501,11 @@ def admin_role():
             current_roles.role_description = form.role_description.data
             current_roles.save()
             # roles = AdminRoles.objects()
-            return redirect(url_for('admin_page'))
+            return redirect(current_host + '/admin')
         else:
-            return redirect(url_for('admin_page'))
+            return redirect(current_host + '/admin')
     else:
-        return redirect(url_for('admin_page'))
+        return redirect(current_host + '/admin')
 
 
 @app.route('/deleteRole/<string:role_name>')
@@ -478,7 +517,7 @@ def delete_role(role_name):
     :return:
     """
     AdminRoles.objects(role_name=role_name).delete()
-    return redirect(url_for('admin_page'))
+    return redirect(current_host + '/admin')
 
 
 @app.route('/adminUser', methods=['POST'])
@@ -498,18 +537,21 @@ def admin_user():
         print('admin form {}'.format(admin_form.roles.data))
         if admin_form.validate():
             admin = Admin()
-            admin.emp_id = admin_form.emp_id.data
-            admin.name = admin_form.name.data
+            print(f'selected admin {admin_form.emp_id.data}')
+            selected_admin = admin_form.emp_id.data.split(' ')
+            print(f'selected admin {selected_admin}')
+            admin.emp_id = selected_admin[0]
+            admin.name = ' '.join(selected_admin[1:])
             admin.super_admin = admin_form.super_admin.data
             admin.roles = admin_form.roles.data
             admin.save()
-            return redirect(url_for('admin_page'))
+            return redirect(current_host + '/admin')
         else:
             print('errors = {}'.format(admin_form.errors))
-            return redirect(url_for('admin_page'))
+            return redirect(current_host + '/admin')
     else:
         print('errors = {}'.format(admin_form.errors))
-        return redirect(url_for('admin_page'))
+        return redirect(current_host + '/admin')
 
 
 @app.route('/deleteAdmin/<string:emp_id>')
@@ -521,7 +563,7 @@ def delete_admin(emp_id):
     :return:
     """
     Admin.objects(emp_id=emp_id).delete()
-    return redirect(url_for('admin_page'))
+    return redirect(current_host + '/admin')
 
 
 def connect_slack_client():

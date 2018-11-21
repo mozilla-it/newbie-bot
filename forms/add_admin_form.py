@@ -5,6 +5,6 @@ from database.admin_roles import AdminRoles
 
 class AddAdminForm(Form):
     emp_id = StringField('Employee ID', [validators.required()])
-    name = StringField('Employee Name', [validators.required()])
+    name = StringField('Employee Name', )
     super_admin = BooleanField('Super Admin', default=False)
     roles = SelectMultipleField('Roles')
