@@ -20,7 +20,7 @@ from mongoengine.queryset.visitor import Q
 import holidays
 import pymongo.errors as pymongo_errors
 import mongoengine.errors as mongoengine_errors
-import requests
+import re
 
 # form imports
 from forms.slack_direct_message import SlackDirectMessage
@@ -373,6 +373,7 @@ def add_new_employee():
     :return:
     """
     user = get_user_info()
+    print(f'add emp user {user}')
     form = AddEmployeeForm(request.form)
     if request.method == 'POST':
         if form.validate():
@@ -445,7 +446,17 @@ def add_new_employee():
             return render_template('employees.html', employees=None, form=form, selectedEmp=None,  timezones=all_timezones, user=user)
     else:
         print('get route')
-        employees = People.objects()
+        admin = user['userid'].split('|')
+        admin = admin[2]
+
+        print(f'admin {admin}')
+
+        employees = []
+        employee_list = People.objects()
+        print(employee_list.count())
+        for emp in employee_list:
+            if re.findall(admin, emp.manager_id):
+                employees.append(emp)
 
         return render_template('employees.html', employees=employees, form=form, selectedEmp=None,  timezones=all_timezones, user=user)
 
@@ -459,7 +470,8 @@ def delete_employee(id):
     :return:
     """
     People.objects(id=id).delete()
-    return redirect(url_for('add_new_employee'))
+    # return redirect(url_for('add_new_employee'))
+    return redirect(current_host + '/addEmployee')
 
 
 @app.route('/admin', methods=['GET', 'POST'])
