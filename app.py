@@ -446,18 +446,23 @@ def add_new_employee():
             return render_template('employees.html', employees=None, form=form, selectedEmp=None,  timezones=all_timezones, user=user)
     else:
         print('get route')
+        #TODO still need to add employee list for super user
         admin = user['userid'].split('|')
         admin = admin[2]
-
         print(f'admin {admin}')
 
         employees = []
         employee_list = People.objects()
         print(employee_list.count())
-        for emp in employee_list:
-            if re.findall(admin, emp.manager_id):
-                employees.append(emp)
 
+        user_id = session.get('profile')['user_id']
+        admin_data = Admin.objects(emp_id=user_id).first()
+        if admin_data.super_admin:
+            employees = employee_list
+        else:
+            for emp in employee_list:
+                if re.findall(admin, emp.manager_id):
+                    employees.append(emp)
         return render_template('employees.html', employees=employees, form=form, selectedEmp=None,  timezones=all_timezones, user=user)
 
 
