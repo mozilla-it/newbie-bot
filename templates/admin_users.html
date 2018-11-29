@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="{{  url_for('static', filename='admin.css') }}">
 <!-- Button trigger modal -->
 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#userModal">
   Add User
@@ -20,11 +21,11 @@
         <div class="row " >
             <div class="col-md-6 col-sm-12 ">
                 <div class="form-group multi-collapse collapse show" id="multiCollapseNo">
-                    <input class="form-control" id="myInput" onkeyup="myFunction()" type="text" placeholder="Search first name...">
-                    <select class="emp_id" name="emp_id" id="emp_id"  style="max-width: 10em;">
-                        <option class="option-menu" >Choose Admin</option>
+                    <input class="form-control" id="myInput" onkeyup="myFunction()" type="text" placeholder="Search person's name...">
+                    <select class="emp_id" name="emp_id" id="emp_id">
+                        <option class="option-menu options" >Choose Admin</option>
                         {% for person in people %}
-                            <option class="option-menu" value="{{ person.emp_id }} {{ person.first_name }} {{ person.last_name }}">{{ person.first_name }} {{ person.last_name }}</option>
+                            <option class="option-menu options" value="{{ person.emp_id }} {{ person.first_name }} {{ person.last_name }}" >{{ person.first_name }} {{ person.last_name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -95,9 +96,8 @@
 </div>
 <script>
     function myFunction() {
-        console.log('myfunction');
     // Declare variables
-    var input, filter, select, option, a, i, txtValue;
+    let input, filter, select, option, a, i, txtValue;
     input = document.getElementById('myInput');
     filter = input.value.toUpperCase();
     select = document.getElementById("emp_id");

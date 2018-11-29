@@ -535,15 +535,18 @@ def admin_user():
     if request.method == 'POST':
         print('admin form {}'.format(admin_form.roles.data))
         if admin_form.validate():
-            admin = Admin()
-            print(f'selected admin {admin_form.emp_id.data}')
-            selected_admin = admin_form.emp_id.data.split(' ')
-            print(f'selected admin {selected_admin}')
-            admin.emp_id = selected_admin[0]
-            admin.name = ' '.join(selected_admin[1:])
-            admin.super_admin = admin_form.super_admin.data
-            admin.roles = admin_form.roles.data
-            admin.save()
+            try:
+                admin = Admin()
+                print(f'selected admin {admin_form.emp_id.data}')
+                selected_admin = admin_form.emp_id.data.split(' ')
+                print(f'selected admin {selected_admin}')
+                admin.emp_id = selected_admin[0]
+                admin.name = ' '.join(selected_admin[1:])
+                admin.super_admin = admin_form.super_admin.data
+                admin.roles = admin_form.roles.data
+                admin.save()
+            except:
+                print('unable to save admin')
             return redirect(current_host + '/admin')
         else:
             print('errors = {}'.format(admin_form.errors))
