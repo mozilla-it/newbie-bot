@@ -9,8 +9,8 @@
     <div class="container collapse"  id="collapseExample" style="margin-top: 25px; margin-bottom: 25px;">
         {% from "includes/_formhelpers.html" import render_field %}
         <form action="" method="POST" class="form">
-            <div class="row">
-                <div class="col-md-4 col-sm-12 ">
+            <div class="row centered">
+                <div class="col-md-6 col-sm-12 ">
                     <div class="form-group moz-drop">
                         <div class="input-group">
                           <div class="input-group-prepend">
@@ -26,7 +26,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="form-group moz-drop">
                         <div class="input-group mb-3">
                           <div class="input-group-prepend">
@@ -46,7 +46,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="form-group">
                         <p>
                             <div class="row" style="padding: 15px;">
@@ -58,31 +58,31 @@
                     </div>
                 </div>
             </div>
-        <div class="row " >
-                <div class="col-md-4 col-sm-12 ">
+        <div class="row centered" >
+                <div class="col-md-6 ">
                     <div class="form-group">
                         {{ render_field(form.title, class_="form_control") }}
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="form-group">
                         {{ render_field(form.title_link, class_="form_control") }}
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="form-group multi-collapse collapse" id="multiCollapseYes">
                         <div><label for="start_date">Send Date</label></div>
                         <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="send_date" type="date" name="send_date"  />
                     </div>
                 </div>
             </div>
-        <div class="row " >
-                <div class="col-md-4 col-sm-12 ">
+        <div class="row centered" >
+                <div class="col-md-6  ">
                     <div class="form-group multi-collapse collapse show" id="multiCollapseNo">
                         {{ render_field(form.send_day, class_="form_control") }}
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="form-group multi-collapse collapse show" id="multiCollapseNo1">
                         {{ render_field(form.send_time, class_="form_control") }}
                     </div>
@@ -90,8 +90,8 @@
 
 
             </div>
-        <div class="row">
-            <div class="col-md-4">
+        <div class="row centered">
+            <div class="col-md-6">
                     <div class="form-group multi-collapse collapse show moz-drop" id="multiCollapseNo2">
                         <div class="input-group mb-3">
                           <div class="input-group-prepend">
@@ -107,19 +107,19 @@
                         </div>
                     </div>
                 </div>
-            <div class="col-md-4 col-sm-12 ">
+            <div class="col-md-6 ">
                 <div class="form-group multi-collapse collapse show">
                     {{ render_field(form.number_of_sends, class_="form_control") }}
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-4 col-sm-12 ">
+        <div class="row centered">
+            <div class="col-md-6 ">
                 <div class="form-group">
                     {{ render_field(form.text, class_="form_control") }}
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                     <div class="form-group moz-drop" id="multiCollapseNo2">
                         <div class="input-group mb-3">
                           <div class="input-group-prepend">
@@ -151,82 +151,82 @@
                 <button style="margin-left: 20px;" class="btn btn-primary btn-sm float-right" type="button" data-toggle="collapse" data-target="#{{ message.id }}" aria-expanded="false" aria-controls="collapseExample">Details</button>
                 </li>
                 <div class="container collapse"  id="{{ message.id }}">
-                        <div class="row">
-                            <div class="col-md-4 col-sm-12 ">
+                        <div class="row centered">
+                            <div class="col-md-6 ">
                                 <div class="form-group">
                                     <div><label for="first">Type</label></div>
                                     <input type="text" disabled value="{{ message.type }}">
 
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <div><label for="last_name">Category</label></div>
                                     <input type="text" disabled value="{{ message.category }}">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <div><label for="email">Send Once</label></div>
                                     <input type="text" disabled value="{{ message.send_once}}">
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-4">
+                        <div class="row centered">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <div><label for="email">Title</label></div>
                                     <input type="text" disabled value="{{ message.title}}">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <div><label for="email">Link</label></div>
                                     <input type="text" disabled value="{{ message.title_link}}">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <div><label for="country">Country</label></div>
                                     <input type="text" disabled value="{{ message.country }}">
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-4">
+                        <div class="row centered">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <div><label for="timezone">Send Day</label></div>
                                     <input type="text" disabled value="{{ message.send_day }}">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <div><label for="send_hour">Send Hour</label></div>
                                     <input type="text" disabled value="{{ message.send_hour }}">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <div><label for="frequency">Frequency</label></div>
                                     <input type="text" disabled value="{{ message.frequency }}">
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-4">
+                        <div class="row centered">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <div><label for="number_of_sends">Send Number</label></div>
                                     <input type="text" disabled value="{{ message.number_of_sends }}">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <div><label for="send_date">Send Date</label></div>
                                     <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="send_date" type="text" disabled value="{{ message.send_date }}" name="start_date"  />
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <div><label for="text">Message</label></div>
                                     <textarea disabled name="text" id="" cols="30" rows="10" >{{ message.text }}</textarea>

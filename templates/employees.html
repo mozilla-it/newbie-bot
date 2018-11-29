@@ -28,16 +28,6 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
-                        {{ render_field(form.city, class_="form_control") }}
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        {{ render_field(form.state, class_="form_control") }}
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
                         {{ render_field(form.country, class_="form_control") }}
                     </div>
                 </div>
@@ -77,26 +67,10 @@
                         <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="start_date" type="date" name="start_date"  />
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        {{ render_field(form.phone, class_="form_control") }}
-                    </div>
-                </div>
+
                 <div class="col-md-4">
                     <div class="form-group">
                         {{ render_field(form.manager_id, class_="form_control") }}
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        {{ render_field(form.title, class_="form_control") }}
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        {{ render_field(form.picture, class_="form_control") }}
                     </div>
                 </div>
             </div>
@@ -138,18 +112,6 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <div><label for="city">City</label></div>
-                                    <input type="text" disabled value="{{ emp.city }}">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <div><label for="state">State</label></div>
-                                    <input type="text" disabled value="{{ emp.state }}">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
                                     <div><label for="country">Country</label></div>
                                     <input type="text" disabled value="{{ emp.country }}">
                                 </div>
@@ -184,28 +146,8 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <div><label for="phone">Phone</label></div>
-                                    <input type="text" disabled value="{{ emp.phone }}">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
                                     <div><label for="manager_id">Manager ID</label></div>
                                     <input type="text" disabled value="{{ emp.manager_id }}">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <div><label for="title">First Name</label></div>
-                                    <input type="text" disabled value="{{ emp.title }}">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <div><label for="picture">Picture</label></div>
-                                    <input type="text" disabled value="{{ emp.picture }}">
                                 </div>
                             </div>
                         </div>

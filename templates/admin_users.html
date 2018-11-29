@@ -18,27 +18,27 @@
         <form action="{{ url_for('admin_user') }}" method="POST" class="form">
 
         <div class="row " >
-            <div class="col-md-4 col-sm-12 ">
+            <div class="col-md-6 col-sm-12 ">
                 <div class="form-group multi-collapse collapse show" id="multiCollapseNo">
-{#                    {{ render_field(admin_form.emp_id, class_="form_control") }}#}
-                    <select name="emp_id" id="emp_id"  style="max-width: 10em;">
-                                    <option selected>Choose...</option>
-                                    {% for person in people %}
-                                        <option value="{{ person.emp_id }} {{ person.first_name }} {{ person.last_name }}">{{ person.first_name }} {{ person.last_name }}</option>
-                                    {% endfor %}
-                                </select>
+                    <input class="form-control" id="myInput" onkeyup="myFunction()" type="text" placeholder="Search first name...">
+                    <select class="emp_id" name="emp_id" id="emp_id"  style="max-width: 10em;">
+                        <option class="option-menu" >Choose Admin</option>
+                        {% for person in people %}
+                            <option class="option-menu" value="{{ person.emp_id }} {{ person.first_name }} {{ person.last_name }}">{{ person.first_name }} {{ person.last_name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
         </div>
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="form-group multi-collapse collapse show" id="multiCollapseNo2">
                     <p>{{ admin_form.super_admin() }} {{ admin_form.super_admin.label }}</p>
                 </div>
             </div>
         </div>
         <div class="row " >
-            <div class=" col-md-4 form-group">
+            <div class=" col-md-6 form-group">
                 {{ admin_form.roles.label }} {{ admin_form.roles(rows=3, multiple=True) }}
             </div>
         </div>
@@ -68,20 +68,20 @@
             </li>
             <div class="container collapse"  id="{{ admin.emp_id }}">
                     <div class="row">
-                        <div class="col-md-4 col-sm-12 ">
+                        <div class="col-md-6 centered ">
                             <div class="form-group">
                                 <div><label for="first">ID</label></div>
                                 <input type="text" disabled value="{{ admin.emp_id }}">
                             </div>
                         </div>
-                        <div class="col-md-4 ">
+                        <div class="col-md-6 centered">
                             <div class="form-group">
                                 <div><label for="first">Name</label></div>
                                 <input type="text" disabled value="{{ admin.name }}">
 
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6 centered">
                             <div class="form-group">
                                 <div><label for="last_name">Super Admin</label></div>
                                 <input type="text" disabled value="{{ admin.super_admin }}">
@@ -93,3 +93,24 @@
         </ul>
     </div>
 </div>
+<script>
+    function myFunction() {
+        console.log('myfunction');
+    // Declare variables
+    var input, filter, select, option, a, i, txtValue;
+    input = document.getElementById('myInput');
+    filter = input.value.toUpperCase();
+    select = document.getElementById("emp_id");
+    option = select.getElementsByTagName('option');
+
+    // Loop through all list items, and hide those who don't match the search query
+    for (i = 0; i < option.length; i++) {
+        txtValue = option[i].value;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            option[i].style.display = "";
+        } else {
+            option[i].style.display = "none";
+        }
+    }
+}
+</script>

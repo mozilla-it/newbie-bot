@@ -8,6 +8,7 @@ from database.admin_roles import AdminRoles
 from database.user_feedback import UserFeedback
 from iam_profile_faker.factory import V2ProfileFactory
 import json
+from json_object_encoder import JSONEncoder
 import datetime
 import pytz
 from authzero import AuthZero
@@ -109,7 +110,7 @@ authentication = auth.OpenIDConnect(
 oidc = authentication.auth(app)
 # endauth
 
-
+admin_people = []
 
 # @app.before_first_request
 def main_start():
@@ -126,6 +127,14 @@ def main_start():
     # scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*')
     # scheduler.add_job(func=get_auth_zero, trigger='cron', hour='*', minute=31)
     # scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute=33)
+
+
+def get_user_admin():
+    try:
+        userid = session.get('profile')['user_id']
+        return Admin.objects(emp_id=userid).first()
+    except:
+        return None
 
 
 
@@ -250,8 +259,9 @@ def index():
     """
     print('session {}'.format(session.get('profile')))
     user = get_user_info()
+    admin = get_user_admin()
     print(f'user {user}')
-    return render_template('home.html', user=user)
+    return render_template('home.html', user=user, admin=admin)
 
 
 @app.route('/help')
@@ -262,7 +272,8 @@ def help_page():
     """
     print('session {}'.format(session.get('profile')))
     user = get_user_info()
-    return render_template('help.html', user=user)
+    admin = get_user_admin()
+    return render_template('help.html', user=user, admin=admin)
 
 
 @app.route('/addMessage', methods=['GET', 'POST'])
@@ -273,6 +284,7 @@ def add_new_message():
     :return:
     """
     user = get_user_info()
+    admin = get_user_admin()
     form = AddMessageForm(request.form)
     if request.method == 'POST':
         if form.validate():
@@ -297,9 +309,9 @@ def add_new_message():
         else:
             print('errors = {}'.format(form.errors))
             messages = Messages.objects()
-            return render_template('messages.html', messages=messages, form=form, user=user)
+            return render_template('messages.html', messages=messages, form=form, user=user, admin=admin)
     messages = Messages.objects()
-    return render_template('messages.html', messages=messages, form=form, user=user)
+    return render_template('messages.html', messages=messages, form=form, user=user, admin=admin)
 
 
 @app.route('/editMessage/<string:message_id>', methods=['GET', 'POST'])
@@ -312,6 +324,7 @@ def edit_message(message_id):
     """
     print('edit message {}'.format(message_id))
     user = get_user_info()
+    admin = get_user_admin()
     form = AddMessageForm(request.form)
     if request.method == 'GET':
         messages = Messages.objects(Q(id=message_id)).get()
@@ -328,7 +341,7 @@ def edit_message(message_id):
         form.text.data = messages.text
         form.number_of_sends.data = messages.number_of_sends
         form.country.data = messages.country
-        return render_template('message_edit.html', form=form, user=user)
+        return render_template('message_edit.html', form=form, user=user, admin=admin)
     elif request.method == 'POST':
         if form.validate():
             message = Messages.objects(Q(id=message_id)).get()
@@ -373,48 +386,17 @@ def add_new_employee():
     :return:
     """
     user = get_user_info()
+    admins = get_user_admin()
     print(f'add emp user {user}')
     form = AddEmployeeForm(request.form)
     if request.method == 'POST':
         if form.validate():
             people = People()
-            # factory = V2ProfileFactory()
-            # new_emp = factory.create()
-            # people.first_name = json.dumps(new_emp['first_name']['value'], sort_keys=True, indent=4).replace('"', '')
-            # people.last_name = json.dumps(new_emp['last_name']['value'], sort_keys=True, indent=4).replace('"', '')
-            # people.email = json.dumps(new_emp['primary_email']['value']).replace('"', '')
-            # people.city = json.dumps(new_emp['access_information']['hris']['values']['LocationCity']).replace('"', '')
-            # people.state = json.dumps(new_emp['access_information']['hris']['values']['LocationState']).replace('"', '')
-            # people.country = json.dumps(new_emp['access_information']['hris']['values']['LocationCountryISO2']).replace('"', '')
-            # people.timezone = json.dumps(new_emp['timezone']['value']).replace('"', '')
-            # people.emp_id = json.dumps(new_emp['access_information']['hris']['values']['EmployeeID'], sort_keys=True, indent=4)
-            # employee_id = json.dumps(new_emp['access_information']['hris']['values']['EmployeeID'], sort_keys=True, indent=4)
-            # people.slack_handle = find_slack_handle(json.dumps(new_emp['usernames']['values']))
-            # people.start_date = datetime.datetime.strptime(json.dumps(new_emp['created']['value']).replace('"', ''), '%Y-%m-%dT%H:%M:%S').isoformat()
-            # people.phone = json.dumps(new_emp['phone_numbers']['values'])
-            # people.manager_id = json.dumps(new_emp['access_information']['hris']['values']['WorkersManagersEmployeeID'])
-            # people.title = json.dumps(new_emp['access_information']['hris']['values']['businessTitle']).replace('"', '')
-            # people.picture = json.dumps(new_emp['picture']['value']).replace('"', '')
-            # people.last_updated = datetime.datetime.strptime(json.dumps(new_emp['last_modified']['value']).replace('"', ''),
-            #                                  '%Y-%m-%dT%H:%M:%S')
-            # print(json.dumps(new_emp['first_name']['value'], sort_keys=True, indent=4).replace('"', ''))
-            # print(json.dumps(new_emp['phone_numbers']['values']))
-            # print('employee id = {}'.format(employee_id))
-            # newly_added_user = People.objects(emp_id=employee_id)
-            # print('newly added user = {}'.format(newly_added_user[0].first_name))
-            # new_person = {}
-            # for p in newly_added_user:
-            #     new_person['first_name'] = p.first_name
-            #     new_person['last_name'] = p.last_name
-            #     print('{} {} {} {} {} {}'.format(p.first_name, p.last_name, p.emp_id, p.start_date, p.manager_id, p.picture))
-            #     add_messages_to_send(p)
             print('user name = {}'.format(form.first_name.data))
 
             people.first_name = form.first_name.data
             people.last_name = form.last_name.data
             people.email = form.email.data
-            people.city = form.city.data
-            people.state = form.state.data
             people.country = form.country.data
             people.timezone = form.timezone.data
             people.emp_id = form.emp_id.data
@@ -422,10 +404,7 @@ def add_new_employee():
             date_start = form.start_date.data.split('-')
             sdate = datetime.datetime(int(date_start[0]), int(date_start[1]), int(date_start[2]), 0, 0, 0)
             people.start_date = datetime.datetime.strftime(sdate, '%Y-%m-%dT%H:%M:%S')
-            people.phone = form.phone.data
             people.manager_id = form.manager_id.data
-            people.title = form.title.data
-            people.picture = form.picture.data
             people.last_updated = datetime.datetime.now()
             people.admin_opt_out = False
             people.user_opt_out = False
@@ -437,23 +416,19 @@ def add_new_employee():
             for p in newly_added_user:
                 new_person['first_name'] = p.first_name
                 new_person['last_name'] = p.last_name
-                print('{} {} {} {} {} {}'.format(p.first_name, p.last_name, p.emp_id, p.start_date, p.manager_id, p.picture))
+                print('{} {} {} {} {}'.format(p.first_name, p.last_name, p.emp_id, p.start_date, p.manager_id))
                 add_messages_to_send(p)
 
-            return redirect(url_for('add_new_employee'))
+            return redirect(current_host + '/addEmployee')
         else:
             print('errors = {}'.format(form.errors))
-            return render_template('employees.html', employees=None, form=form, selectedEmp=None,  timezones=all_timezones, user=user)
+            return render_template('employees.html', employees=None, form=form, selectedEmp=None,  timezones=all_timezones, user=user, admin=admins)
     else:
-        print('get route')
-        #TODO still need to add employee list for super user
         admin = user['userid'].split('|')
         admin = admin[2]
-        print(f'admin {admin}')
 
         employees = []
         employee_list = People.objects()
-        print(employee_list.count())
 
         user_id = session.get('profile')['user_id']
         admin_data = Admin.objects(emp_id=user_id).first()
@@ -463,7 +438,7 @@ def add_new_employee():
             for emp in employee_list:
                 if re.findall(admin, emp.manager_id):
                     employees.append(emp)
-        return render_template('employees.html', employees=employees, form=form, selectedEmp=None,  timezones=all_timezones, user=user)
+        return render_template('employees.html', employees=employees, form=form, selectedEmp=None,  timezones=all_timezones, user=user, admin=admins)
 
 
 @app.route('/deleteEmployee/<string:id>')
@@ -487,10 +462,17 @@ def admin_page():
     :param :
     :return:
     """
+    print('admin')
     form = AddAdminRoleForm(request.form)
     admin_form = AddAdminForm(request.form)
     admin_roles = AdminRoles.objects()
-    people = People.objects()
+    admin = get_user_admin()
+    peoples = People.objects()
+    global admin_people
+    admin_people = peoples
+    # for person in peoples:
+    #     admin_people.append(JSONEncoder().encode(person.to_mongo()))
+    print(admin_people[10])
     role_names = [(role.role_name, role.role_description) for role in admin_roles]
     role_names = role_names[1:]
     print('role names = {}'.format(role_names))
@@ -500,7 +482,7 @@ def admin_page():
         print('role {}'.format(role.role_name))
     admins = Admin.objects()
     user = get_user_info()
-    return render_template('admin.html', user=user, admin_roles=admin_roles, admins=admins, form=form, admin_form=admin_form, people=people)
+    return render_template('admin.html', user=user, admin_roles=admin_roles, admins=admins, form=form, admin_form=admin_form, people=peoples, admin=admin)
 
 
 @app.route('/adminRole', methods=['POST'])
@@ -548,7 +530,7 @@ def admin_user():
     admin_roles = AdminRoles.objects()
     role_names = [(role.role_name, role.role_description) for role in admin_roles]
     role_names = role_names[1:]
-    print('role names = {}'.format(role_names))
+    print(f'admin people {admin_people[11]}')
     admin_form.roles.choices = role_names
     if request.method == 'POST':
         print('admin form {}'.format(admin_form.roles.data))
@@ -865,22 +847,31 @@ def message_actions():
     :return: Message sent to update user on action of button command
     """
     form_json = json.loads(request.form['payload'])
-    # print(f'form json {json.dumps(form_json, indent=4)}')
     callback_id = form_json['callback_id']
     if form_json['type'] == 'interactive_message':
         actions = form_json['actions'][0]['value']
         user = form_json['user']['name']
+        print(f'user {user}')
         message_text = ''
         if callback_id == 'opt_out':
             if 'keep' in actions.lower():
+                print('keep')
                 message_text = 'We\'ll keep sending you onboarding messages!'
                 People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
+                slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text,
+                               '')
             elif 'stop' in actions.lower():
+                print('stop')
                 message_text = 'We\'ve unsubscribed you from onboarding messages.'
                 People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
+                slack_client.api_call(
+                    'chat.update',
+                    channel=form_json['channel']['id'],
+                    text=message_text)
             else:
                 message_text = 'Sorry, we\'re having trouble understanding you.'
-            slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text, '')
+                slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text,
+                               '')
         elif callback_id == 'rating':
             message_attachments = {
                     "callback_id": form_json['callback_id'],
@@ -919,6 +910,7 @@ def message_actions():
                 feedback.rating = 'thumbsdown'
                 feedback.comment = ''
                 feedback.save()
+                feedback_val = dict(feedback.to_mongo())
                 slack_client.api_call(
                     "dialog.open",
                     trigger_id=form_json["trigger_id"],
@@ -931,17 +923,50 @@ def message_actions():
                 slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text, '')
         return make_response(message_text, 200)
     elif form_json['type'] == 'dialog_submission':
-        feedback = UserFeedback.objects(emp_id=form_json['user']['name'])
+        print('dialog {}'.format(form_json))
+        feedback = UserFeedback.objects(Q(emp_id=form_json['user']['name'])).all()
         created = feedback[len(feedback) - 1].created_date
         for feed in feedback:
             if feed.created_date == created:
                 feed.comment = form_json['submission']['comment']
                 feed.save()
-        slack_client.api_call(
-            'chat.postMessage',
-            channel=form_json['channel']['id'],
-            text='Thanks for your feedback!',
+        if form_json['state'] == 'thumbsdown':
+            message_attachments = []
+            message_attach = {
+                "callback_id": "opt_out",
+                "text": "Sorry to see you go",
+                "replace_original": False,
+                "delete_original": False,
+                "fallback": "You need to upgrade your Slack client to receive this message.",
+                "actions": [{
+                    "name": "optout",
+                    "type": "button",
+                    "text": 'Opt Out',
+                    "value": "stop",
+                    "confirm": {
+                        "title": "Are you sure?",
+                        "text": "If you opt out you won\'t receive any more helpful info.",
+                        "ok_text": "Yes",
+                        "dismiss_text": "No"
+                    }
+                }]
+            }
+            message_attachments.insert(0, message_attach)
+            print(message_attachments)
+            slack_client.api_call(
+                'chat.postMessage',
+                channel=form_json['channel']['id'],
+                text='We\'re sad to hear things aren\'t going well. \n\n '
+                     'If you would like to opt-out of future messages, '
+                     'click the button below.',
+                attachments=message_attachments
             )
+        else:
+            slack_client.api_call(
+                'chat.postMessage',
+                channel=form_json['channel']['id'],
+                text='Thanks for your feedback!',
+                )
         return make_response('', 200)
 
 
@@ -953,15 +978,17 @@ def new_hire_help():
     """
     incoming_message = json.dumps(request.values['text']).replace('"', '')
     user = json.dumps(request.values['user_name'])
+    user = user.replace('"','')
+    print(f'user {user}')
     if incoming_message == 'opt-in':
-        message_response = "We'll sign you back up!"
         People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
+        message_response = "We'll sign you back up!"
     elif incoming_message == 'help':
         message_response = 'Help will soon arrive!'
     elif incoming_message == 'opt-out':
+        People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
         message_response = 'Okay, we\'ll stop sending you important tips and reminders. ' \
                            'Hope you don\'t miss any deadlines!'
-        People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
     else:
         message_response = 'Sorry, I don\'t know what you want.'
     return make_response(message_response, 200)
@@ -975,6 +1002,7 @@ def send_slack_message():
     :return:
     """
     user = get_user_info()
+    admin = get_user_admin()
     form = SlackDirectMessage(request.form)
     slack_client.rtm_connect()
     users = slack_client.api_call('users.list')['members']
@@ -983,14 +1011,15 @@ def send_slack_message():
             message_text = form.message_text.data
             message_user = form.message_user.data
             user = search(users, 'name', message_user)
+            print(f'user {user}')
             dm = slack_client.api_call('im.open', user=user['id'])['channel']['id']
             slack_client.rtm_send_message(dm, message_text)
             return redirect(url_for('send_slack_message'))
         else:
             print('errors = {}'.format(form.errors))
-            return render_template('senddm.html', form=form, users=users, user=user)
+            return render_template('senddm.html', form=form, users=users, user=user, admin=admin)
     else:
-        return render_template('senddm.html', form=form, users=users, user=user)
+        return render_template('senddm.html', form=form, users=users, user=user, admin=admin)
 
 
 def send_newhire_messages():
@@ -1018,49 +1047,50 @@ def send_newhire_messages():
             message_user = emp['slack_handle']
             user = search(users, 'name', message_user)
             message_attachments = []
-            dm = slack_client.api_call(
-                'im.open',
-                user=user['id'],
-            )['channel']['id']
-            if len(message['title_link']) > 1 and len(message_text) == 1:
+            if user is not None:
+                dm = slack_client.api_call(
+                    'im.open',
+                    user=user['id'],
+                )['channel']['id']
+                if len(message['title_link']) > 1 and len(message_text) == 1:
 
-                message_attach = {
-                    "fallback": "You need to upgrade your Slack client to receive this message.",
-                    "actions": [{
-                        "type": "button",
-                        "text": message['title'],
-                        "url": message['title_link'],
-                    }]
-                }
-                message_attachments.insert(0, message_attach)
-            elif len(message_text) > 1:
-                message_actions = []
-                for x in range(1, len(message_text)):
-                    action = {
-                        "type": "button",
-                        "text": message_text[x],
-                        "name": message['title'],
-                        "value": message_text[x]
+                    message_attach = {
+                        "fallback": "You need to upgrade your Slack client to receive this message.",
+                        "actions": [{
+                            "type": "button",
+                            "text": message['title'],
+                            "url": message['title_link'],
+                        }]
                     }
-                    message_actions.insert(0, action)
-                message_attach = {
-                    "callback_id": message['callback_id'] if message['callback_id'] else '',
-                    "fallback": "You need to upgrade your Slack client to receive this message.",
-                    "actions": message_actions
-                }
-                message_attachments.insert(0, message_attach)
-                print(message_attachments)
-            else:
-                app.logger.info('No message attachments.')
+                    message_attachments.insert(0, message_attach)
+                elif len(message_text) > 1:
+                    message_actions = []
+                    for x in range(1, len(message_text)):
+                        action = {
+                            "type": "button",
+                            "text": message_text[x],
+                            "name": message['title'],
+                            "value": message_text[x]
+                        }
+                        message_actions.insert(0, action)
+                    message_attach = {
+                        "callback_id": message['callback_id'] if message['callback_id'] else '',
+                        "fallback": "You need to upgrade your Slack client to receive this message.",
+                        "actions": message_actions
+                    }
+                    message_attachments.insert(0, message_attach)
+                    print(message_attachments)
+                else:
+                    app.logger.info('No message attachments.')
 
 
-            slack_client.api_call(
-                'chat.postMessage',
-                channel=dm,
-                text=message_text[0],
-                attachments=message_attachments
-            )
-            s.update(set__send_status=True)
+                slack_client.api_call(
+                    'chat.postMessage',
+                    channel=dm,
+                    text=message_text[0],
+                    attachments=message_attachments
+                )
+                s.update(set__send_status=True)
         else:
             s.update(set__cancel_status=True)
             print('User has opted out of notifications')
@@ -1075,6 +1105,7 @@ def get_user_info():
         user = {'userid': session.get('profile')['user_id'], 'username': session.get('profile')['name'],
                 'picture': session.get('profile')['picture']}
     return user
+
 
 @atexit.register
 def shutdown():
@@ -1094,7 +1125,7 @@ if __name__ == '__main__':
     scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute=58)
     if scheduler.running is False:
         scheduler.start()
-    app.debug = False
+    # app.debug = False
     app.use_reloader=False
     app.jinja_env.cache = {}
     app.run(ssl_context=('cert.pem', 'key.pem'), host='0.0.0.0')
