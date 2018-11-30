@@ -48,3 +48,9 @@ ul li ul li {
     margin-right: 5px;
     margin-top: 10px;
 }
+.newbie-top {
+    margin-top: 10em;
+}
+.newbie-bottom {
+    margin-bottom: 10em;
+}
