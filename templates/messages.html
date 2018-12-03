@@ -120,20 +120,30 @@
                 </div>
             </div>
             <div class="col-md-6">
-                    <div class="form-group moz-drop" id="multiCollapseNo2">
-                        <div class="input-group mb-3">
-                          <div class="input-group-prepend">
-                            <label class="input-group-text" for="country">Country</label>
-                          </div>
-                          <select name="country" class="custom-select" id="county">
-                            <option selected>Choose...</option>
-                            <option value="ALL">Any</option>
-                            <option value="US">US</option>
-                            <option value="CA">CA</option>
-                          </select>
-                        </div>
+                <div class="form-group moz-drop" id="multiCollapseNo2">
+                    <div class="input-group mb-3">
+                      <div class="input-group-prepend">
+                        <label class="input-group-text" for="country">Country</label>
+                      </div>
+                      <select name="country" class="custom-select" id="county">
+                        <option selected>Choose...</option>
+                        <option value="ALL">Any</option>
+                        <option value="US">US</option>
+                        <option value="CA">CA</option>
+                      </select>
                     </div>
                 </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <div class="row">
+                        <input type=text id=tag_val name=tag_val >
+                        <button name=add_tag id=add_tag >Add Tag</button>
+                    </div>
+
+                    <ul name=tag_list id=tag_list class="list-group"></ul>
+                </div>
+            </div>
         </div>
         <p><input type="submit" class="btn btn-primary" value="Submit" data-toggle="collapse" data-target="#collapseExample"></p>
 
@@ -233,6 +243,18 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row centered">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div><label for="text">Tags</label></div>
+                                    <ul class="list-group">
+                                        {% for tag in message.tags %}
+                                            <li class="list-group-item">{{ tag }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
             {% endfor %}
             </ul>
@@ -241,7 +263,8 @@
 
 
     </div>
-
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript">$SCRIPT_ROOT = {{ request.script_root|tojson|safe }}; </script>
     <script src="{{ url_for('static', filename='myscript.js') }}"></script>
 
 {%  endblock %}
