@@ -984,13 +984,13 @@ def search_messages(search_string, message):
     :return: matching message
     """
     result = [x.strip() for x in search_string.split(' ')]
+    print(f'tags {message["tags"]}')
     print(f'result {result}')
     for r in result:
         print(f'r {r}')
-        if r.lower() in message['text'].lower() or r.lower() in message['title'].lower():
-            return message.to_mongo()
-        # else:
-        #     return None
+        for m in message['tags']:
+            if r.lower() in m.lower():
+                return message.to_mongo()
 
 
 def send_opt_out_message(channel):
