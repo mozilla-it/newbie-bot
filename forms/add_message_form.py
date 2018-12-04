@@ -24,6 +24,6 @@ class AddMessageForm(Form):
         [validators.number_range(min=1, max=10, message='Must be between 1 and 10.'), validators.data_required()],
         default=1)
     country = StringField('Country', [validators.data_required()])
-    tags = SelectMultipleField('Tags')
+    tagitems = StringField('Tags')
 
 

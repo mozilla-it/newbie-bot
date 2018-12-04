@@ -210,12 +210,13 @@ def requires_manager(f):
 def profile():
     logger.info("User: {} authenticated proceeding to dashboard.".format(session.get('profile')['user_id']))
     user = get_user_info()
+    admin = get_user_admin()
     print(json.dumps(session['jwt_payload']["https://sso.mozilla.com/claim/groups"]))
     print(json.dumps(session['jwt_payload']))
     return render_template('profile.html',
                            userinfo=session['profile'],
                            usergroups=session['jwt_payload']["https://sso.mozilla.com/claim/groups"],
-                           userinfo_pretty=json.dumps(session['jwt_payload'], indent=4), user=user)
+                           userinfo_pretty=json.dumps(session['jwt_payload'], indent=4), user=user, admin=admin)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -303,8 +304,10 @@ def add_new_message():
             message.text = form.text.data
             message.number_of_sends = form.number_of_sends.data
             message.country = form.country.data
+            tagitems = form.tagitems.data
+            tag = tagitems.split('|')
+            message.tags = tag[:-1]
             message.save()
-            # messages = Messages()
             return redirect(current_host + '/addMessage')
         else:
             print('errors = {}'.format(form.errors))
@@ -341,6 +344,7 @@ def edit_message(message_id):
         form.text.data = messages.text
         form.number_of_sends.data = messages.number_of_sends
         form.country.data = messages.country
+        form.tagitems.data = messages.tags
         return render_template('message_edit.html', form=form, user=user, admin=admin)
     elif request.method == 'POST':
         if form.validate():
@@ -359,6 +363,9 @@ def edit_message(message_id):
             message.text = form.text.data
             message.number_of_sends = form.number_of_sends.data
             message.country = form.country.data
+            tagitems = form.tagitems.data
+            tag = tagitems.split('|')
+            message.tags = tag[:-1]
             message.save()
             return redirect(current_host + '/addMessage')
         else:
@@ -934,36 +941,8 @@ def message_actions():
                 feed.comment = form_json['submission']['comment']
                 feed.save()
         if form_json['state'] == 'thumbsdown':
-            message_attachments = []
-            message_attach = {
-                "callback_id": "opt_out",
-                "text": "Sorry to see you go",
-                "replace_original": False,
-                "delete_original": False,
-                "fallback": "You need to upgrade your Slack client to receive this message.",
-                "actions": [{
-                    "name": "optout",
-                    "type": "button",
-                    "text": 'Opt Out',
-                    "value": "stop",
-                    "confirm": {
-                        "title": "Are you sure?",
-                        "text": "If you opt out you won\'t receive any more helpful info.",
-                        "ok_text": "Yes",
-                        "dismiss_text": "No"
-                    }
-                }]
-            }
-            message_attachments.insert(0, message_attach)
-            print(message_attachments)
-            slack_client.api_call(
-                'chat.postMessage',
-                channel=form_json['channel']['id'],
-                text='We\'re sad to hear things aren\'t going well. \n\n '
-                     'If you would like to opt-out of future messages, '
-                     'click the button below.',
-                attachments=message_attachments
-            )
+            channel = form_json['channel']['id']
+            send_opt_out_message(channel)
         else:
             slack_client.api_call(
                 'chat.postMessage',
@@ -973,10 +952,83 @@ def message_actions():
         return make_response('', 200)
 
 
+@app.route('/slack/newbiesearch', methods=['GET', 'POST'])
+def newbie_search():
+    """
+    Slack slash newbiesearch - performs search for topic that is inserted after the
+    slash command.
+    :return: Message sent with list of topics that are related to the search criteria
+    """
+    incoming_search_term = json.dumps(request.values['text']).replace('"', '')
+    print(f'incoming search {incoming_search_term}')
+    user = json.dumps(request.values['user_name'])
+    user = user.replace('"', '')
+    messages = Messages.objects()
+    found_messages = []
+    for message in messages:
+        searchresult = search_messages(incoming_search_term, message)
+        if searchresult is not None:
+            found_messages.append(searchresult)
+    print(f'found messages {found_messages}')
+    for found in found_messages:
+        if user is not None:
+            dm = request.values['channel_id']
+            send_dm_message(dm, found)
+    return make_response('', 200)
+
+
+def search_messages(search_string, message):
+    """
+    Search message for text or titles that match the search string
+    :param search_string, message:
+    :return: matching message
+    """
+    result = [x.strip() for x in search_string.split(' ')]
+    print(f'result {result}')
+    for r in result:
+        print(f'r {r}')
+        if r.lower() in message['text'].lower() or r.lower() in message['title'].lower():
+            return message.to_mongo()
+        # else:
+        #     return None
+
+
+def send_opt_out_message(channel):
+    message_attachments = []
+    message_attach = {
+        "callback_id": "opt_out",
+        "replace_original": False,
+        "delete_original": False,
+        "fallback": "You need to upgrade your Slack client to receive this message.",
+        "actions": [{
+            "name": "optout",
+            "type": "button",
+            "text": 'Opt Out',
+            "value": "stop",
+            "confirm": {
+                "title": "Are you sure?",
+                "text": "If you opt out you won\'t receive any more helpful info.",
+                "ok_text": "Yes",
+                "dismiss_text": "No"
+            }
+        }]
+    }
+    message_attachments.insert(0, message_attach)
+    print(message_attachments)
+    slack_client.api_call(
+        'chat.postMessage',
+        channel=channel,
+        text='We\'re sad to hear things aren\'t going well. \n\n '
+             'If you would like to opt-out of future messages, '
+             'click the button below.',
+        attachments=message_attachments
+    )
+
+
 @app.route('/slack/newhirehelp', methods=['POST'])
 def new_hire_help():
     """
-    Slack slash newhirehelp - performs action based on slash message commands
+    Slack slash newhbie - performs action based on slash message commands
     :return: Message sent to update user on action of slash command
     """
     incoming_message = json.dumps(request.values['text']).replace('"', '')
@@ -985,13 +1037,19 @@ def new_hire_help():
     print(f'user {user}')
     if incoming_message == 'opt-in':
         People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
-        message_response = "We'll sign you back up!"
+        message_response = "Welcome back! You'll receive any scheduled notifications."
     elif incoming_message == 'help':
-        message_response = 'Help will soon arrive!'
+        message_response = "To explore how I can help you, try using the slash command for " \
+                           "searching my topics.  It's easy, just type /newbiesearch followed" \
+                           "by the topic that you need more information on.  I'll respond " \
+                           "with any relevant information I find."
     elif incoming_message == 'opt-out':
-        People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
-        message_response = 'Okay, we\'ll stop sending you important tips and reminders. ' \
-                           'Hope you don\'t miss any deadlines!'
+        channel = request.values['channel_id']
+        send_opt_out_message(channel)
+        message_response = ''
+        # People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
+        # message_response = 'Okay, we\'ll stop sending you important tips and reminders. ' \
+        #                    'Hope you don\'t miss any deadlines!'
     else:
         message_response = 'Sorry, I don\'t know what you want.'
     return make_response(message_response, 200)
@@ -1040,63 +1098,67 @@ def send_newhire_messages():
     users = slack_client.api_call('users.list')['members']
     for s in send:
         print('new hire messages ={}'.format(s['send_status']))
+        print(f'emp {s["emp_id"]}')
         emp = People.objects(Q(emp_id=s['emp_id'])).get()
         if emp.user_opt_out is False and emp.manager_opt_out is False and emp.admin_opt_out is False:
             message = Messages.objects(Q(id=s['message_id'])).get().to_mongo()
             print('emp = {}'.format(emp))
             print('message = {}'.format(message))
-            message_text = message['text'].split('button:')
-
             message_user = emp['slack_handle']
             user = search(users, 'name', message_user)
-            message_attachments = []
             if user is not None:
                 dm = slack_client.api_call(
                     'im.open',
                     user=user['id'],
                 )['channel']['id']
-                if len(message['title_link']) > 1 and len(message_text) == 1:
-
-                    message_attach = {
-                        "fallback": "You need to upgrade your Slack client to receive this message.",
-                        "actions": [{
-                            "type": "button",
-                            "text": message['title'],
-                            "url": message['title_link'],
-                        }]
-                    }
-                    message_attachments.insert(0, message_attach)
-                elif len(message_text) > 1:
-                    message_actions = []
-                    for x in range(1, len(message_text)):
-                        action = {
-                            "type": "button",
-                            "text": message_text[x],
-                            "name": message['title'],
-                            "value": message_text[x]
-                        }
-                        message_actions.insert(0, action)
-                    message_attach = {
-                        "callback_id": message['callback_id'] if message['callback_id'] else '',
-                        "fallback": "You need to upgrade your Slack client to receive this message.",
-                        "actions": message_actions
-                    }
-                    message_attachments.insert(0, message_attach)
-                    print(message_attachments)
-                else:
-                    app.logger.info('No message attachments.')
-
-
-                slack_client.api_call(
-                    'chat.postMessage',
-                    channel=dm,
-                    text=message_text[0],
-                    attachments=message_attachments
-                )
+                send_dm_message(dm, message)
                 s.update(set__send_status=True)
         else:
             s.update(set__cancel_status=True)
             print('User has opted out of notifications')
+
+
+def send_dm_message(dm, message):
+    message_text = message['text'].split('button:')
+    message_attachments = []
+    if len(message['title_link']) > 1 and len(message_text) == 1:
+
+        message_attach = {
+            "fallback": "You need to upgrade your Slack client to receive this message.",
+            "actions": [{
+                "type": "button",
+                "text": message['title'],
+                "url": message['title_link'],
+            }]
+        }
+        message_attachments.insert(0, message_attach)
+    elif len(message_text) > 1:
+        message_actions = []
+        for x in range(1, len(message_text)):
+            action = {
+                "type": "button",
+                "text": message_text[x],
+                "name": message['title'],
+                "value": message_text[x]
+            }
+            message_actions.insert(0, action)
+        message_attach = {
+            "callback_id": message['callback_id'] if message['callback_id'] else '',
+            "fallback": "You need to upgrade your Slack client to receive this message.",
+            "actions": message_actions
+        }
+        message_attachments.insert(0, message_attach)
+        print(message_attachments)
+    else:
+        app.logger.info('No message attachments.')
+
+    slack_client.api_call(
+        'chat.postMessage',
+        channel=dm,
+        text=message_text[0],
+        attachments=message_attachments
+    )
+
 
 def get_user_info():
     """
@@ -1123,12 +1185,12 @@ if __name__ == '__main__':
     main_start()
 
     print('scheduler = {}'.format(scheduler.running))
-    scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*')
-    scheduler.add_job(func=get_auth_zero, trigger='cron', hour='*', minute=23)
-    scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute=58)
     if scheduler.running is False:
         scheduler.start()
-    # app.debug = False
+        scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*')
+        scheduler.add_job(func=get_auth_zero, trigger='cron', hour='*', minute=23)
+        scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute=58)
+    app.debug = False
     app.use_reloader=False
     app.jinja_env.cache = {}
     app.run(ssl_context=('cert.pem', 'key.pem'), host='0.0.0.0')
