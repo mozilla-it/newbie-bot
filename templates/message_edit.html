@@ -10,37 +10,17 @@
                 <div class="col-md-4 col-sm-12 ">
                     <div class="form-group moz-drop">
                         <div class="input-group">
-                          <div class="input-group-prepend">
-                            <label class="input-group-text" for="inputGroupSelect01">Message Type</label>
-                          </div>
-                          <select name="message_type" class="custom-select" id="inputGroupSelect01">
-                            <option selected>Choose...</option>
-                            <option value="Reminder: Best Practices">Reminder: Best Practices</option>
-                            <option value="Reminder: Deadline">Reminder: Deadline</option>
-                            <option value="Instruction: How-to">Instruction: How-to</option>
-                            <option value="Informational: Awareness">Informational: Awareness</option>
-                          </select>
+                            <p>{{ form.message_type.label }} {{ form.message_type }}</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group moz-drop">
+
                         <div class="input-group mb-3">
-                          <div class="input-group-prepend">
-                            <label class="input-group-text" for="inputGroupSelect01">Message Category</label>
-                          </div>
-                          <select name="category" class="custom-select" id="inputGroupSelect01">
-                              <option selected>Choose...</option>
-                              <option value="Procedural">Procedural</option>
-                              <option value="Welcome">Welcome</option>
-                              <option value="Failure / fallback">Failure / fallback</option>
-                              <option value="Help">Help</option>
-                              <option value="Rating request">Rating request</option>
-                              <option value="Opt-out">Opt-out</option>
-                              <option value="Cultural">Cultural</option>
-                              <option value="Orientation">Orientation</option>
-                          </select>
+                            <p>{{ form.category.label }} {{ form.category }}</p>
                         </div>
+
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -55,7 +35,7 @@
                     </div>
                 </div>
             </div>
-        <div class="row " >
+            <div class="row " >
                 <div class="col-md-4 col-sm-12 ">
                     <div class="form-group">
                         {{ render_field(form.title, class_="form_control") }}
@@ -73,7 +53,7 @@
                     </div>
                 </div>
             </div>
-        <div class="row " >
+            <div class="row " >
                 <div class="col-md-4 col-sm-12 ">
                     <div class="form-group multi-collapse collapse show" id="multiCollapseNo">
                         {{ render_field(form.send_day, class_="form_control") }}
@@ -84,60 +64,57 @@
                         {{ render_field(form.send_time, class_="form_control") }}
                     </div>
                 </div>
-
-
             </div>
-        <div class="row">
-            <div class="col-md-4">
+            <div class="row">
+                <div class="col-md-4">
                     <div class="form-group multi-collapse collapse show moz-drop" id="multiCollapseNo2">
-                        <div class="input-group mb-3">
-                          <div class="input-group-prepend">
-                            <label class="input-group-text" for="frequency">Frequency</label>
-                          </div>
-                          <select name="frequency" class="custom-select" id="frequency">
-                            <option selected>Choose...</option>
-                            <option selected value="day">Day</option>
-                            <option value="week">Week</option>
-                            <option value="month">Month</option>
-                            <option value="year">Year</option>
-                          </select>
+                        <div class="input-group">
+                            <p>{{ form.frequency.label }} {{ form.frequency }}</p>
                         </div>
                     </div>
                 </div>
-            <div class="col-md-4 col-sm-12 ">
-                <div class="form-group multi-collapse collapse show">
-                    {{ render_field(form.number_of_sends, class_="form_control") }}
+                <div class="col-md-4 col-sm-12 ">
+                    <div class="form-group multi-collapse collapse show">
+                        {{ render_field(form.number_of_sends, class_="form_control") }}
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-md-4 col-sm-12 ">
-                <div class="form-group">
-                    {{ render_field(form.text, class_="form_control") }}
+            <div class="row">
+                <div class="col-md-4 col-sm-12 ">
+                    <div class="form-group">
+                        {{ render_field(form.text, class_="form_control") }}
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-4">
+                <div class="col-md-4">
                     <div class="form-group moz-drop" id="multiCollapseNo2">
                         <div class="input-group mb-3">
-                          <div class="input-group-prepend">
-                            <label class="input-group-text" for="country">Country</label>
-                          </div>
-                          <select name="country" class="custom-select" id="county">
-                            <option selected>Choose...</option>
-                            <option value="ALL">Any</option>
-                            <option value="US">US</option>
-                            <option value="CA">CA</option>
-                          </select>
+                            <p>{{ form.country.label }} {{ form.country }}</p>
                         </div>
                     </div>
                 </div>
-        </div>
-        <p><input type="submit" class="btn btn-primary" value="Submit" data-toggle="collapse" data-target="#collapseExample"></p>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <input type=text id=tag_val name=tag_val class="form-control" placeholder="Add a tag" >
+                        <a class="btn btn-sm" name=add_tag id=add_tag >Add Tag</a>
+                        <input name="tagitems" id="tagitems" type="hidden">
+                        <div><label for="text">Tags</label></div>
+                        <ul class="list-group taglist" name="tag_list" id="tag_list">
+                            {% for tag in message.tags %}
+                                <li class="list-group-item tags">
+                                <a style="margin-left: 20px; margin-right: 20px; text-decoration: none;" class="clearitem"><i class="fas fa-times" style="color:red"></i></a>
+                                    {{ tag }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        <div><input type="submit" class="btn btn-primary" value="Submit" data-toggle="collapse" data-target="#collapseExample"></div>
 
         </form>
     </div>
     </div>
-
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript">$SCRIPT_ROOT = {{ request.script_root|tojson|safe }}; </script>
     <script src="{{ url_for('static', filename='myscript.js') }}"></script>
 
 {%  endblock %}

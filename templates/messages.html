@@ -13,36 +13,14 @@
                 <div class="col-md-6 col-sm-12 ">
                     <div class="form-group moz-drop">
                         <div class="input-group">
-                          <div class="input-group-prepend">
-                            <label class="input-group-text" for="inputGroupSelect01">Message Type</label>
-                          </div>
-                          <select name="message_type" class="custom-select" id="inputGroupSelect01">
-                            <option selected>Choose...</option>
-                            <option value="Reminder: Best Practices">Reminder: Best Practices</option>
-                            <option value="Reminder: Deadline">Reminder: Deadline</option>
-                            <option value="Instruction: How-to">Instruction: How-to</option>
-                            <option value="Informational: Awareness">Informational: Awareness</option>
-                          </select>
+                            <p>{{ form.message_type.label }} {{ form.message_type }}</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group moz-drop">
                         <div class="input-group mb-3">
-                          <div class="input-group-prepend">
-                            <label class="input-group-text" for="inputGroupSelect01">Message Category</label>
-                          </div>
-                          <select name="category" class="custom-select" id="inputGroupSelect01">
-                            <option selected>Choose...</option>
-                            <option  value="Procedural">Procedural</option>
-                            <option value="Welcome">Welcome</option>
-                            <option value="Failure / fallback">Failure / fallback</option>
-                            <option value="Help">Help</option>
-                            <option value="Rating request">Rating request</option>
-                            <option value="Opt-out">Opt-out</option>
-                            <option value="Cultural">Cultural</option>
-                            <option value="Orientation">Orientation</option>
-                          </select>
+                            <p>{{ form.category.label }} {{ form.category }}</p>
                         </div>
                     </div>
                 </div>
@@ -92,18 +70,9 @@
             </div>
         <div class="row centered">
             <div class="col-md-6">
-                    <div class="form-group multi-collapse collapse show moz-drop" id="multiCollapseNo2">
-                        <div class="input-group mb-3">
-                          <div class="input-group-prepend">
-                            <label class="input-group-text" for="frequency">Frequency</label>
-                          </div>
-                          <select name="frequency" class="custom-select" id="frequency">
-                            <option selected>Choose...</option>
-                            <option selected value="day">Day</option>
-                            <option value="week">Week</option>
-                            <option value="month">Month</option>
-                            <option value="year">Year</option>
-                          </select>
+                    <div class="form-group multi-collapse collapse show " id="multiCollapseNo2">
+                        <div class="input-group">
+                            <p>{{ form.frequency.label }} {{ form.frequency }}</p>
                         </div>
                     </div>
                 </div>
@@ -122,15 +91,7 @@
             <div class="col-md-6">
                 <div class="form-group moz-drop" id="multiCollapseNo2">
                     <div class="input-group mb-3">
-                      <div class="input-group-prepend">
-                        <label class="input-group-text" for="country">Country</label>
-                      </div>
-                      <select name="country" class="custom-select" id="county">
-                        <option selected>Choose...</option>
-                        <option value="ALL">Any</option>
-                        <option value="US">US</option>
-                        <option value="CA">CA</option>
-                      </select>
+                        <p>{{ form.country.label }} {{ form.country }}</p>
                     </div>
                 </div>
             </div>

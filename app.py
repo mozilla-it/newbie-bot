@@ -331,7 +331,6 @@ def edit_message(message_id):
     form = AddMessageForm(request.form)
     if request.method == 'GET':
         messages = Messages.objects(Q(id=message_id)).get()
-        print(messages.type)
         form.message_type.data = messages.type
         form.category.data = messages.category
         form.title.data = messages.title
@@ -345,7 +344,7 @@ def edit_message(message_id):
         form.number_of_sends.data = messages.number_of_sends
         form.country.data = messages.country
         form.tagitems.data = messages.tags
-        return render_template('message_edit.html', form=form, user=user, admin=admin)
+        return render_template('message_edit.html', form=form, user=user, admin=admin, message=messages)
     elif request.method == 'POST':
         if form.validate():
             message = Messages.objects(Q(id=message_id)).get()
@@ -365,6 +364,7 @@ def edit_message(message_id):
             message.country = form.country.data
             tagitems = form.tagitems.data
             tag = tagitems.split('|')
+            tag = [re.sub(r'\r\n\s+', '', x) for x in tag]
             message.tags = tag[:-1]
             message.save()
             return redirect(current_host + '/addMessage')

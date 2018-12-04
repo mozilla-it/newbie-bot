@@ -1,10 +1,19 @@
-from wtforms import Form, StringField, TextAreaField, validators, IntegerField, BooleanField, FieldList, SelectMultipleField
+from wtforms import Form, StringField, TextAreaField, validators, IntegerField, BooleanField, FieldList, SelectMultipleField, SelectField
 
 
 
 class AddMessageForm(Form):
-    message_type = StringField('Message Type', [validators.data_required()])
-    category = StringField('Category', [validators.data_required()])
+    message_type = SelectField('Message Type', validators=[validators.data_required()], choices=[
+        ('best_practices', 'Reminder: Best Practices'),
+        ('deadline', 'Reminder: Deadline'),
+        ('instruction', 'Instruction: How-to'),
+        ('informational', 'Informational: Awareness')
+    ])
+    category = SelectField('Category', validators=[validators.data_required()], choices=[
+        ('Procedural', 'Prodedural'), ('Welcome', 'Welcome'), ('Failure', 'Failure / fallback'),
+        ('Help', 'Help'), ('Rating', 'Rating request'), ('Opt-out', 'Opt-out'), ('Cultural', 'Cultural'),
+        ('Orientation', 'Orientation')
+    ])
     title = StringField('Title', [validators.data_required()])
     title_link = StringField('Title Link')
     send_day = IntegerField(
@@ -15,7 +24,9 @@ class AddMessageForm(Form):
         'Send Hour',
         [validators.number_range(min=0, max=23, message='Must be valid hour (0 - 23).')],
         default=9)
-    frequency = StringField('Frequency')
+    frequency = SelectField('Frequency', validators=[validators.data_required()], choices=[
+        ('day', 'Day'), ('week', 'Week'), ('month', 'Month'), ('year', 'Year')
+    ])
     send_date = StringField('Send Date')
     send_once = BooleanField('Specific Date', default=False)
     text = TextAreaField('Message Value')
@@ -23,7 +34,8 @@ class AddMessageForm(Form):
         'Number of Sends',
         [validators.number_range(min=1, max=10, message='Must be between 1 and 10.'), validators.data_required()],
         default=1)
-    country = StringField('Country', [validators.data_required()])
+    country = SelectField('Country', validators=[validators.data_required()], choices=[('ALL', 'ALL'), ('US', 'US'),
+                                                                                       ('CA', 'CA')])
     tagitems = StringField('Tags')
 
 
