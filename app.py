@@ -287,13 +287,16 @@ def add_new_message():
     user = get_user_info()
     admin = get_user_admin()
     form = AddMessageForm(request.form)
+    messages = Messages.objects()
     if request.method == 'POST':
+        print(request.form)
         if form.validate():
+
             message = Messages()
             message.type = form.message_type.data
             message.category = form.category.data
             message.title = form.title.data
-            message.title_link = form.title_link.data
+            message.title_link = json.loads(form.linkitems.data)
             message.send_day = form.send_day.data
             message.send_hour = form.send_time.data
             date_start = form.send_date.data.split('-')
@@ -311,9 +314,8 @@ def add_new_message():
             return redirect(current_host + '/addMessage')
         else:
             print('errors = {}'.format(form.errors))
-            messages = Messages.objects()
+            # messages = Messages.objects()
             return render_template('messages.html', messages=messages, form=form, user=user, admin=admin)
-    messages = Messages.objects()
     return render_template('messages.html', messages=messages, form=form, user=user, admin=admin)
 
 
@@ -334,7 +336,7 @@ def edit_message(message_id):
         form.message_type.data = messages.type
         form.category.data = messages.category
         form.title.data = messages.title
-        form.title_link.data = messages.title_link
+        form.linkitems.data = messages.title_link
         form.send_day.data = messages.send_day
         form.send_time.data = messages.send_hour
         form.send_date.data = messages.send_date
@@ -351,7 +353,7 @@ def edit_message(message_id):
             message.type = form.message_type.data
             message.category = form.category.data
             message.title = form.title.data
-            message.title_link = form.title_link.data
+            message.title_link = json.loads(form.linkitems.data)
             message.send_day = form.send_day.data
             message.send_hour = form.send_time.data
             date_start = form.send_date.data.split('-')
@@ -974,7 +976,11 @@ def newbie_search():
         if user is not None:
             dm = request.values['channel_id']
             send_dm_message(dm, found)
-    return make_response('', 200)
+            return make_response('', 200)
+    if len(found_messages) == 0:
+        return make_response('I\'m sorry, I couldn\'t find '
+                      'any information on ' + incoming_search_term, 200)
+
 
 
 def search_messages(search_string, message):
@@ -1000,9 +1006,11 @@ def send_opt_out_message(channel):
         "replace_original": False,
         "delete_original": False,
         "fallback": "You need to upgrade your Slack client to receive this message.",
+        "color": "#d72b3f",
         "actions": [{
             "name": "optout",
             "type": "button",
+            "style": "danger",
             "text": 'Opt Out',
             "value": "stop",
             "confirm": {
@@ -1125,8 +1133,10 @@ def send_dm_message(dm, message):
 
         message_attach = {
             "fallback": "You need to upgrade your Slack client to receive this message.",
+            "color": "#008952",
             "actions": [{
                 "type": "button",
+                "style": "primary",
                 "text": message['title'],
                 "url": message['title_link'],
             }]
@@ -1145,6 +1155,7 @@ def send_dm_message(dm, message):
         message_attach = {
             "callback_id": message['callback_id'] if message['callback_id'] else '',
             "fallback": "You need to upgrade your Slack client to receive this message.",
+            "color": "#008952",
             "actions": message_actions
         }
         message_attachments.insert(0, message_attach)

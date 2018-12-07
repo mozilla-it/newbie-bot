@@ -15,7 +15,7 @@ class AddMessageForm(Form):
         ('Orientation', 'Orientation')
     ])
     title = StringField('Title', [validators.data_required()])
-    title_link = StringField('Title Link')
+    linkitems = StringField('Title Link')
     send_day = IntegerField(
         'Send Day',
         [validators.number_range(min=1, max=31, message='Must be valid day.')],

@@ -5,7 +5,25 @@
     }
 
 .moz-drop {
-    margin-top: 26px;
+    margin-top: 30px;
+}
+.moz-right {
+    margin-right: 2em;
+}
+.moz-input {
+    max-width: 5em;
+}
+.moz-drop-sm {
+    margin-top: 1em;
+}
+#link_list li {
+  list-style-position:inside;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#link_list li:hover {
+    text-overflow: initial;
 }
 .profile-icon {
     width: 50px;

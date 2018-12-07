@@ -5,7 +5,7 @@ class Messages(mongoengine.Document):
     type = mongoengine.StringField(required=True)
     category = mongoengine.StringField(required=True)
     title = mongoengine.StringField(unique=True, required=True)
-    title_link = mongoengine.StringField()
+    title_link = mongoengine.ListField()
     send_day = mongoengine.IntField(required=True)
     send_hour = mongoengine.IntField(required=True)
     frequency = mongoengine.StringField(required=True)
