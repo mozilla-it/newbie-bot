@@ -1127,33 +1127,26 @@ def send_newhire_messages():
 
 
 def send_dm_message(dm, message):
+    print(f'send message {message}')
     message_text = message['text'].split('button:')
+    message_link = message['title_link']
     message_attachments = []
-    if len(message['title_link']) > 1 and len(message_text) == 1:
-
-        message_attach = {
-            "fallback": "You need to upgrade your Slack client to receive this message.",
-            "color": "#008952",
-            "actions": [{
-                "type": "button",
-                "style": "primary",
-                "text": message['title'],
-                "url": message['title_link'],
-            }]
-        }
-        message_attachments.insert(0, message_attach)
-    elif len(message_text) > 1:
+    callback = message['title'].lower()
+    if len(message_link) > 0:
+        print(f'message link {message_link}')
         message_actions = []
-        for x in range(1, len(message_text)):
+        for x in message_link:
+            print(f'url {x["url"]}')
             action = {
                 "type": "button",
-                "text": message_text[x],
-                "name": message['title'],
-                "value": message_text[x]
+                "text": x['name'],
+                "name": x['name'],
+                "url": x['url'],
+                "value": x['url']
             }
-            message_actions.insert(0, action)
+            message_actions.append(action)
         message_attach = {
-            "callback_id": message['callback_id'] if message['callback_id'] else '',
+            "callback_id": callback,
             "fallback": "You need to upgrade your Slack client to receive this message.",
             "color": "#008952",
             "actions": message_actions
@@ -1198,9 +1191,9 @@ if __name__ == '__main__':
     print('scheduler = {}'.format(scheduler.running))
     if scheduler.running is False:
         scheduler.start()
-        scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*')
-        scheduler.add_job(func=get_auth_zero, trigger='cron', hour='*', minute=23)
-        scheduler.add_job(func=updates_from_slack, trigger='cron', hour='*', minute=58)
+        scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*/2')
+        scheduler.add_job(func=get_auth_zero, trigger='cron', hour=0, minute=0)
+        scheduler.add_job(func=updates_from_slack, trigger='cron', hour=0, minute=5)
     app.debug = False
     app.use_reloader=False
     app.jinja_env.cache = {}
