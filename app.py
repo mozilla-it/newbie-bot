@@ -965,6 +965,7 @@ def newbie_search():
     print(f'incoming search {incoming_search_term}')
     user = json.dumps(request.values['user_name'])
     user = user.replace('"', '')
+    print(f'searching user {user}')
     messages = Messages.objects()
     found_messages = []
     for message in messages:
@@ -976,10 +977,10 @@ def newbie_search():
         if user is not None:
             dm = request.values['channel_id']
             send_dm_message(dm, found)
-            return make_response('', 200)
     if len(found_messages) == 0:
         return make_response('I\'m sorry, I couldn\'t find '
                       'any information on ' + incoming_search_term, 200)
+    return make_response('', 200)
 
 
 
@@ -1075,6 +1076,7 @@ def send_slack_message():
     form = SlackDirectMessage(request.form)
     slack_client.rtm_connect()
     users = slack_client.api_call('users.list')['members']
+    print(f'slack user {users}')
     if request.method == 'POST':
         if form.validate():
             message_text = form.message_text.data
@@ -1191,7 +1193,7 @@ if __name__ == '__main__':
     print('scheduler = {}'.format(scheduler.running))
     if scheduler.running is False:
         scheduler.start()
-        scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*/2')
+        scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*/10')
         scheduler.add_job(func=get_auth_zero, trigger='cron', hour=0, minute=0)
         scheduler.add_job(func=updates_from_slack, trigger='cron', hour=0, minute=5)
     app.debug = False

@@ -16,6 +16,15 @@
 .moz-drop-sm {
     margin-top: 1em;
 }
+
+.moz-disabled {
+    pointer-events: none;
+}
+
+.moz-http:hover {
+
+}
+
 #link_list li {
   list-style-position:inside;
   white-space: nowrap;

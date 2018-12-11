@@ -87,18 +87,18 @@
         <div class="col-md-6">
             <div class="form-group">
                 <div class="row">
-                    <input type=text id=link_name name=link_name class="form-control moz-input" placeholder="Name" >
-                    <input type="text" name="link_url" placeholder="Link">
+                    <input type=text id=link_name name=link_name class="form-control moz-input" placeholder="Name" data-toggle="tooltip" data-placement="top" title="This value will be displayed as a button title." >
+                    <input type="text" id="link_url" name="link_url" placeholder="Link" data-toggle="tooltip" data-placement="top" title="Must be a valid URL">
                     <input name="linkitems" id="linkitems" type="hidden">
                 </div>
-                <a class="btn btn-sm btn-outline-primary moz-drop-sm" name=add_link id=add_link>Add Link</a>
+                <a class="btn btn-sm btn-outline-primary moz-drop-sm moz-disabled" name=add_link id=add_link >Add Link</a>
             </div>
         </div>
         <div class="col-md-6">
             <div class="form-group">
                 <div class="row">
                     <input type=text id=tag_val name=tag_val class="form-control" placeholder="Add a tag" >
-                    <a class="btn btn-sm btn-outline-primary moz-drop-sm" name=add_tag id=add_tag >Add Tag</a>
+                    <a class="btn btn-sm btn-outline-primary moz-drop-sm moz-disabled" name=add_tag id=add_tag >Add Tag</a>
                     <input name="tagitems" id="tagitems" type="hidden">
                 </div>
 

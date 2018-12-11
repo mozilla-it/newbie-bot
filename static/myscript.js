@@ -42,6 +42,7 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
             tagitems = tagitems + $('input[name="tag_val"]').val() + '|';
             $('#tagitems').val(tagitems);
             $('input[name="tag_val"]').val('');
+            document.getElementById('add_tag').classList.add('moz-disabled');
         });
     });
 
@@ -60,6 +61,7 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
             $('#linkitems').val(JSON.stringify(links));
             $('input[name="link_name"]').val('');
             $('input[name="link_url"]').val('');
+            document.getElementById('add_link').classList.add('moz-disabled');
         });
     });
     // Function to remove links and tags
@@ -90,4 +92,31 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
             }
         }
     }, false);
+
+    // Check inputs and enable/disable as appropriate
+    document.addEventListener('keyup', (e) => {
+        checkInputs();
+    }, false);
+    function checkInputs() {
+        var name = document.getElementById('link_name');
+        var link = document.getElementById('link_url');
+        var tag = document.getElementById('tag_val');
+        if (name.value.length > 0 && link.value.length > 0 && (link.value.startsWith('http://') || link.value.startsWith('https://'))){
+            document.getElementById('add_link').classList.remove('moz-disabled');
+        } else {
+            document.getElementById('add_link').classList.add('moz-disabled');
+        }
+        if (tag.value.length > 0){
+            document.getElementById('add_tag').classList.remove('moz-disabled');
+        } else {
+            document.getElementById('add_tag').classList.add('moz-disabled');
+        }
+    };
+
+
 }(window, jQuery));
+// add tool tip to http link
+    $(function() {
+      $('[data-toggle="tooltip"]').tooltip();
+    });
+
