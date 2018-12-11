@@ -1143,6 +1143,7 @@ def send_dm_message(dm, message):
                 "type": "button",
                 "text": x['name'],
                 "name": x['name'],
+                "style": "primary",
                 "url": x['url'],
                 "value": x['url']
             }
