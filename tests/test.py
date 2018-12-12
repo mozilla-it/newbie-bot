@@ -1,4 +1,5 @@
 import database.people as people
+import database.messages as messages
 import database.mongo_setup as mongo
 import pytest
 import datetime
@@ -13,7 +14,8 @@ class TestClass(object):
 
 
     def teardown(self):
-        people.People.objects(emp_id=123).delete()
+        people.People.objects(emp_id='123').delete()
+        messages.Messages.objects(title='Test Message').delete()
 
     @pytest.fixture(scope='module')
     def new_employee(self):
@@ -22,7 +24,7 @@ class TestClass(object):
         person.first_name = 'Bob'
         person.last_name = 'Jones'
         person.start_date = datetime.datetime.now()
-        person.emp_id = 123
+        person.emp_id = '123'
         person.title = 'Tester'
         person.country = 'US'
         person.city = 'Houston'
@@ -30,7 +32,7 @@ class TestClass(object):
         person.timezone = 'Americas/Chicago'
         person.email = 'bob@jones.com'
         person.slack_handle = 'tester123'
-        person.manager_id = 456
+        person.manager_id = '456'
         person.phone = '212-555-1212'
         person.last_modified = datetime.datetime.now()
         person.save()
@@ -46,7 +48,7 @@ class TestClass(object):
         assert new_employee.first_name == 'Bob'
         assert new_employee.last_name == 'Jones'
         assert not new_employee.start_date == ''
-        assert new_employee.emp_id == 123
+        assert new_employee.emp_id == '123'
         assert new_employee.title == 'Tester'
         assert new_employee.country == 'US'
         assert new_employee.city == 'Houston'
@@ -54,9 +56,35 @@ class TestClass(object):
         assert new_employee.timezone == 'Americas/Chicago'
         assert new_employee.email == 'bob@jones.com'
         assert new_employee.slack_handle == 'tester123'
-        assert new_employee.manager_id == 456
+        assert new_employee.manager_id == '456'
         assert new_employee.phone == '212-555-1212'
         assert not new_employee.last_modified == ''
+
+    @pytest.fixture(scope='module')
+    def new_message(self):
+        mongo.global_init()
+        message = messages.Messages()
+        message.type = 'test_practice'
+        message.category = 'Test'
+        message.title = 'Test Message'
+        message.title_link = [{"name": "test", "url": "https://www.example.com"}]
+        message.send_day = 7
+        message.send_hour = 9
+        message.send_date = datetime.datetime.now()
+        message.send_once = True
+        message.frequency = 'day'
+        message.text = 'Hi, I\'m a test message and you\'re not.'
+        message.number_of_sends = 1
+        message.country = 'ALL'
+        message.tags = ['test', 'code', 'success']
+        message.save()
+        return message
+
+    def test_new_message(self, new_message):
+        assert new_message.type == 'test_practice'
+        assert new_message.category == 'Test'
+        assert new_message.title == 'Test Message'
+
 
     def test_adjust_send_date_for_holidays(self):
         """
