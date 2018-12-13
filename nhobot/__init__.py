@@ -28,6 +28,7 @@ current_host = 'https://nhobot.ngrok.io'
 
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = settings.MONGODB_SECRET
+app.config['SQLALCHEMY_DATABASE_URI'] = settings.SQLALCHEMY_DATABASE_URI
 cors(app)
 db = SQLAlchemy(app)
 
