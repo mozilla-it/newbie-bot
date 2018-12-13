@@ -1,6 +1,7 @@
 import mongoengine
 import datetime
 
+from nhobot import db
 
 class Admin(mongoengine.Document):
     emp_id = mongoengine.StringField(required=True, unique=True)
@@ -13,3 +14,7 @@ class Admin(mongoengine.Document):
         'db_alias': 'core',
         'collection': 'admin'
     }
+
+class NewAdmin(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    emp_id = db.Column(db.String(), unique=True, )
