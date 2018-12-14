@@ -79,8 +79,8 @@ if AUTH_AUDIENCE is '':
     AUTH_AUDIENCE = 'https://' + app.config.get('HOST') + '/userinfo'
 
 # This will be the callback URL Auth0 returns the authenticatee to.
-# app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
-app.config['AUTH_URL'] = 'https://nhobot.ngrok.io/callback/auth'
+app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
+# app.config['AUTH_URL'] = 'https://nhobot.ngrok.io/callback/auth'
 
 
 oidc_config = config.OIDCConfig()

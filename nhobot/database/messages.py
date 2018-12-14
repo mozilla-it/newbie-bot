@@ -40,8 +40,7 @@ class NewMessages(db.Model):
     created_date = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
     country = db.Column(db.String(3), nullable=False, default='ALL')
     callback_id = db.Column(db.String(15), nullable=True)
-    tags = db.Column(db.ARRAY(str))
-    messagestosend = db.relationship('NewMessagesToSend', backref='messagetosend', lazy=True)
+    tags = db.Column(db.String())
 
     def __repr__(self):
         return f"NewMessages('{self.type}', '{self.category}', '{self.title}', '{self.title_link}'" \
