@@ -33,7 +33,7 @@ class NewPeople(db.Model):
     start_date = db.Column(db.DateTime, nullable=False)
     last_modified = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
     timezone = db.Column(db.String(100), nullable=True, default='US/Pacific')
-    country = db.Column(db.String(2), nullable=True)
+    country = db.Column(db.String(4), nullable=True)
     manager_id = db.Column(db.String(120), nullable=False)
     user_opt_out = db.Column(db.Boolean, nullable=False, default=False)
     manager_opt_out = db.Column(db.Boolean, nullable=False, default=False)

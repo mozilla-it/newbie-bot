@@ -1,9 +1,12 @@
-from nhobot.database.people import People
-from nhobot.database.messages import Messages
+from nhobot.database.people import People, NewPeople
+from nhobot.database.messages import Messages, NewMessages
 from nhobot.database.messages_to_send import MessagesToSend as Send
-from nhobot.database.admin import Admin
-from nhobot.database.admin_roles import AdminRoles
-from nhobot.database.user_feedback import UserFeedback
+from nhobot.database.messages_to_send import NewMessagesToSend as NewSend
+from nhobot.database.admin import Admin, NewAdmin
+from nhobot.database.admin_roles import AdminRoles, NewAdminRoles
+from nhobot.database.user_feedback import UserFeedback, NewUserFeedback
+from nhobot import db
+from sqlalchemy.exc import IntegrityError
 
 # form imports
 from nhobot.forms.slack_direct_message import SlackDirectMessage
@@ -30,7 +33,8 @@ from authzero import AuthZero
 def get_user_admin():
     try:
         userid = session.get('profile')['user_id']
-        return Admin.objects(emp_id=userid).first()
+        print(f'userid {userid}')
+        return NewAdmin.query.filter_by(emp_id=userid).first()
     except:
         return None
 
@@ -52,7 +56,10 @@ def requires_super(f):
         if 'profile' not in session:
             return redirect(current_host)
         userid = session.get('profile')['user_id']
-        admin = Admin.objects(emp_id=userid).first()
+        print(f'super userid {userid}')
+        # admin = Admin.objects(emp_id=userid).first()
+        admin = NewAdmin.query.filter_by(emp_id=userid).first()
+        print(f'super admin {admin}')
         if admin is None or admin.super_admin is not True:
             return redirect(current_host)
         return f(*args, **kwargs)
@@ -70,7 +77,7 @@ def requires_admin(f):
             return redirect(current_host)
         userid = session.get('profile')['user_id']
         print(f'requires admin {userid}')
-        admin = Admin.objects(emp_id=userid).first()
+        admin = NewAdmin.query.filter_by(emp_id=userid).first()
         print(f'Admin {admin.emp_id}')
         print(f'Super {admin.super_admin}')
         if admin is None:
@@ -90,8 +97,8 @@ def requires_manager(f):
         if 'profile' not in session:
             return redirect(current_host)
         userid = session.get('profile')['user_id']
-        print(f'requires admin {userid}')
-        admin = Admin.objects(emp_id=userid).first()
+        print(f'requires manager {userid}')
+        admin = NewAdmin.query.filter_by(emp_id=userid).first()
         if admin is None:
             return redirect(current_host)
         elif admin.super_admin:
@@ -116,7 +123,6 @@ def get_auth_zero():
     :return: Auth0 user list
     """
     print('get auth zero')
-
     config = {'client_id': client_id, 'client_secret': client_secret, 'uri': client_uri}
     az = AuthZero(config)
     az.get_access_token()
@@ -125,7 +131,7 @@ def get_auth_zero():
         connection = user['identities'][0]['connection']
         if 'Mozilla-LDAP' in connection:
             user_id = user['user_id']
-            current_user = People.objects(emp_id=user_id)
+            current_user = NewPeople.query.filter_by(emp_id=user_id)
             if not current_user:
                 name = user['name'].split()
                 try:
@@ -134,22 +140,22 @@ def get_auth_zero():
                     manager_email = ''
                 first_name = name[0]
                 last_name = name[-1]
-                person = People()
-                person.emp_id = user_id
-                person.first_name = first_name
-                person.last_name = last_name
-                person.manager_id = manager_email
                 country = [item for item in user['groups'] if item[:7] == 'egencia']
+                person_country = ''
                 if country:
-                    person.country = country[0][8:].upper()
-                person.email = user['email']
-                person.start_date = user['created_at']
+                    person_country = country[0][8:].upper()
+                dnow = datetime.datetime.utcnow()
+                person = NewPeople(emp_id=user_id, first_name=first_name, last_name=last_name,
+                          email=user['email'], slack_handle='', start_date=user['created_at'],
+                          last_modified=dnow, timezone='', country=person_country,
+                          manager_id=manager_email, user_opt_out=False, manager_opt_out=False,
+                          admin_opt_out=False, created_date=dnow)
+                db.session.add(person)
                 try:
-                    person.save()
-                except pymongo_errors.DuplicateKeyError as error:
+                    db.session.commit()
+                except IntegrityError as error:
                     print('DuplicateKeyError {}'.format(error))
-                except mongoengine_errors.NotUniqueError as error:
-                    pass
+                    db.session.rollback()
 
 
 def updates_from_slack():
@@ -157,7 +163,7 @@ def updates_from_slack():
     actual_one_day_ago = measure_date()
     slack_users = slack_client.api_call('users.list')['members']
     print(len(slack_users))
-    people = People.objects(slack_handle=None)
+    people = NewPeople.query.filter_by(slack_handle=None).all()
     for person in people:
         slackinfo = searchemail(slack_users, 'email', person.email)
         print(slackinfo)
@@ -172,7 +178,7 @@ def updates_from_slack():
             except:
                 timezone = 'US/Pacific'
             person.timezone = timezone
-            person.save()
+            db.session.commit()
             print(actual_one_day_ago)
             start_date = person.start_date
             # .strptime('%Y-%m-%d')
@@ -202,7 +208,7 @@ def find_slack_handle(socials: dict):
         return 'mballard'
 
 
-def add_messages_to_send(person: People):
+def add_messages_to_send(person: NewPeople):
     """
     Add each message from the messages table to the messages_to_send table when a new user is added
     :param person:
@@ -212,8 +218,9 @@ def add_messages_to_send(person: People):
     start_date = person.start_date
     my_timezone = pytz.timezone(person.timezone)
     my_country = person.country
-    for m in Messages.objects:
-        mobject = json.loads(m.to_json())
+    messages = NewMessages.query.all()
+    for m in messages:
+        print(f'm = {m.id}')
         for x in range(0, m.number_of_sends):
             if x == 0:
                 send_day = m.send_day
@@ -227,11 +234,11 @@ def add_messages_to_send(person: People):
             send_date_time = send_date_time.replace(hour=m.send_hour, minute=0, second=0)
             send_date_time = adjust_send_date_for_holidays_and_weekends(send_date_time, my_country)
             if m.country == 'US' and my_country == 'US':
-                save_send_message(employee_id, mobject['_id']['$oid'], x, send_date_time)
+                save_send_message(employee_id, m.id, x, send_date_time)
             elif m.country == 'CA' and my_country == 'CA':
-                save_send_message(employee_id, mobject['_id']['$oid'], x, send_date_time)
+                save_send_message(employee_id, m.id, x, send_date_time)
             elif m.country == 'ALL':
-                save_send_message(employee_id, mobject['_id']['$oid'], x, send_date_time)
+                save_send_message(employee_id, m.id, x, send_date_time)
             else:
                 app.logger.info('No message to be sent, user country {} and message country {}'.format(my_country, m.country))
 
@@ -275,13 +282,19 @@ def save_send_message(emp_id, message_id, send_order, send_dttm):
     :param send_dttm:
     :return:
     """
-    to_send = Send()
-    to_send.emp_id = emp_id
-    to_send.message_id = message_id
-    to_send.send_order = send_order
-    to_send.send_dttm = send_dttm
-    to_send.last_updated = datetime.datetime.now()
-    to_send.save()
+    # to_send = Send()
+    # to_send.emp_id = emp_id
+    # to_send.message_id = message_id
+    # to_send.send_order = send_order
+    # to_send.send_dttm = send_dttm
+    # to_send.last_updated = datetime.datetime.now()
+    # to_send.save()
+    dnow = datetime.datetime.utcnow()
+    to_send = NewSend(emp_id=emp_id, message_id=message_id, send_dttm=send_dttm,
+                      send_order=send_order, send_status=False, cancel_status=False,
+                      last_updated=dnow, created_date=dnow)
+    db.session.add(to_send)
+    db.session.commit()
 
 
 def verify_slack_token(request_token):
@@ -398,7 +411,7 @@ def send_newhire_messages():
     for s in send:
         print('new hire messages ={}'.format(s['send_status']))
         print(f'emp {s["emp_id"]}')
-        emp = People.objects(Q(emp_id=s['emp_id'])).get()
+        emp = NewPeople.query.filter_by(emp_id=s['emp_id']).first()
         if emp.user_opt_out is False and emp.manager_opt_out is False and emp.admin_opt_out is False:
             message = Messages.objects(Q(id=s['message_id'])).get().to_mongo()
             print('emp = {}'.format(emp))
@@ -525,6 +538,7 @@ def index():
     user = get_user_info()
     admin = get_user_admin()
     print(f'user {user}')
+    print(f'admin {admin}')
     return render_template('home.html', user=user, admin=admin)
 
 
@@ -550,39 +564,32 @@ def add_new_message():
     user = get_user_info()
     admin = get_user_admin()
     form = AddMessageForm(request.form)
-    messages = Messages.objects()
+    messages = NewMessages.query.all()
     if request.method == 'POST':
-        print(request.form)
         if form.validate():
-
-            message = Messages()
-            message.type = form.message_type.data
-            message.category = form.category.data
-            message.title = form.title.data
-            message.title_link = json.loads(form.linkitems.data)
-            message.send_day = form.send_day.data
-            message.send_hour = form.send_time.data
+            title_link = json.loads(form.linkitems.data)
             date_start = form.send_date.data.split('-')
             sdate = datetime.datetime(int(date_start[0]), int(date_start[1]), int(date_start[2]), 0, 0, 0)
-            message.send_date = datetime.datetime.strftime(sdate, '%Y-%m-%dT%H:%M:%S')
-            message.send_once = True if form.send_once.data is True else False
-            message.frequency = form.frequency.data
-            message.text = form.text.data
-            message.number_of_sends = form.number_of_sends.data
-            message.country = form.country.data
+            send_date = datetime.datetime.strftime(sdate, '%Y-%m-%dT%H:%M:%S')
+            send_once = True if form.send_once.data is True else False
             tagitems = form.tagitems.data
             tag = tagitems.split('|')
-            message.tags = tag[:-1]
-            message.save()
-            return redirect(current_host + '/addMessage')
+            message = NewMessages(type=form.message_type.data, category=form.category.data, title=form.title.data,
+                                  title_link=title_link, send_day=form.send_day.data, send_hour=form.send_time.data,
+                                  send_date=send_date, send_once=send_once, frequency=form.frequency.data,
+                                  text=form.text.data, number_of_sends=form.number_of_sends.data, country=form.country.data,
+                                  tags=tag[:-1])
+            db.session.add(message)
+            db.session.commit()
+            # return redirect(current_host + '/addMessage')
+            return redirect(url_for('add_new_message'))
         else:
             print('errors = {}'.format(form.errors))
-            # messages = Messages.objects()
-            return render_template('messages.html', messages=messages, form=form, user=user, admin=admin)
+            return redirect(url_for('add_new_message'))
     return render_template('messages.html', messages=messages, form=form, user=user, admin=admin)
 
 
-@app.route('/editMessage/<string:message_id>', methods=['GET', 'POST'])
+@app.route('/editMessage/<int:message_id>', methods=['GET', 'POST'])
 @requires_admin
 def edit_message(message_id):
     """
@@ -594,8 +601,9 @@ def edit_message(message_id):
     user = get_user_info()
     admin = get_user_admin()
     form = AddMessageForm(request.form)
+    messages = NewMessages.query.get_or_404(message_id)
     if request.method == 'GET':
-        messages = Messages.objects(Q(id=message_id)).get()
+        # messages = Messages.objects(Q(id=message_id)).get()
         form.message_type.data = messages.type
         form.category.data = messages.category
         form.title.data = messages.title
@@ -612,33 +620,34 @@ def edit_message(message_id):
         return render_template('message_edit.html', form=form, user=user, admin=admin, message=messages)
     elif request.method == 'POST':
         if form.validate():
-            message = Messages.objects(Q(id=message_id)).get()
-            message.type = form.message_type.data
-            message.category = form.category.data
-            message.title = form.title.data
-            message.title_link = json.loads(form.linkitems.data)
-            message.send_day = form.send_day.data
-            message.send_hour = form.send_time.data
+            messages.type = form.message_type.data
+            messages.category = form.category.data
+            messages.title = form.title.data
+            messages.title_link = json.loads(form.linkitems.data)
+            messages.send_day = form.send_day.data
+            messages.send_hour = form.send_time.data
             date_start = form.send_date.data.split('-')
             sdate = datetime.datetime(int(date_start[0]), int(date_start[1]), int(date_start[2]), 0, 0, 0)
-            message.send_date = datetime.datetime.strftime(sdate, '%Y-%m-%dT%H:%M:%S')
-            message.send_once = True if form.send_once.data is True else False
-            message.frequency = form.frequency.data
-            message.text = form.text.data
-            message.number_of_sends = form.number_of_sends.data
-            message.country = form.country.data
+            messages.send_date = datetime.datetime.strftime(sdate, '%Y-%m-%dT%H:%M:%S')
+            messages.send_once = True if form.send_once.data is True else False
+            messages.frequency = form.frequency.data
+            messages.text = form.text.data
+            messages.number_of_sends = form.number_of_sends.data
+            messages.country = form.country.data
             tagitems = form.tagitems.data
             tag = tagitems.split('|')
             tag = [re.sub(r'\r\n\s+', '', x) for x in tag]
-            message.tags = tag[:-1]
-            message.save()
-            return redirect(current_host + '/addMessage')
+            messages.tags = tag[:-1]
+            db.session.commit()
+            # return redirect(current_host + '/addMessage')
+            return redirect(url_for('add_new_message'))
         else:
             print('errors = {}'.format(form.errors))
-            return redirect(current_host + '/addMessage')
+            # return redirect(current_host + '/addMessage')
+            return redirect(url_for('add_new_message'))
 
 
-@app.route('/deleteMessage/<string:message_id>')
+@app.route('/deleteMessage/<int:message_id>')
 @requires_admin
 def delete_message(message_id):
     """
@@ -646,8 +655,11 @@ def delete_message(message_id):
     :param message_id:
     :return:
     """
-    Messages.objects(id=message_id).delete()
-    return redirect(current_host + '/addMessage')
+    messages = NewMessages.query.get_or_404(message_id)
+    db.session.delete(messages)
+    db.session.commit()
+    # return redirect(current_host + '/addMessage')
+    return redirect(url_for('add_new_message'))
 
 
 @app.route('/addEmployee', methods=['GET', 'POST'])
@@ -663,35 +675,27 @@ def add_new_employee():
     form = AddEmployeeForm(request.form)
     if request.method == 'POST':
         if form.validate():
-            people = People()
-            print('user name = {}'.format(form.first_name.data))
-
-            people.first_name = form.first_name.data
-            people.last_name = form.last_name.data
-            people.email = form.email.data
-            people.country = form.country.data
-            people.timezone = form.timezone.data
-            people.emp_id = form.emp_id.data
-            people.slack_handle = form.slack_handle.data
             date_start = form.start_date.data.split('-')
             sdate = datetime.datetime(int(date_start[0]), int(date_start[1]), int(date_start[2]), 0, 0, 0)
-            people.start_date = datetime.datetime.strftime(sdate, '%Y-%m-%dT%H:%M:%S')
-            people.manager_id = form.manager_id.data
-            people.last_updated = datetime.datetime.now()
-            people.admin_opt_out = False
-            people.user_opt_out = False
-            people.manager_opt_out = False
-            people.save()
-            newly_added_user = People.objects(emp_id=form.emp_id.data)
-            print('newly added user = {}'.format(newly_added_user[0].first_name))
-            new_person = {}
-            for p in newly_added_user:
-                new_person['first_name'] = p.first_name
-                new_person['last_name'] = p.last_name
-                print('{} {} {} {} {}'.format(p.first_name, p.last_name, p.emp_id, p.start_date, p.manager_id))
-                add_messages_to_send(p)
+            last_updated = datetime.datetime.now()
+            start_date = datetime.datetime.strftime(sdate, '%Y-%m-%dT%H:%M:%S')
+            person = NewPeople(emp_id=form.emp_id.data, first_name=form.first_name.data, last_name=form.last_name.data,
+                               email=form.email.data, slack_handle=form.slack_handle.data, start_date=start_date,
+                               last_modified=last_updated, timezone=form.timezone.data, country=form.country.data,
+                               manager_id=form.manager_id.data, user_opt_out=False, manager_opt_out=False,
+                               admin_opt_out=False, created_date=last_updated)
+            db.session.add(person)
+            try:
+                db.session.commit()
+            except IntegrityError as error:
+                print('DuplicateKeyError {}'.format(error))
+                db.session.rollback()
+            newly_added_user = NewPeople.query.filter_by(emp_id=form.emp_id.data).first()
+            print('newly added user = {}'.format(newly_added_user.first_name))
+            add_messages_to_send(newly_added_user)
 
-            return redirect(current_host + '/addEmployee')
+            # return redirect(current_host + '/addEmployee')
+            return redirect(url_for('add_new_employee'))
         else:
             print('errors = {}'.format(form.errors))
             return render_template('employees.html', employees=None, form=form, selectedEmp=None,  timezones=all_timezones, user=user, admin=admins)
@@ -700,10 +704,10 @@ def add_new_employee():
         admin = admin[2]
 
         employees = []
-        employee_list = People.objects()
+        employee_list = NewPeople.query.all()
 
         user_id = session.get('profile')['user_id']
-        admin_data = Admin.objects(emp_id=user_id).first()
+        admin_data = NewAdmin.query.filter_by(emp_id=user_id).first()
         if admin_data.super_admin:
             employees = employee_list
         else:
@@ -713,7 +717,7 @@ def add_new_employee():
         return render_template('employees.html', employees=employees, form=form, selectedEmp=None,  timezones=all_timezones, user=user, admin=admins)
 
 
-@app.route('/deleteEmployee/<string:id>')
+@app.route('/deleteEmployee/<int:id>')
 @requires_super
 def delete_employee(id):
     """
@@ -721,9 +725,14 @@ def delete_employee(id):
     :param id:
     :return:
     """
-    People.objects(id=id).delete()
-    # return redirect(url_for('add_new_employee'))
-    return redirect(current_host + '/addEmployee')
+    person = NewPeople.query.get_or_404(id)
+    messages = NewSend.query.filter_by(emp_id=person.emp_id).all()
+    for mes in messages:
+        db.session.delete(mes)
+    db.session.delete(person)
+    db.session.commit()
+    return redirect(url_for('add_new_employee'))
+    # return redirect(current_host + '/addEmployee')
 
 
 @app.route('/admin', methods=['GET', 'POST'])
@@ -734,27 +743,19 @@ def admin_page():
     :param :
     :return:
     """
-    print('admin')
     form = AddAdminRoleForm(request.form)
     admin_form = AddAdminForm(request.form)
-    admin_roles = AdminRoles.objects()
+    admin_roles = NewAdminRoles.query.all()
     admin = get_user_admin()
-    peoples = People.objects()
+    peoples = NewPeople.query.all()
     global admin_people
     admin_people = peoples
-    # for person in peoples:
-    #     admin_people.append(JSONEncoder().encode(person.to_mongo()))
-    print(admin_people[10])
     role_names = [(role.role_name, role.role_description) for role in admin_roles]
-    role_names = role_names[1:]
-    print('role names = {}'.format(role_names))
     admin_form.roles.choices = role_names
-    # TODO connect users to database after Person API is connected
-    for role in admin_roles:
-        print('role {}'.format(role.role_name))
-    admins = Admin.objects()
+    admins = NewAdmin.query.all()
     user = get_user_info()
-    return render_template('admin.html', user=user, admin_roles=admin_roles, admins=admins, form=form, admin_form=admin_form, people=peoples, admin=admin)
+    return render_template('admin.html', user=user, admin_roles=admin_roles, admins=admins, form=form,
+                           admin_form=admin_form, people=peoples, admin=admin)
 
 
 @app.route('/adminRole', methods=['POST'])
@@ -767,28 +768,35 @@ def admin_role():
     form = AddAdminRoleForm(request.form)
     if request.method == 'POST':
         if form.validate():
-            current_roles = AdminRoles()
-            current_roles.role_name = form.role_name.data
-            current_roles.role_description = form.role_description.data
-            current_roles.save()
-            # roles = AdminRoles.objects()
-            return redirect(current_host + '/admin')
+            role = NewAdminRoles(role_name=form.role_name.data, role_description=form.role_description.data)
+            db.session.add(role)
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+            # return redirect(current_host + '/admin')
+            return redirect(url_for('admin_page'))
         else:
-            return redirect(current_host + '/admin')
+            # return redirect(current_host + '/admin')
+            return redirect(url_for('admin_page'))
     else:
-        return redirect(current_host + '/admin')
+        # return redirect(current_host + '/admin')
+        return redirect(url_for('admin_page'))
 
 
-@app.route('/deleteRole/<string:role_name>')
+@app.route('/deleteRole/<int:role_id>', methods=['POST'])
 @requires_super
-def delete_role(role_name):
+def delete_role(role_id):
     """
     Delete employee from database
     :param role_name:
     :return:
     """
-    AdminRoles.objects(role_name=role_name).delete()
-    return redirect(current_host + '/admin')
+    role = NewAdminRoles.query.get_or_404(role_id)
+    db.session.delete(role)
+    db.session.commit()
+    # return redirect(current_host + '/admin')
+    return redirect(url_for('admin_page'))
 
 
 @app.route('/adminUser', methods=['POST'])
@@ -799,7 +807,7 @@ def admin_user():
     :return:
     """
     admin_form = AddAdminForm(request.form)
-    admin_roles = AdminRoles.objects()
+    admin_roles = NewAdminRoles.query.all()
     role_names = [(role.role_name, role.role_description) for role in admin_roles]
     role_names = role_names[1:]
     print(f'admin people {admin_people[11]}')
@@ -808,36 +816,43 @@ def admin_user():
         print('admin form {}'.format(admin_form.roles.data))
         if admin_form.validate():
             try:
-                admin = Admin()
                 print(f'selected admin {admin_form.emp_id.data}')
                 selected_admin = admin_form.emp_id.data.split(' ')
-                print(f'selected admin {selected_admin}')
-                admin.emp_id = selected_admin[0]
-                admin.name = ' '.join(selected_admin[1:])
-                admin.super_admin = admin_form.super_admin.data
-                admin.roles = admin_form.roles.data
-                admin.save()
+                name = ' '.join(selected_admin[1:])
+                admin = NewAdmin(emp_id=selected_admin[0], name=name, super_admin=admin_form.super_admin.data,
+                                 roles=admin_form.roles.data)
+                db.session.add(admin)
+                try:
+                    db.session.commit()
+                except IntegrityError:
+                    db.session.rollback()
             except:
                 print('unable to save admin')
-            return redirect(current_host + '/admin')
+            # return redirect(current_host + '/admin')
+            return redirect(url_for('admin_page'))
         else:
             print('errors = {}'.format(admin_form.errors))
-            return redirect(current_host + '/admin')
+            # return redirect(current_host + '/admin')
+            return redirect(url_for('admin_page'))
     else:
         print('errors = {}'.format(admin_form.errors))
-        return redirect(current_host + '/admin')
+        # return redirect(current_host + '/admin')
+        return redirect(url_for('admin_page'))
 
 
-@app.route('/deleteAdmin/<string:emp_id>')
+@app.route('/deleteAdmin/<int:admin_id>', methods=['POST'])
 @requires_super
-def delete_admin(emp_id):
+def delete_admin(admin_id):
     """
     Delete employee from database
-    :param emp_id:
+    :param admin_id:
     :return:
     """
-    Admin.objects(emp_id=emp_id).delete()
-    return redirect(current_host + '/admin')
+    admin = NewAdmin.query.get_or_404(admin_id)
+    db.session.delete(admin)
+    db.session.commit()
+    # return redirect(current_host + '/admin')
+    return redirect(url_for('admin_page'))
 
 
 @app.route('/slack/message_events', methods=['POST', 'GET'])
@@ -906,13 +921,19 @@ def message_actions():
             if 'keep' in actions.lower():
                 print('keep')
                 message_text = 'We\'ll keep sending you onboarding messages!'
-                People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
+                # People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
+                person = NewPeople.query.filter_by(slack_handle=user)
+                person.user_opt_out = False
+                db.session.commit()
                 slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text,
                                '')
             elif 'stop' in actions.lower():
                 print('stop')
                 message_text = 'We\'ve unsubscribed you from onboarding messages.'
-                People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
+                # People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
+                person = NewPeople.query.filter_by(slack_handle=user)
+                person.user_opt_out = True
+                db.session.commit()
                 slack_client.api_call(
                     'chat.update',
                     channel=form_json['channel']['id'],
@@ -1031,7 +1052,10 @@ def new_hire_help():
     user = user.replace('"','')
     print(f'user {user}')
     if incoming_message == 'opt-in':
-        People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
+        # People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
+        person = NewPeople.query.filter_by(slack_handle=user)
+        person.user_opt_out = False
+        db.session.commit()
         message_response = "Welcome back! You'll receive any scheduled notifications."
     elif incoming_message == 'help':
         message_response = "To explore how I can help you, try using the slash command for " \

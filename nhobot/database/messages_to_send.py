@@ -19,7 +19,7 @@ class MessagesToSend(mongoengine.Document):
 
 class NewMessagesToSend(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    emp_id = db.Column(db.String(50), unique=True, nullable=False)
+    emp_id = db.Column(db.String(50), unique=False, nullable=False)
     message_id = db.Column(db.String(), nullable=False)
     send_dttm = db.Column(db.DateTime, nullable=False)
     send_order = db.Column(db.Integer, nullable=False)

@@ -47,8 +47,9 @@
         <ul>
         {%  for role in admin_roles %}
             <li class="list-group-item">
-                <a style="text-decoration: none;" href="/admin"><i class="fas fa-edit" style="color: #000000"></i></a> {# href="/editRole/{{ role.role_name }}" #}
-                <a style="margin-left: 20px; margin-right: 20px; text-decoration: none;" href="/deleteRole/{{ role.role_name }}"><i class="fas fa-times" style="color:red"></i></a>
+{#                <a style="text-decoration: none;" href="/admin"><i class="fas fa-edit" style="color: #000000"></i></a> {# href="/editRole/{{ role.role_name }}" #}
+{#                <a style="margin-left: 20px; margin-right: 20px; text-decoration: none;" href="/deleteRole/{{ role.id }}"><i class="fas fa-times" style="color:red"></i></a>#}
+                <button type="button" class="moz-delete-button" data-toggle="modal" data-target="#deleteModal{{ role.id }}"><i class="fas fa-times"></i></button>
                 {{ role.role_name }}
             <button style="margin-left: 20px;" class="btn btn-primary btn-sm float-right" type="button" data-toggle="collapse" data-target="#{{ role.role_name }}" aria-expanded="false" aria-controls="collapseExample">Details</button>
             </li>
@@ -70,6 +71,26 @@
                         </div>
                     </div>
                 </div>
+            <!--Delete Modal -->
+            <div class="modal fade" id="deleteModal{{ role.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Delete Role</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                      <form action="{{ url_for('delete_role', role_id=role.id) }}" method="POST">
+                          <input type="submit" class="btn btn-danger" value="Delete">
+                      </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--end delete modal -->
         {% endfor %}
         </ul>
     </div>

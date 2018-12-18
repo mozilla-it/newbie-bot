@@ -1,6 +1,7 @@
 import mongoengine
 import datetime
 from nhobot import db
+from sqlalchemy import String, Integer, ARRAY, JSON
 
 class Messages(mongoengine.Document):
     type = mongoengine.StringField(required=True)
@@ -29,7 +30,7 @@ class NewMessages(db.Model):
     type = db.Column(db.String(32), nullable=False)
     category = db.Column(db.String(32), nullable=False)
     title = db.Column(db.String(100), unique=True, nullable=False)
-    title_link = db.Column(db.ARRAY(db.JSON), nullable=True)
+    title_link = db.Column(JSON, nullable=True)
     send_day = db.Column(db.Integer, nullable=True)
     send_hour = db.Column(db.Integer, nullable=True)
     frequency = db.Column(db.String(5))
@@ -40,7 +41,7 @@ class NewMessages(db.Model):
     created_date = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
     country = db.Column(db.String(3), nullable=False, default='ALL')
     callback_id = db.Column(db.String(15), nullable=True)
-    tags = db.Column(db.String())
+    tags = db.Column(ARRAY(String))
 
     def __repr__(self):
         return f"NewMessages('{self.type}', '{self.category}', '{self.title}', '{self.title_link}'" \
