@@ -1,10 +1,9 @@
-import database.people as people
-import database.messages as messages
-import database.mongo_setup as mongo
+import nhobot.database.people as people
+import nhobot.database.messages as messages
+import nhobot.database.mongo_setup as mongo
 import pytest
 import datetime
-import app
-import time
+import nhobot
 
 """
 Run with:
@@ -94,7 +93,7 @@ class TestClass(object):
         """
         send_date_time = datetime.date(2018, 1, 1)
         country = 'US'
-        send_date = app.adjust_send_date_for_holidays_and_weekends(send_date_time, country)
+        send_date = nhobot.adjust_send_date_for_holidays_and_weekends(send_date_time, country)
         assert not send_date == datetime.date(2018, 1, 1)
         assert send_date == datetime.date(2018, 1, 2)
         print('send date {}'.format(send_date))
@@ -109,7 +108,7 @@ class TestClass(object):
            """
         send_date_time = datetime.date(2018, 11, 24)
         country = 'US'
-        send_date = app.adjust_send_date_for_holidays_and_weekends(send_date_time, country)
+        send_date = nhobot.adjust_send_date_for_holidays_and_weekends(send_date_time, country)
         print('send date {}'.format(send_date))
         assert send_date.weekday() <= 4
         assert send_date == datetime.date(2018, 11, 26)
@@ -123,7 +122,7 @@ class TestClass(object):
            """
         send_date_time = datetime.date(2018, 11, 18)
         country = 'US'
-        send_date = app.adjust_send_date_for_holidays_and_weekends(send_date_time, country)
+        send_date = nhobot.adjust_send_date_for_holidays_and_weekends(send_date_time, country)
         print('send date {}'.format(send_date))
         assert send_date.weekday() <= 4
         assert send_date == datetime.date(2018, 11, 19)

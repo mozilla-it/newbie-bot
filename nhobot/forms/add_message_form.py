@@ -37,5 +37,3 @@ class AddMessageForm(Form):
     country = SelectField('Country', validators=[validators.data_required()], choices=[('ALL', 'ALL'), ('US', 'US'),
                                                                                        ('CA', 'CA')])
     tagitems = StringField('Tags')
-
-

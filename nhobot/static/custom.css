@@ -25,6 +25,12 @@
 
 }
 
+.moz-delete-button {
+    border: none;
+    background: none;
+    color: red;
+}
+
 #link_list li {
   list-style-position:inside;
   white-space: nowrap;

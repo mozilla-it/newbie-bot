@@ -1,6 +1,5 @@
 """Configuration loader for different environments."""
-import base64
-import get_config
+from nhobot import get_config
 
 CONFIG = get_config.get_config()
 

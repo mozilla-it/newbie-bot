@@ -16,7 +16,8 @@
             {%  for message in messages %}
                 <li class="list-group-item">
                     <a style="text-decoration: none;" href="/editMessage/{{ message.id }}"><i class="fas fa-edit" style="color: #000000"></i></a>
-                    <a style="margin-left: 20px; margin-right: 20px; text-decoration: none;" href="/deleteMessage/{{ message.id }}"><i class="fas fa-times" style="color:red"></i></a>
+{#                    <a style="margin-left: 20px; margin-right: 20px; text-decoration: none;" href="/deleteMessage/{{ message.id }}"><i class="fas fa-times" style="color:red"></i></a>#}
+                    <button type="button" class="moz-delete-button" data-toggle="modal" data-target="#deleteModal{{ message.id }}"><i class="fas fa-times"></i></button>
                     {{ message.title }}
                 <button style="margin-left: 20px;" class="btn btn-primary btn-sm float-right" type="button" data-toggle="collapse" data-target="#{{ message.id }}" aria-expanded="false" aria-controls="collapseExample">Details</button>
                 </li>
@@ -102,8 +103,8 @@
                                 <div class="form-group">
                                     <div><label for="email">Links</label></div>
                                     <ul class="list-group link_list">
-                                        {% for link in message.title_link %}
-                                            <li class="list-group-item">{{ link['name'] }} {{ link['url'] }}</li>
+                                        {% for links in message.title_link|list %}
+                                            <li class="list-group-item">{{ links['name'] }} {{ links['url'] }}</li>
                                         {% endfor %}
                                     </ul>
                                 </div>
@@ -120,6 +121,26 @@
                             </div>
                         </div>
                     </div>
+            <!--Delete Modal -->
+            <div class="modal fade" id="deleteModal{{ message.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Delete Message</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                      <form action="{{ url_for('delete_message', message_id=message.id) }}" method="POST">
+                          <input type="submit" class="btn btn-danger" value="Delete">
+                      </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--end delete modal -->
             {% endfor %}
             </ul>
         </div>
