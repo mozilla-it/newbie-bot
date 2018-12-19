@@ -631,7 +631,9 @@ def updates_from_slack():
     people = People.objects(slack_handle=None)
     for person in people:
         slackinfo = searchemail(slack_users, 'email', person.email)
-        print(slackinfo)
+        if slackinfo != None:
+            print(slackinfo)
+
         if slackinfo:
             try:
                 slack_handle = slackinfo['name']
@@ -1060,7 +1062,8 @@ def new_hire_help():
         # message_response = 'Okay, we\'ll stop sending you important tips and reminders. ' \
         #                    'Hope you don\'t miss any deadlines!'
     else:
-        message_response = 'Sorry, I don\'t know what you want.'
+        message_response = 'Sorry, I don\'t know what you want. Please enter one of the following parameters after' \
+                           'the slash command: opt-in, opt-out, or help.'
     return make_response(message_response, 200)
 
 
