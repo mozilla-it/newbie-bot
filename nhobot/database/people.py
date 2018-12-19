@@ -5,9 +5,9 @@ from nhobot import db
 class People(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     emp_id = db.Column(db.String(50), unique=True, nullable=False)
-    first_name = db.Column(db.String(30), nullable=False)
-    last_name = db.Column(db.String(30), nullable=False)
-    email = db.Column(db.String(120), nullable=False)
+    first_name = db.Column(db.String(), nullable=False)
+    last_name = db.Column(db.String(), nullable=False)
+    email = db.Column(db.String(150), nullable=False)
     slack_handle = db.Column(db.String(50), nullable=True, default='')
     start_date = db.Column(db.DateTime, nullable=False)
     last_modified = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)

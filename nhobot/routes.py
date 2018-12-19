@@ -4,6 +4,7 @@ from nhobot.database.messages_to_send import MessagesToSend as Send
 from nhobot.database.admin import Admin
 from nhobot.database.admin_roles import AdminRoles
 from nhobot.database.user_feedback import UserFeedback
+from nhobot.database.auth_groups import AuthGroups
 from nhobot import db
 from sqlalchemy.exc import IntegrityError
 
@@ -122,10 +123,20 @@ def get_auth_zero():
                                 "groups,picture,nickname,_HRData,created_at,"
                                 "user_metadata.groups,userinfo,app_metadata.groups,app_metadata.hris")
     for user in users:
+        if 'groups' in user:
+            print(f'user {user["groups"]}')
+            groups = user["groups"]
+            for group in groups:
+                auth_group = AuthGroups.query.filter_by(groups=group).first()
+                print(f'auth_group {auth_group}')
+                if not auth_group:
+                    auth = AuthGroups(groups=group)
+                    db.session.add(auth)
+                    db.session.commit()
         connection = user['identities'][0]['connection']
         if 'Mozilla-LDAP' in connection:
             user_id = user['user_id']
-            current_user = People.query.filter_by(emp_id=user_id)
+            current_user = People.query.filter_by(emp_id=user_id).first()
             if not current_user:
                 name = user['name'].split()
                 try:
