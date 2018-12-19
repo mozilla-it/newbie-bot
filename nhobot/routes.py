@@ -1,10 +1,9 @@
-from nhobot.database.people import People, NewPeople
-from nhobot.database.messages import Messages, NewMessages
+from nhobot.database.people import People
+from nhobot.database.messages import Messages
 from nhobot.database.messages_to_send import MessagesToSend as Send
-from nhobot.database.messages_to_send import NewMessagesToSend as NewSend
-from nhobot.database.admin import Admin, NewAdmin
-from nhobot.database.admin_roles import AdminRoles, NewAdminRoles
-from nhobot.database.user_feedback import UserFeedback, NewUserFeedback
+from nhobot.database.admin import Admin
+from nhobot.database.admin_roles import AdminRoles
+from nhobot.database.user_feedback import UserFeedback
 from nhobot import db
 from sqlalchemy.exc import IntegrityError
 
@@ -24,9 +23,6 @@ import json
 import datetime
 import pytz
 
-from mongoengine.queryset.visitor import Q
-import pymongo.errors as pymongo_errors
-import mongoengine.errors as mongoengine_errors
 import re
 from authzero import AuthZero
 
@@ -34,10 +30,9 @@ def get_user_admin():
     try:
         userid = session.get('profile')['user_id']
         print(f'userid {userid}')
-        return NewAdmin.query.filter_by(emp_id=userid).first()
+        return Admin.query.filter_by(emp_id=userid).first()
     except:
         return None
-
 
 
 def requires_auth(f):
@@ -58,7 +53,7 @@ def requires_super(f):
         userid = session.get('profile')['user_id']
         print(f'super userid {userid}')
         # admin = Admin.objects(emp_id=userid).first()
-        admin = NewAdmin.query.filter_by(emp_id=userid).first()
+        admin = Admin.query.filter_by(emp_id=userid).first()
         print(f'super admin {admin}')
         if admin is None or admin.super_admin is not True:
             return redirect(current_host)
@@ -77,7 +72,7 @@ def requires_admin(f):
             return redirect(current_host)
         userid = session.get('profile')['user_id']
         print(f'requires admin {userid}')
-        admin = NewAdmin.query.filter_by(emp_id=userid).first()
+        admin = Admin.query.filter_by(emp_id=userid).first()
         print(f'Admin {admin.emp_id}')
         print(f'Super {admin.super_admin}')
         if admin is None:
@@ -98,7 +93,7 @@ def requires_manager(f):
             return redirect(current_host)
         userid = session.get('profile')['user_id']
         print(f'requires manager {userid}')
-        admin = NewAdmin.query.filter_by(emp_id=userid).first()
+        admin = Admin.query.filter_by(emp_id=userid).first()
         if admin is None:
             return redirect(current_host)
         elif admin.super_admin:
@@ -108,9 +103,6 @@ def requires_manager(f):
             return redirect(current_host)
         return f(*args, **kwargs)
     return decorated_manager
-
-
-
 
 
 def connect_slack_client():
@@ -126,12 +118,14 @@ def get_auth_zero():
     config = {'client_id': client_id, 'client_secret': client_secret, 'uri': client_uri}
     az = AuthZero(config)
     az.get_access_token()
-    users = az.get_users(fields="username,user_id,name,email,identities,groups,picture,nickname,_HRData,created_at,user_metadata.groups,userinfo,app_metadata.groups,app_metadata.hris")
+    users = az.get_users(fields="username,user_id,name,email,identities,"
+                                "groups,picture,nickname,_HRData,created_at,"
+                                "user_metadata.groups,userinfo,app_metadata.groups,app_metadata.hris")
     for user in users:
         connection = user['identities'][0]['connection']
         if 'Mozilla-LDAP' in connection:
             user_id = user['user_id']
-            current_user = NewPeople.query.filter_by(emp_id=user_id)
+            current_user = People.query.filter_by(emp_id=user_id)
             if not current_user:
                 name = user['name'].split()
                 try:
@@ -145,11 +139,11 @@ def get_auth_zero():
                 if country:
                     person_country = country[0][8:].upper()
                 dnow = datetime.datetime.utcnow()
-                person = NewPeople(emp_id=user_id, first_name=first_name, last_name=last_name,
-                          email=user['email'], slack_handle='', start_date=user['created_at'],
-                          last_modified=dnow, timezone='', country=person_country,
-                          manager_id=manager_email, user_opt_out=False, manager_opt_out=False,
-                          admin_opt_out=False, created_date=dnow)
+                person = People(emp_id=user_id, first_name=first_name, last_name=last_name,
+                                   email=user['email'], slack_handle='', start_date=user['created_at'],
+                                   last_modified=dnow, timezone='', country=person_country,
+                                   manager_id=manager_email, user_opt_out=False, manager_opt_out=False,
+                                   admin_opt_out=False, created_date=dnow)
                 db.session.add(person)
                 try:
                     db.session.commit()
@@ -163,7 +157,7 @@ def updates_from_slack():
     actual_one_day_ago = measure_date()
     slack_users = slack_client.api_call('users.list')['members']
     print(len(slack_users))
-    people = NewPeople.query.filter_by(slack_handle=None).all()
+    people = People.query.filter_by(slack_handle=None).all()
     for person in people:
         slackinfo = searchemail(slack_users, 'email', person.email)
         print(slackinfo)
@@ -208,7 +202,7 @@ def find_slack_handle(socials: dict):
         return 'mballard'
 
 
-def add_messages_to_send(person: NewPeople):
+def add_messages_to_send(person: People):
     """
     Add each message from the messages table to the messages_to_send table when a new user is added
     :param person:
@@ -218,10 +212,11 @@ def add_messages_to_send(person: NewPeople):
     start_date = person.start_date
     my_timezone = pytz.timezone(person.timezone)
     my_country = person.country
-    messages = NewMessages.query.all()
+    messages = Messages.query.all()
     for m in messages:
         print(f'm = {m.id}')
         for x in range(0, m.number_of_sends):
+            send_day = ''
             if x == 0:
                 send_day = m.send_day
             else:
@@ -240,7 +235,8 @@ def add_messages_to_send(person: NewPeople):
             elif m.country == 'ALL':
                 save_send_message(employee_id, m.id, x, send_date_time)
             else:
-                app.logger.info('No message to be sent, user country {} and message country {}'.format(my_country, m.country))
+                app.logger.info('No message to be sent, user country {} and message country {}'
+                                .format(my_country, m.country))
 
 
 def adjust_send_date_for_holidays_and_weekends(send_date_time, country):
@@ -290,7 +286,7 @@ def save_send_message(emp_id, message_id, send_order, send_dttm):
     # to_send.last_updated = datetime.datetime.now()
     # to_send.save()
     dnow = datetime.datetime.utcnow()
-    to_send = NewSend(emp_id=emp_id, message_id=message_id, send_dttm=send_dttm,
+    to_send = Send(emp_id=emp_id, message_id=message_id, send_dttm=send_dttm,
                       send_order=send_order, send_status=False, cancel_status=False,
                       last_updated=dnow, created_date=dnow)
     db.session.add(to_send)
@@ -315,7 +311,6 @@ def search(dict_list, key, value):
             return item
 
 
-
 def searchemail(dict_list, key, value):
     for item in dict_list:
         try:
@@ -323,7 +318,6 @@ def searchemail(dict_list, key, value):
                 return item
         except:
             pass
-
 
 
 def slack_call_api(call_type, channel, ts, text, attachments):
@@ -348,8 +342,9 @@ def slack_call_api(call_type, channel, ts, text, attachments):
 def search_messages(search_string, message):
     """
     Search message for text or titles that match the search string
-    :param search_string, message:
-    :return: matching message
+    :param search_string:
+    :param message:
+    :return:
     """
     result = [x.strip() for x in search_string.split(' ')]
     print(f'tags {message["tags"]}')
@@ -405,15 +400,18 @@ def send_newhire_messages():
     lasthour = now - datetime.timedelta(minutes=59, seconds=59, days=7)
     print('now {}'.format(now))
     print('lasthour {}'.format(lasthour))
-    send = Send.objects(Q(send_dttm__lte=now) & Q(send_dttm__gte=lasthour) & Q(send_status__exact=False))
+    # send = Send.objects(Q(send_dttm__lte=now) & Q(send_dttm__gte=lasthour) & Q(send_status__exact=False))
+    send = Send.query.filter(Send.send_dttm < now, Send.send_dttm > lasthour,
+                                Send.send_status is False).all()
     slack_client.rtm_connect()
     users = slack_client.api_call('users.list')['members']
     for s in send:
         print('new hire messages ={}'.format(s['send_status']))
         print(f'emp {s["emp_id"]}')
-        emp = NewPeople.query.filter_by(emp_id=s['emp_id']).first()
+        emp = People.query.filter_by(emp_id=s['emp_id']).first()
         if emp.user_opt_out is False and emp.manager_opt_out is False and emp.admin_opt_out is False:
-            message = Messages.objects(Q(id=s['message_id'])).get().to_mongo()
+            # message = Messages.objects(Q(id=s['message_id'])).get().to_mongo()
+            message = Messages.get(s['message_id'])
             print('emp = {}'.format(emp))
             print('message = {}'.format(message))
             message_user = emp['slack_handle']
@@ -475,7 +473,7 @@ def get_user_info():
     :return:
     """
     user = None
-    if (session.get('profile')):
+    if session.get('profile'):
         user = {'userid': session.get('profile')['user_id'], 'username': session.get('profile')['name'],
                 'picture': session.get('profile')['picture']}
     return user
@@ -527,7 +525,6 @@ def logout():
     return redirect('https://nhobot.ngrok.io/')
 
 
-
 @app.route('/', host='https://nhobot.ngrok.io')
 def index():
     """
@@ -564,7 +561,7 @@ def add_new_message():
     user = get_user_info()
     admin = get_user_admin()
     form = AddMessageForm(request.form)
-    messages = NewMessages.query.all()
+    messages = Messages.query.all()
     if request.method == 'POST':
         if form.validate():
             title_link = json.loads(form.linkitems.data)
@@ -574,7 +571,7 @@ def add_new_message():
             send_once = True if form.send_once.data is True else False
             tagitems = form.tagitems.data
             tag = tagitems.split('|')
-            message = NewMessages(type=form.message_type.data, category=form.category.data, title=form.title.data,
+            message = Messages(type=form.message_type.data, category=form.category.data, title=form.title.data,
                                   title_link=title_link, send_day=form.send_day.data, send_hour=form.send_time.data,
                                   send_date=send_date, send_once=send_once, frequency=form.frequency.data,
                                   text=form.text.data, number_of_sends=form.number_of_sends.data, country=form.country.data,
@@ -601,7 +598,7 @@ def edit_message(message_id):
     user = get_user_info()
     admin = get_user_admin()
     form = AddMessageForm(request.form)
-    messages = NewMessages.query.get_or_404(message_id)
+    messages = Messages.query.get_or_404(message_id)
     if request.method == 'GET':
         # messages = Messages.objects(Q(id=message_id)).get()
         form.message_type.data = messages.type
@@ -655,7 +652,7 @@ def delete_message(message_id):
     :param message_id:
     :return:
     """
-    messages = NewMessages.query.get_or_404(message_id)
+    messages = Messages.query.get_or_404(message_id)
     db.session.delete(messages)
     db.session.commit()
     # return redirect(current_host + '/addMessage')
@@ -679,7 +676,7 @@ def add_new_employee():
             sdate = datetime.datetime(int(date_start[0]), int(date_start[1]), int(date_start[2]), 0, 0, 0)
             last_updated = datetime.datetime.now()
             start_date = datetime.datetime.strftime(sdate, '%Y-%m-%dT%H:%M:%S')
-            person = NewPeople(emp_id=form.emp_id.data, first_name=form.first_name.data, last_name=form.last_name.data,
+            person = People(emp_id=form.emp_id.data, first_name=form.first_name.data, last_name=form.last_name.data,
                                email=form.email.data, slack_handle=form.slack_handle.data, start_date=start_date,
                                last_modified=last_updated, timezone=form.timezone.data, country=form.country.data,
                                manager_id=form.manager_id.data, user_opt_out=False, manager_opt_out=False,
@@ -690,7 +687,7 @@ def add_new_employee():
             except IntegrityError as error:
                 print('DuplicateKeyError {}'.format(error))
                 db.session.rollback()
-            newly_added_user = NewPeople.query.filter_by(emp_id=form.emp_id.data).first()
+            newly_added_user = People.query.filter_by(emp_id=form.emp_id.data).first()
             print('newly added user = {}'.format(newly_added_user.first_name))
             add_messages_to_send(newly_added_user)
 
@@ -704,10 +701,10 @@ def add_new_employee():
         admin = admin[2]
 
         employees = []
-        employee_list = NewPeople.query.all()
+        employee_list = People.query.all()
 
         user_id = session.get('profile')['user_id']
-        admin_data = NewAdmin.query.filter_by(emp_id=user_id).first()
+        admin_data = Admin.query.filter_by(emp_id=user_id).first()
         if admin_data.super_admin:
             employees = employee_list
         else:
@@ -725,8 +722,8 @@ def delete_employee(id):
     :param id:
     :return:
     """
-    person = NewPeople.query.get_or_404(id)
-    messages = NewSend.query.filter_by(emp_id=person.emp_id).all()
+    person = People.query.get_or_404(id)
+    messages = Send.query.filter_by(emp_id=person.emp_id).all()
     for mes in messages:
         db.session.delete(mes)
     db.session.delete(person)
@@ -745,14 +742,14 @@ def admin_page():
     """
     form = AddAdminRoleForm(request.form)
     admin_form = AddAdminForm(request.form)
-    admin_roles = NewAdminRoles.query.all()
+    admin_roles = AdminRoles.query.all()
     admin = get_user_admin()
-    peoples = NewPeople.query.all()
+    peoples = People.query.all()
     global admin_people
     admin_people = peoples
     role_names = [(role.role_name, role.role_description) for role in admin_roles]
     admin_form.roles.choices = role_names
-    admins = NewAdmin.query.all()
+    admins = Admin.query.all()
     user = get_user_info()
     return render_template('admin.html', user=user, admin_roles=admin_roles, admins=admins, form=form,
                            admin_form=admin_form, people=peoples, admin=admin)
@@ -768,7 +765,7 @@ def admin_role():
     form = AddAdminRoleForm(request.form)
     if request.method == 'POST':
         if form.validate():
-            role = NewAdminRoles(role_name=form.role_name.data, role_description=form.role_description.data)
+            role = AdminRoles(role_name=form.role_name.data, role_description=form.role_description.data)
             db.session.add(role)
             try:
                 db.session.commit()
@@ -792,7 +789,7 @@ def delete_role(role_id):
     :param role_name:
     :return:
     """
-    role = NewAdminRoles.query.get_or_404(role_id)
+    role = AdminRoles.query.get_or_404(role_id)
     db.session.delete(role)
     db.session.commit()
     # return redirect(current_host + '/admin')
@@ -807,7 +804,7 @@ def admin_user():
     :return:
     """
     admin_form = AddAdminForm(request.form)
-    admin_roles = NewAdminRoles.query.all()
+    admin_roles = AdminRoles.query.all()
     role_names = [(role.role_name, role.role_description) for role in admin_roles]
     role_names = role_names[1:]
     print(f'admin people {admin_people[11]}')
@@ -819,7 +816,7 @@ def admin_user():
                 print(f'selected admin {admin_form.emp_id.data}')
                 selected_admin = admin_form.emp_id.data.split(' ')
                 name = ' '.join(selected_admin[1:])
-                admin = NewAdmin(emp_id=selected_admin[0], name=name, super_admin=admin_form.super_admin.data,
+                admin = Admin(emp_id=selected_admin[0], name=name, super_admin=admin_form.super_admin.data,
                                  roles=admin_form.roles.data)
                 db.session.add(admin)
                 try:
@@ -848,7 +845,7 @@ def delete_admin(admin_id):
     :param admin_id:
     :return:
     """
-    admin = NewAdmin.query.get_or_404(admin_id)
+    admin = Admin.query.get_or_404(admin_id)
     db.session.delete(admin)
     db.session.commit()
     # return redirect(current_host + '/admin')
@@ -922,7 +919,7 @@ def message_actions():
                 print('keep')
                 message_text = 'We\'ll keep sending you onboarding messages!'
                 # People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
-                person = NewPeople.query.filter_by(slack_handle=user)
+                person = People.query.filter_by(slack_handle=user)
                 person.user_opt_out = False
                 db.session.commit()
                 slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text,
@@ -931,7 +928,7 @@ def message_actions():
                 print('stop')
                 message_text = 'We\'ve unsubscribed you from onboarding messages.'
                 # People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
-                person = NewPeople.query.filter_by(slack_handle=user)
+                person = People.query.filter_by(slack_handle=user)
                 person.user_opt_out = True
                 db.session.commit()
                 slack_client.api_call(
@@ -960,11 +957,9 @@ def message_actions():
             if 'thumbsup' in actions.lower():
                 print('thumbsup')
                 message_attachments['state'] = 'thumbsup'
-                feedback = UserFeedback()
-                feedback.emp_id = form_json['user']['name']
-                feedback.rating = 'thumbsup'
-                feedback.comment = ''
-                feedback.save()
+                feedback = UserFeedback(emp_id=form_json['user']['name'], rating='thumbsup', comment='')
+                db.session.add(feedback)
+                db.session.commit()
                 slack_client.api_call(
                     "dialog.open",
                     trigger_id=form_json["trigger_id"],
@@ -975,12 +970,9 @@ def message_actions():
             elif 'thumbsdown' in actions.lower():
                 print('thumbsdown')
                 message_attachments['state'] = 'thumbsdown'
-                feedback = UserFeedback()
-                feedback.emp_id = form_json['user']['name']
-                feedback.rating = 'thumbsdown'
-                feedback.comment = ''
-                feedback.save()
-                feedback_val = dict(feedback.to_mongo())
+                feedback = UserFeedback(emp_id=form_json['user']['name'], rating='thumbsdown', comment='')
+                db.session.add(feedback)
+                db.session.commit()
                 slack_client.api_call(
                     "dialog.open",
                     trigger_id=form_json["trigger_id"],
@@ -994,12 +986,12 @@ def message_actions():
         return make_response(message_text, 200)
     elif form_json['type'] == 'dialog_submission':
         print('dialog {}'.format(form_json))
-        feedback = UserFeedback.objects(Q(emp_id=form_json['user']['name'])).all()
+        feedback = UserFeedback.query.filter_by(emp_id=form_json['user']['name']).all()
         created = feedback[len(feedback) - 1].created_date
         for feed in feedback:
             if feed.created_date == created:
                 feed.comment = form_json['submission']['comment']
-                feed.save()
+                db.session.commit()
         if form_json['state'] == 'thumbsdown':
             channel = form_json['channel']['id']
             send_opt_out_message(channel)
@@ -1024,7 +1016,7 @@ def newbie_search():
     user = json.dumps(request.values['user_name'])
     user = user.replace('"', '')
     print(f'searching user {user}')
-    messages = Messages.objects()
+    messages = Messages.query.all()
     found_messages = []
     for message in messages:
         searchresult = search_messages(incoming_search_term, message)
@@ -1053,7 +1045,7 @@ def new_hire_help():
     print(f'user {user}')
     if incoming_message == 'opt-in':
         # People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
-        person = NewPeople.query.filter_by(slack_handle=user)
+        person = People.query.filter_by(slack_handle=user)
         person.user_opt_out = False
         db.session.commit()
         message_response = "Welcome back! You'll receive any scheduled notifications."

@@ -1,10 +1,10 @@
 import bson
-from nhobot.database.people import NewPeople
-from nhobot.database.messages import NewMessages
-from nhobot.database.messages_to_send import NewMessagesToSend as NewSend
-from nhobot.database.admin import NewAdmin
-from nhobot.database.admin_roles import NewAdminRoles
-from nhobot.database.user_feedback import NewUserFeedback
+from nhobot.database.people import People
+from nhobot.database.messages import Messages
+from nhobot.database.messages_to_send import MessagesToSend as NewSend
+from nhobot.database.admin import Admin
+from nhobot.database.admin_roles import AdminRoles
+from nhobot.database.user_feedback import UserFeedback
 from nhobot import db
 import datetime
 dnow = datetime.datetime.utcnow()
@@ -14,7 +14,7 @@ import json
 # with open('/Users/marty331/Dev/nhobot/admin.bson', 'rb') as f:
 #     data = bson.decode_all(f.read())
 #     for d in data:
-#         admin = NewAdmin(emp_id=d['emp_id'], name=d['name'], super_admin=d['super_admin'], roles=d['roles'])
+#         admin = Admin(emp_id=d['emp_id'], name=d['name'], super_admin=d['super_admin'], roles=d['roles'])
 #         db.session.add(admin)
 #     db.session.commit()
 
@@ -22,7 +22,7 @@ import json
 # with open('/Users/marty331/Dev/nhobot/admin_roles.bson', 'rb') as f:
 #     data = bson.decode_all(f.read())
 #     for d in data:
-#         role = NewAdminRoles(role_name=d['role_name'], role_description=d['role_description'])
+#         role = AdminRoles(role_name=d['role_name'], role_description=d['role_description'])
 #         db.session.add(role)
 #     db.session.commit()
 
@@ -42,7 +42,7 @@ import json
 #             if 'country' in d:
 #                 country = d['country']
 #                 print(f'country {country}')
-#             person = NewPeople(emp_id=d['emp_id'], first_name=d['first_name'], last_name=d['last_name'],
+#             person = People(emp_id=d['emp_id'], first_name=d['first_name'], last_name=d['last_name'],
 #                                email=d['email'],
 #                                slack_handle=slack, start_date=d['start_date'], last_modified=dnow,
 #                                timezone=timezone, country=country, manager_id=d['manager_id'],
@@ -59,7 +59,7 @@ with open('/Users/marty331/Dev/nhobot/messages.bson', 'rb') as f:
         callback = ''
         if "callback_id" in d:
             callback = d["callback_id"]
-        message = NewMessages(type=d['type'], category=d['category'], title=d['title'], title_link=links,
+        message = Messages(type=d['type'], category=d['category'], title=d['title'], title_link=links,
                               send_day=d['send_day'], send_hour=d['send_hour'], frequency=d['frequency'],
                               number_of_sends=d['number_of_sends'], text=d['text'], send_date=d['send_date'],
                               send_once=d['send_once'], created_date=dnow, country=d['country'],

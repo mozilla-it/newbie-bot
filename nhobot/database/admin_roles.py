@@ -1,19 +1,8 @@
-import mongoengine
 import datetime
 from nhobot import db
 
 
-class AdminRoles(mongoengine.Document):
-    role_name = mongoengine.StringField(required=True, unique=True)
-    role_description = mongoengine.StringField(required=True)
-    created_date = mongoengine.DateTimeField(default=datetime.datetime.now)
-
-    meta = {
-        'db_alias': 'core',
-        'collection': 'admin_roles'
-    }
-
-class NewAdminRoles(db.Model):
+class AdminRoles(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     role_name = db.Column(db.String(20), nullable=False, unique=True)
     role_description = db.Column(db.String(100), nullable=False)

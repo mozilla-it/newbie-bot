@@ -1,5 +1,4 @@
 from flask import Flask, request, render_template, redirect, url_for, session, make_response, Response
-import nhobot.database.mongo_setup as mongo_setup
 from flask_sqlalchemy import SQLAlchemy
 
 

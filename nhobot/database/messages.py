@@ -1,31 +1,9 @@
-import mongoengine
 import datetime
 from nhobot import db
-from sqlalchemy import String, Integer, ARRAY, JSON
+from sqlalchemy import String, ARRAY, JSON
 
-class Messages(mongoengine.Document):
-    type = mongoengine.StringField(required=True)
-    category = mongoengine.StringField(required=True)
-    title = mongoengine.StringField(unique=True, required=True)
-    title_link = mongoengine.ListField()
-    send_day = mongoengine.IntField(required=True)
-    send_hour = mongoengine.IntField(required=True)
-    frequency = mongoengine.StringField(required=True)
-    number_of_sends = mongoengine.IntField(required=True)
-    text = mongoengine.StringField(required=True)
-    send_date = mongoengine.DateTimeField()
-    send_once = mongoengine.BooleanField(default=False)
-    created_date = mongoengine.DateTimeField(default=datetime.datetime.now)
-    country = mongoengine.StringField(required=True)
-    callback_id = mongoengine.StringField()
-    tags = mongoengine.ListField()
 
-    meta = {
-        'db_alias': 'core',
-        'collection': 'messages'
-    }
-
-class NewMessages(db.Model):
+class Messages(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.String(32), nullable=False)
     category = db.Column(db.String(32), nullable=False)
