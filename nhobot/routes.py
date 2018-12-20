@@ -130,6 +130,12 @@ def get_auth_zero():
                     auth = AuthGroups(groups=group)
                     db.session.add(auth)
                     db.session.commit()
+                if 'manager' in group:
+                    admin = Admin.query.filter_by(emp_id=user['user_id']).first()
+                    if not admin:
+                        new_admin = Admin(emp_id=user['user_id'], name=user['name'], roles=['Manager'])
+                        db.session.add(new_admin)
+                        db.session.commit()
         connection = user['identities'][0]['connection']
         if 'Mozilla-LDAP' in connection:
             user_id = user['user_id']

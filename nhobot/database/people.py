@@ -1,5 +1,6 @@
 import datetime
 from nhobot import db
+from sqlalchemy import String, ARRAY
 
 
 class People(db.Model):
@@ -18,6 +19,9 @@ class People(db.Model):
     manager_opt_out = db.Column(db.Boolean, nullable=False, default=False)
     admin_opt_out = db.Column(db.Boolean, nullable=False, default=False)
     created_date = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    admin_requested = db.Column(db.Boolean, default=False, nullable=True)
+    admin_role_requested = db.Column(ARRAY(String), nullable=True)
+    admin_requested_date = db.Column(db.DateTime, nullable=True)
 
     def __repr__(self):
         return f"MessagesToSend('{self.emp_id}', '{self.first_name}', '{self.last_name}', " \

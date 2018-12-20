@@ -1,7 +1,6 @@
 from flask import Flask, request, render_template, redirect, url_for, session, make_response, Response
 from flask_sqlalchemy import SQLAlchemy
-
-
+from flask_migrate import Migrate
 
 import slackclient
 
@@ -30,6 +29,7 @@ app.secret_key = settings.MONGODB_SECRET
 app.config['SQLALCHEMY_DATABASE_URI'] = settings.SQLALCHEMY_DATABASE_URI
 cors(app)
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 client_id = settings.CLIENT_ID
 client_secret = settings.CLIENT_SECRET
