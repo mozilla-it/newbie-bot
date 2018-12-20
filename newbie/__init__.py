@@ -10,7 +10,7 @@ import holidays
 
 import logging.config
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('nhobot')
+logger = logging.getLogger('newbie')
 scheduler = BackgroundScheduler()
 
 # auth
@@ -18,7 +18,7 @@ from flask_cors import CORS as cors
 from flask_environ import get, collect, word_for_true
 from authlib.flask.client import OAuth
 from functools import wraps
-from nhobot import auth, config, settings
+from newbie import auth, config, settings
 
 # endauth
 
@@ -79,7 +79,7 @@ if AUTH_AUDIENCE is '':
 
 # This will be the callback URL Auth0 returns the authenticate to.
 # app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
-app.config['AUTH_URL'] = 'https://nhobot.ngrok.io/callback/auth'
+app.config['AUTH_URL'] = 'https://newbie.ngrok.io/callback/auth'
 
 
 oidc_config = config.OIDCConfig()

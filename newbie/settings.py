@@ -19,7 +19,7 @@ AUTH_HOST = os.getenv('AUTH_HOST')
 AUTH_SECRET_KEY = os.getenv('AUTH_SECRET_KEY')
 AUTH_AUDIENCE = os.getenv('AUTH_AUDIENCE')
 AUTH_ISSUER = os.getenv('AUTH_ISSUER')
-SQLALCHEMY_DATABASE_URI = 'postgresql://localhost/nhobot'
+SQLALCHEMY_DATABASE_URI = 'postgresql://localhost/newbie'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 all_timezones = [

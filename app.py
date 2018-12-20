@@ -1,6 +1,6 @@
-from nhobot import app, scheduler
+from newbie import app, scheduler
 import atexit
-from nhobot.routes import send_newhire_messages, get_auth_zero, updates_from_slack
+from newbie.routes import send_newhire_messages, get_auth_zero, updates_from_slack
 
 
 @atexit.register

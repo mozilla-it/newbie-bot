@@ -1,22 +1,22 @@
-from nhobot.database.people import People
-from nhobot.database.messages import Messages
-from nhobot.database.messages_to_send import MessagesToSend as Send
-from nhobot.database.admin import Admin
-from nhobot.database.admin_roles import AdminRoles
-from nhobot.database.user_feedback import UserFeedback
-from nhobot.database.auth_groups import AuthGroups
-from nhobot import db
+from newbie.database.people import People
+from newbie.database.messages import Messages
+from newbie.database.messages_to_send import MessagesToSend as Send
+from newbie.database.admin import Admin
+from newbie.database.admin_roles import AdminRoles
+from newbie.database.user_feedback import UserFeedback
+from newbie.database.auth_groups import AuthGroups
+from newbie import db
 from sqlalchemy.exc import IntegrityError
 
 # form imports
-from nhobot.forms.slack_direct_message import SlackDirectMessage
-from nhobot.forms.add_employee_form import AddEmployeeForm
-from nhobot.forms.add_message_form import AddMessageForm
-from nhobot.forms.add_admin_role_form import AddAdminRoleForm
-from nhobot.forms.add_admin_form import AddAdminForm
+from newbie.forms.slack_direct_message import SlackDirectMessage
+from newbie.forms.add_employee_form import AddEmployeeForm
+from newbie.forms.add_message_form import AddMessageForm
+from newbie.forms.add_admin_role_form import AddAdminRoleForm
+from newbie.forms.add_admin_form import AddAdminForm
 # end form imports
 
-from nhobot import app, session, redirect, current_host, wraps, slack_client, \
+from newbie import app, session, redirect, current_host, wraps, slack_client, \
     message_frequency, client_id, client_secret, client_uri, us_holidays, ca_holidays, \
     make_response, slack_verification_token, render_template, auth0, logger, request, \
     Response, url_for, all_timezones
@@ -501,10 +501,12 @@ def profile():
     admin = get_user_admin()
     print(json.dumps(session['jwt_payload']["https://sso.mozilla.com/claim/groups"]))
     print(json.dumps(session['jwt_payload']))
+    person = People.query.filter_by(emp_id=session['profile']['user_id']).first()
+    print(f'person {person}')
     return render_template('profile.html',
                            userinfo=session['profile'],
                            usergroups=session['jwt_payload']["https://sso.mozilla.com/claim/groups"],
-                           userinfo_pretty=json.dumps(session['jwt_payload'], indent=4), user=user, admin=admin)
+                           userinfo_pretty=json.dumps(session['jwt_payload'], indent=4), user=user, admin=admin, person=person)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -528,7 +530,7 @@ def callback_handling():
     return redirect(current_host)
 
 
-@app.route('/logout', host='https://nhobot.ngrok.io')
+@app.route('/logout', host='https://newbie.ngrok.io')
 def logout():
     """
     Logout and clear session
@@ -536,10 +538,10 @@ def logout():
     """
     # Clear session stored data
     session.clear()
-    return redirect('https://nhobot.ngrok.io/')
+    return redirect('https://newbie.ngrok.io/')
 
 
-@app.route('/', host='https://nhobot.ngrok.io')
+@app.route('/', host='https://newbie.ngrok.io')
 def index():
     """
     Home page route

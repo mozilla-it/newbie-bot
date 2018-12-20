@@ -1,5 +1,5 @@
 """Configuration loader for different environments."""
-from nhobot import get_config
+from newbie import get_config
 
 CONFIG = get_config.get_config()
 
@@ -24,7 +24,7 @@ class DefaultConfig(object):
     PERMANENT_SESSION_LIFETIME = int(CONFIG('permanent_session_lifetime', namespace=None, default='86400'))
 
     SESSION_COOKIE_HTTPONLY = bool(CONFIG('session_cookie_httponly', namespace=None, default='True'))
-    LOGGER_NAME = CONFIG('logger_name', namespace=None, default='nhobot')
+    LOGGER_NAME = CONFIG('logger_name', namespace=None, default='newbie')
 
     SECRET_KEY = CONFIG('auth_secret', namespace=None)
     SERVER_NAME = CONFIG('server_name', namespace=None, default='localhost:5000')

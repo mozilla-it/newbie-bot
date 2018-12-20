@@ -1,17 +1,17 @@
 import bson
-from nhobot.database.people import People
-from nhobot.database.messages import Messages
-from nhobot.database.messages_to_send import MessagesToSend as NewSend
-from nhobot.database.admin import Admin
-from nhobot.database.admin_roles import AdminRoles
-from nhobot.database.user_feedback import UserFeedback
-from nhobot import db
+from newbie.database.people import People
+from newbie.database.messages import Messages
+from newbie.database.messages_to_send import MessagesToSend as NewSend
+from newbie.database.admin import Admin
+from newbie.database.admin_roles import AdminRoles
+from newbie.database.user_feedback import UserFeedback
+from newbie import db
 import datetime
 dnow = datetime.datetime.utcnow()
 import json
 
 # Convert Admins
-# with open('/Users/mballard/Dev/nhobot/admin.bson', 'rb') as f:
+# with open('/Users/mballard/Dev/newbie/admin.bson', 'rb') as f:
 #     data = bson.decode_all(f.read())
 #     for d in data:
 #         admin = Admin(emp_id=d['emp_id'], name=d['name'], super_admin=d['super_admin'], roles=d['roles'])
@@ -19,7 +19,7 @@ import json
 #     db.session.commit()
 
 # Convert Roles
-# with open('/Users/mballard/Dev/nhobot/admin_roles.bson', 'rb') as f:
+# with open('/Users/mballard/Dev/newbie/admin_roles.bson', 'rb') as f:
 #     data = bson.decode_all(f.read())
 #     for d in data:
 #         role = AdminRoles(role_name=d['role_name'], role_description=d['role_description'])
@@ -27,7 +27,7 @@ import json
 #     db.session.commit()
 
 # Convert People
-with open('/Users/mballard/Dev/nhobot/people.bson', 'rb') as f:
+with open('/Users/mballard/Dev/newbie/people.bson', 'rb') as f:
     data = bson.decode_all(f.read())
     for d in data:
         if len(d['first_name']) <31 and len(d['last_name']) < 31:
@@ -52,7 +52,7 @@ with open('/Users/mballard/Dev/nhobot/people.bson', 'rb') as f:
     db.session.commit()
 
 # Convert Messages
-with open('/Users/mballard/Dev/nhobot/messages.bson', 'rb') as f:
+with open('/Users/mballard/Dev/newbie/messages.bson', 'rb') as f:
     data = bson.decode_all(f.read())
     for d in data:
         links = d["title_link"]

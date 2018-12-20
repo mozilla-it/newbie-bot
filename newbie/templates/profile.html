@@ -6,6 +6,14 @@
             <img class="avatar" src="{{userinfo['picture']}}"/>
             <h2>Welcome {{userinfo['name']}}</h2>
             <h2>User ID: {{ userinfo['user_id'] }}</h2>
+            <p>Admin Requested: {% if person.admin_requested is not none %} {{ person.admin_requested }} {% else %} False {% endif %}
+            </p>
+            {% if person.admin_requested is not none %}
+                {{ person.admin_requested }}
+            {% else %}
+                False
+            {% endif %}
+        {{ person.admin_requested if person.admin_requested != None or person.admin_requested != False else 'None' }}
             <h3>User Groups</h3>
             <ul>
             {% for group in usergroups %}

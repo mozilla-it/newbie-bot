@@ -1,5 +1,5 @@
 import datetime
-from nhobot import db
+from newbie import db
 
 
 class UserFeedback(db.Model):
