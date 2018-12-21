@@ -808,15 +808,11 @@ def admin_request(person_id):
         if pending_form.validate():
             decision = pending_form.decision.data
             comment = pending_form.comment.data
-            print(f'decision {decision}')
-            print(f'comment {comment}')
-            print(f'person {person.admin_role_requested}')
             if decision == 'approve':
                 name = person.first_name + ' ' + person.last_name
                 super_admin = False
                 if 'Super Admin' in person.admin_role_requested:
                     super_admin = True
-                print(f'super {super_admin}')
                 new_admin = Admin(emp_id=person.emp_id, name=name, super_admin=super_admin, roles=person.admin_role_requested)
                 db.session.add(new_admin)
                 try:
@@ -1165,7 +1161,6 @@ def send_slack_message():
     form = SlackDirectMessage(request.form)
     slack_client.rtm_connect()
     users = slack_client.api_call('users.list')['members']
-    channels = slack_client.api_call('channels.list')['']
     print(f'slack user {users}')
     if request.method == 'POST':
         if form.validate():

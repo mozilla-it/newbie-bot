@@ -2,6 +2,9 @@
     <h1>Admin Requests</h1>
     <div style="overflow: scroll; margin-top: 25px">
             {% from "includes/_formhelpers.html" import render_field %}
+            {% if pending_requests|length < 1 %}
+                <h4>Currently there are no pending requests.</h4>
+            {% endif %}
             {%  for pending in pending_requests %}
             <div class="row">
               <form class="row moz-form" action="{{ url_for('admin_request', person_id=pending.id) }}" method="POST">
