@@ -22,9 +22,12 @@ class People(db.Model):
     admin_requested = db.Column(db.Boolean, default=False, nullable=True)
     admin_role_requested = db.Column(ARRAY(String), nullable=True)
     admin_requested_date = db.Column(db.DateTime, nullable=True)
+    admin_status = db.Column(db.String, nullable=True)
+    admin_status_updated_date = db.Column(db.DateTime, nullable=True)
+    admin_request_updated_by = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
-        return f"MessagesToSend('{self.emp_id}', '{self.first_name}', '{self.last_name}', " \
+        return f"Person('{self.emp_id}', '{self.first_name}', '{self.last_name}', " \
             f"'{self.email}', '{self.slack_handle}', '{self.start_date}', '{self.last_modified}'," \
             f"'{self.timezone}', '{self.country}', '{self.manager_id}', '{self.manager_opt_out}', " \
             f"'{self.user_opt_out}', '{self.admin_opt_out}', '{self.created_date}')"

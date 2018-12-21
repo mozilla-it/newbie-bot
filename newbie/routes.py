@@ -14,6 +14,8 @@ from newbie.forms.add_employee_form import AddEmployeeForm
 from newbie.forms.add_message_form import AddMessageForm
 from newbie.forms.add_admin_role_form import AddAdminRoleForm
 from newbie.forms.add_admin_form import AddAdminForm
+from newbie.forms.add_admin_request import AddAdminRequest
+from newbie.forms.pending_requests_form import PendingRequestsForm
 # end form imports
 
 from newbie import app, session, redirect, current_host, wraps, slack_client, \
@@ -493,20 +495,39 @@ def get_user_info():
     return user
 
 
-@app.route('/profile')
+@app.route('/profile', methods=['GET', 'POST'])
 @requires_auth
 def profile():
     logger.info("User: {} authenticated proceeding to dashboard.".format(session.get('profile')['user_id']))
     user = get_user_info()
     admin = get_user_admin()
+    form = AddAdminRequest(request.form)
     print(json.dumps(session['jwt_payload']["https://sso.mozilla.com/claim/groups"]))
     print(json.dumps(session['jwt_payload']))
     person = People.query.filter_by(emp_id=session['profile']['user_id']).first()
+    roles = AdminRoles.query.all()
+    role_names = [(role.role_name, role.role_description) for role in roles]
+    form.roles.choices = role_names
     print(f'person {person}')
+    if request.method == 'POST':
+        if form.validate():
+            requested_roles = form.roles.data
+            print(f'roles = {requested_roles}')
+            person.admin_role_requested = requested_roles
+            person.admin_requested = True
+            person.admin_requested_date = datetime.datetime.utcnow()
+            person.admin_status = 'Pending'
+            db.session.commit()
+            slack_client.api_call(
+                'chat.postMessage',
+                channel='GE97V74BD',
+                text=f'{person.first_name} {person.last_name} has requested to be granted the '
+                     f'following role(s) {requested_roles}.')
     return render_template('profile.html',
                            userinfo=session['profile'],
                            usergroups=session['jwt_payload']["https://sso.mozilla.com/claim/groups"],
-                           userinfo_pretty=json.dumps(session['jwt_payload'], indent=4), user=user, admin=admin, person=person)
+                           userinfo_pretty=json.dumps(session['jwt_payload'], indent=4), user=user, admin=admin,
+                           person=person, roles=roles, form=form)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -733,15 +754,15 @@ def add_new_employee():
         return render_template('employees.html', employees=employees, form=form, selectedEmp=None,  timezones=all_timezones, user=user, admin=admins)
 
 
-@app.route('/deleteEmployee/<int:id>')
+@app.route('/deleteEmployee/<int:emp_id>')
 @requires_super
-def delete_employee(id):
+def delete_employee(emp_id):
     """
     Delete employee from database
-    :param id:
+    :param emp_id:
     :return:
     """
-    person = People.query.get_or_404(id)
+    person = People.query.get_or_404(emp_id)
     messages = Send.query.filter_by(emp_id=person.emp_id).all()
     for mes in messages:
         db.session.delete(mes)
@@ -762,6 +783,7 @@ def admin_page():
     """
     form = AddAdminRoleForm(request.form)
     admin_form = AddAdminForm(request.form)
+    pending_form = PendingRequestsForm(request.form)
     admin_roles = AdminRoles.query.all()
     admin = get_user_admin()
     peoples = People.query.all()
@@ -771,8 +793,45 @@ def admin_page():
     admin_form.roles.choices = role_names
     admins = Admin.query.all()
     user = get_user_info()
+    pending_requests = People.query.filter_by(admin_status='Pending').all()
+    print(f'pending requests {pending_requests}')
     return render_template('admin.html', user=user, admin_roles=admin_roles, admins=admins, form=form,
-                           admin_form=admin_form, people=peoples, admin=admin)
+                           admin_form=admin_form, people=peoples, admin=admin, pending_requests=pending_requests, pending_form=pending_form)
+
+
+@app.route('/adminRequest/<int:person_id>', methods=['POST'])
+@requires_super
+def admin_request(person_id):
+    pending_form = PendingRequestsForm(request.form)
+    person = People.query.get_or_404(person_id)
+    if request.method == 'POST':
+        if pending_form.validate():
+            decision = pending_form.decision.data
+            comment = pending_form.comment.data
+            print(f'decision {decision}')
+            print(f'comment {comment}')
+            print(f'person {person.admin_role_requested}')
+            if decision == 'approve':
+                name = person.first_name + ' ' + person.last_name
+                super_admin = False
+                if 'Super Admin' in person.admin_role_requested:
+                    super_admin = True
+                print(f'super {super_admin}')
+                new_admin = Admin(emp_id=person.emp_id, name=name, super_admin=super_admin, roles=person.admin_role_requested)
+                db.session.add(new_admin)
+                try:
+                    db.session.commit()
+                except IntegrityError:
+                    db.session.rollback()
+            person = People.query.get_or_404(person_id)
+            person.admin_status = decision.capitalize()
+            person.admin_status_updated_date = datetime.datetime.utcnow()
+            current_admin = People.query.filter_by(emp_id=session.get('profile')['user_id']).first()
+            person.admin_request_updated_by = current_admin.id
+            db.session.commit()
+            if current_host:
+                return redirect(current_host + '/admin')
+            return redirect(url_for('admin_page'))
 
 
 @app.route('/adminRole', methods=['POST'])
@@ -1106,6 +1165,7 @@ def send_slack_message():
     form = SlackDirectMessage(request.form)
     slack_client.rtm_connect()
     users = slack_client.api_call('users.list')['members']
+    channels = slack_client.api_call('channels.list')['']
     print(f'slack user {users}')
     if request.method == 'POST':
         if form.validate():

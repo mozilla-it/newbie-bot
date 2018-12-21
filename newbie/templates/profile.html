@@ -6,20 +6,35 @@
             <img class="avatar" src="{{userinfo['picture']}}"/>
             <h2>Welcome {{userinfo['name']}}</h2>
             <h2>User ID: {{ userinfo['user_id'] }}</h2>
-            <p>Admin Requested: {% if person.admin_requested is not none %} {{ person.admin_requested }} {% else %} False {% endif %}
             </p>
-            {% if person.admin_requested is not none %}
-                {{ person.admin_requested }}
+            {% if person.admin_requested %}
+                <h4>Admin Access Requested</h4>
+                <h5>Date Submitted: {{ person.admin_requested_date.strftime('%Y-%m-%d') }}</h5>
+                <h5>Role(s) Requested:
+                {% for role in person.admin_role_requested %}
+                    {{ role }}
+                {% endfor %}
+                </h5>
+                <h5>Request Status: {{ person.admin_status }}</h5>
             {% else %}
-                False
+                {% from "includes/_formhelpers.html" import render_field %}
+                <form action="{{ url_for('profile') }}" method="POST" class="form">
+                <h3>Request Admin Access</h3>
+                    <div class="row " >
+                        <div class=" col-md-6 form-group">
+                            {{ form.roles.label }} {{ form.roles(rows=3, multiple=True) }}
+                        </div>
+                    </div>
+
+                    <input type="submit" class="btn btn-primary" value="Submit">
+                </form>
             {% endif %}
-        {{ person.admin_requested if person.admin_requested != None or person.admin_requested != False else 'None' }}
-            <h3>User Groups</h3>
-            <ul>
-            {% for group in usergroups %}
-                <li>{{ group }}</li>
-            {% endfor %}
-            </ul>
+{#            <h3>User Groups</h3>#}
+{#            <ul>#}
+{#            {% for group in usergroups %}#}
+{#                <li>{{ group }}</li>#}
+{#            {% endfor %}#}
+{#            </ul>#}
             <a class="btn btn-primary btn-lg btn-logout " href="/logout">Logout</a>
         </div>
     </div>

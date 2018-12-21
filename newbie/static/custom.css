@@ -25,6 +25,15 @@
 
 }
 
+.moz-form {
+    width: 100%;
+    margin: 1rem;
+}
+
+.moz-role-request {
+    margin-bottom: 0;
+}
+
 .moz-delete-button {
     border: none;
     background: none;

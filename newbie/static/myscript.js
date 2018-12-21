@@ -93,6 +93,8 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
         }
     }, false);
 
+    
+
     // Check inputs and enable/disable as appropriate
     document.addEventListener('keyup', (e) => {
         checkInputs();
