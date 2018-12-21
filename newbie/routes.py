@@ -18,6 +18,7 @@ from newbie.forms.add_admin_request import AddAdminRequest
 from newbie.forms.pending_requests_form import PendingRequestsForm
 # end form imports
 
+
 from newbie import app, session, redirect, current_host, wraps, slack_client, \
     message_frequency, client_id, client_secret, client_uri, us_holidays, ca_holidays, \
     make_response, slack_verification_token, render_template, auth0, logger, request, \
@@ -551,7 +552,7 @@ def callback_handling():
     return redirect(current_host)
 
 
-@app.route('/logout', host='https://newbie.ngrok.io')
+@app.route('/logout', host='https://nhobot.ngrok.io')
 def logout():
     """
     Logout and clear session
@@ -559,10 +560,10 @@ def logout():
     """
     # Clear session stored data
     session.clear()
-    return redirect('https://newbie.ngrok.io/')
+    return redirect('https://nhobot.ngrok.io/')
 
 
-@app.route('/', host='https://newbie.ngrok.io')
+@app.route('/', host='https://nhobot.ngrok.io')
 def index():
     """
     Home page route
@@ -1170,6 +1171,8 @@ def send_slack_message():
             print(f'user {user}')
             dm = slack_client.api_call('im.open', user=user['id'])['channel']['id']
             slack_client.rtm_send_message(dm, message_text)
+            if current_host:
+                return redirect(current_host + '/slackMessage')
             return redirect(url_for('send_slack_message'))
         else:
             print('errors = {}'.format(form.errors))

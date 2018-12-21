@@ -33,6 +33,7 @@ migrate = Migrate(app, db)
 
 client_id = settings.CLIENT_ID
 client_secret = settings.CLIENT_SECRET
+print(f'client secret {client_secret}')
 client_uri = settings.CLIENT_URI
 client_audience = settings.CLIENT_AUDIENCE
 
@@ -79,7 +80,7 @@ if AUTH_AUDIENCE is '':
 
 # This will be the callback URL Auth0 returns the authenticate to.
 # app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
-app.config['AUTH_URL'] = 'https://newbie.ngrok.io/callback/auth'
+app.config['AUTH_URL'] = 'https://nhobot.ngrok.io/callback/auth'
 
 
 oidc_config = config.OIDCConfig()
