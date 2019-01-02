@@ -123,10 +123,11 @@ def get_auth_zero():
     az.get_access_token()
     users = az.get_users(fields="username,user_id,name,email,identities,"
                                 "groups,picture,nickname,_HRData,created_at,"
-                                "user_metadata.groups,userinfo,app_metadata.groups,app_metadata.hris")
+                                "user_metadata.groups,userinfo,app_metadata.groups,app_metadata.hris,"
+                                "app_metadata")
     for user in users:
-        if 'groups' in user:
-            groups = user["groups"]
+        if 'app_metadata' in user:
+            groups = user["app_metadata"]["groups"]
             for group in groups:
                 auth_group = AuthGroups.query.filter_by(groups=group).first()
                 if not auth_group:
@@ -503,13 +504,10 @@ def profile():
     user = get_user_info()
     admin = get_user_admin()
     form = AddAdminRequest(request.form)
-    print(json.dumps(session['jwt_payload']["https://sso.mozilla.com/claim/groups"]))
-    print(json.dumps(session['jwt_payload']))
     person = People.query.filter_by(emp_id=session['profile']['user_id']).first()
     roles = AdminRoles.query.all()
     role_names = [(role.role_name, role.role_description) for role in roles]
     form.roles.choices = role_names
-    print(f'person {person}')
     if request.method == 'POST':
         if form.validate():
             requested_roles = form.roles.data
