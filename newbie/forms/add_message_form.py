@@ -29,7 +29,7 @@ class AddMessageForm(Form):
     ])
     send_date = StringField('Send Date')
     send_once = BooleanField('Specific Date', default=False)
-    text = TextAreaField('Message Value')
+    text = TextAreaField('Message Body')
     number_of_sends = IntegerField(
         'Number of Sends',
         [validators.number_range(min=1, max=10, message='Must be between 1 and 10.'), validators.data_required()],

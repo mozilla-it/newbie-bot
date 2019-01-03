@@ -36,10 +36,15 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
     // Function to add tags
     $(function (){
         $('#add_tag').bind('click', function () {
-            $('<li name="tag_item" class="list-group-item litags">' +
+            var tags = $('input[name="tag_val"]').val().split(',');
+            console.log('tags ', tags);
+            for (let x = 0; x < tags.length; x++){
+                $('<li name="tag_item" class="list-group-item litags">' +
                 '<a style="margin-left: 20px; margin-right: 20px; text-decoration: none;" class="clearitem" ><i class="fas fa-times tags" style="color:red"></i></a>' +
-                $('input[name="tag_val"]').val() + '</li>').appendTo($("#tag_list"));
+                tags[x] + '</li>').appendTo($("#tag_list"));
             tagitems = tagitems + $('input[name="tag_val"]').val() + '|';
+            }
+
             $('#tagitems').val(tagitems);
             $('input[name="tag_val"]').val('');
             document.getElementById('add_tag').classList.add('moz-disabled');
@@ -93,7 +98,7 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
         }
     }, false);
 
-    
+
 
     // Check inputs and enable/disable as appropriate
     document.addEventListener('keyup', (e) => {
@@ -116,9 +121,16 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
     };
 
 
+
+
 }(window, jQuery));
 // add tool tip to http link
     $(function() {
       $('[data-toggle="tooltip"]').tooltip();
     });
 
+var options = {
+      valueNames: [ 'title', 'team', 'tags', 'owner', 'topic' ]
+    };
+
+var userList = new List('users', options);

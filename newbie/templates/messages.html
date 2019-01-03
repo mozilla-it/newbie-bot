@@ -9,124 +9,64 @@
     <div class="container collapse"  id="collapseExample" style="margin-top: 25px; margin-bottom: 25px;">
         {%  include 'message_form.html' %}
     </div>
-    <div style="margin-top: 25px">
+    <div  style="margin-top: 25px">
         <h1>Messages</h1>
-        <div style="overflow: scroll; height: 600px; margin-top: 25px">
-            <ul>
+        <div id="users" style="overflow: scroll; height: 600px; margin-top: 25px">
+        <div class="row moz-left">
+            <input class=" search" placeholder="Search" />
+        </div>
+        <div class="row moz-left">
+            <button class="sort" data-sort="title">Sort by Title</button>
+            <button class="sort" data-sort="team">Sort by Team</button>
+            <button class="sort" data-sort="tags">Sort by Tags</button>
+            <button class="sort" data-sort="owner">Sort by Owner</button>
+            <button class="sort" data-sort="topic">Sort by Topic</button>
+        </div>
+
+            <ul class="list">
             {%  for message in messages %}
-                <li class="list-group-item">
-                    <a style="text-decoration: none;" href="/editMessage/{{ message.id }}"><i class="fas fa-edit" style="color: #000000"></i></a>
-{#                    <a style="margin-left: 20px; margin-right: 20px; text-decoration: none;" href="/deleteMessage/{{ message.id }}"><i class="fas fa-times" style="color:red"></i></a>#}
-                    <button type="button" class="moz-delete-button" data-toggle="modal" data-target="#deleteModal{{ message.id }}"><i class="fas fa-times"></i></button>
-                    {{ message.title }}
-                <button style="margin-left: 20px;" class="btn btn-primary btn-sm float-right" type="button" data-toggle="collapse" data-target="#{{ message.id }}" aria-expanded="false" aria-controls="collapseExample">Details</button>
-                </li>
-                <div class="container collapse"  id="{{ message.id }}">
-                        <div class="row centered">
-                            <div class="col-md-6 ">
-                                <div class="form-group">
-                                    <div><label for="first">Type</label></div>
-                                    <input type="text" disabled value="{{ message.type }}">
-
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <div><label for="last_name">Category</label></div>
-                                    <input type="text" disabled value="{{ message.category }}">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <div><label for="email">Send Once</label></div>
-                                    <input type="text" disabled value="{{ message.send_once}}">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row centered">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <div><label for="email">Title</label></div>
-                                    <input type="text" disabled value="{{ message.title}}">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <div><label for="country">Country</label></div>
-                                    <input type="text" disabled value="{{ message.country }}">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row centered">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <div><label for="timezone">Send Day</label></div>
-                                    <input type="text" disabled value="{{ message.send_day }}">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <div><label for="send_hour">Send Hour</label></div>
-                                    <input type="text" disabled value="{{ message.send_hour }}">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <div><label for="frequency">Frequency</label></div>
-                                    <input type="text" disabled value="{{ message.frequency }}">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row centered">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <div><label for="number_of_sends">Send Number</label></div>
-                                    <input type="text" disabled value="{{ message.number_of_sends }}">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <div><label for="send_date">Send Date</label></div>
-                                    <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="send_date" type="text" disabled value="{{ message.send_date }}" name="start_date"  />
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <div><label for="text">Message</label></div>
-                                    <textarea disabled name="text" id="" cols="30" rows="10" >{{ message.text }}</textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row centered">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <div><label for="email">Links</label></div>
-                                    <ul class="list-group link_list">
-                                        {% for links in message.title_link|list %}
-                                            <li class="list-group-item">{{ links['name'] }} {{ links['url'] }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <div><label for="text">Tags</label></div>
-                                    <ul class="list-group">
-                                        {% for tag in message.tags %}
-                                            <li class="list-group-item">{{ tag }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                <li class="moz-group-item ">
+                <div class="row">
+                    <div class="col">
+                        <a style="text-decoration: none;" href="/editMessage/{{ message.id }}" data-toggle="tooltip" data-placement="top" title="Click here to edit {{ message.title }} message."><i class="fas fa-edit" style="color: #000000"></i></a>
+                    <button type="button" class="moz-delete-button" data-toggle="modal" data-target="#deleteModal{{ message.id }}"><i class="fas fa-times" data-toggle="tooltip" data-placement="top" title="Click here to delete {{ message.title }} message."></i></button>
                     </div>
+                    <div class="col">
+                        <span ><strong>Title: </strong></span><span class="moz-left title"> {{ message.title }}</span>
+                    </div>
+                    <div class="col">
+                        <span ><strong>Team: </strong></span><span class="moz-left team"> {{ message.team }}</span>
+                    </div>
+                    <div class="col">
+                        <span ><strong>Topic: </strong></span><span class="moz-left topic"> {{ message.topic }}</span>
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <a type="button" data-toggle="modal" data-target="#viewModal{{ message.id }}"><i class="far fa-file fa-md" data-toggle="tooltip" data-placement="top" title="Click here to view {{ message.title }} details."></i></a>
+                    </div>
+                    <div class="col">
+                        <span ><strong>Tags: </strong></span><span class="moz-left tags"> {% for tags in message.tags %} {{ tags }} {% endfor %}</span>
+                    </div>
+                    <div class="col">
+                        <span ><strong>Owner: </strong></span><span class="moz-left owner"> {{ message.owner }}</span>
+                    </div>
+                    <div class="col">
+
+                    </div>
+
+                </div>
+
+
+                </li>
+
             <!--Delete Modal -->
             <div class="modal fade" id="deleteModal{{ message.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
               <div class="modal-dialog" role="document">
                 <div class="modal-content">
                   <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">Delete Message</h5>
+                    <h5 class="modal-title" id="deleteModalLabel">Delete - {{ message.title }} - Message</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                     </button>
@@ -141,6 +81,139 @@
               </div>
             </div>
             <!--end delete modal -->
+            <!--View Modal -->
+            <div class="modal fade" id="viewModal{{ message.id }}" tabindex="-1" role="dialog" aria-labelledby="viewModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+{#                    <h5 class="modal-title" id="viewModalLabel">Title: {{ message.title }}</h5>#}
+                      <div class="modal-body"  id="{{ message.id }}">
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-group">
+                                    <strong><div>Title</div>
+                                    {{ message.title}}</strong>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="text">Message Body</label></div>
+                                    <textarea disabled name="text" id="" cols="30" rows="10" >{{ message.text }}</textarea>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="email">Links</label></div>
+                                    <ul id="link_list" class="list-group ">
+                                        {% for links in message.title_link|list %}
+                                            <li class="list-group-item">{{ links['name'] }} {{ links['url'] }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="text">Tags</label></div>
+                                    <ul class="list-group">
+                                        {% for tag in message.tags %}
+                                            <li class="list-group-item">{{ tag }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="first">Type</label></div>
+                                    <input type="text" disabled value="{{ message.type }}">
+
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="last_name">Category</label></div>
+                                    <input type="text" disabled value="{{ message.category }}">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="email">Send Once</label></div>
+                                    <input type="text" disabled value="{{ message.send_once}}">
+                                </div>
+                            </div>
+
+
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="country">Country</label></div>
+                                    <input type="text" disabled value="{{ message.country }}">
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="timezone">Send Day</label></div>
+                                    <input type="text" disabled value="{{ message.send_day }}">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="send_hour">Send Hour</label></div>
+                                    <input type="text" disabled value="{{ message.send_hour }}">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="frequency">Frequency</label></div>
+                                    <input type="text" disabled value="{{ message.frequency }}">
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="number_of_sends">Send Number</label></div>
+                                    <input type="text" disabled value="{{ message.number_of_sends }}">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="send_date">Send Date</label></div>
+                                    <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="send_date" type="text" disabled value="{{ message.send_date }}" name="start_date"  />
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="team">Team</label></div>
+                                    <input type="text" disabled value="{{ message.team }}">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="owner">Owner</label></div>
+                                    <input type="text" disabled value="{{ message.owner }}">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="owner">Topic</label></div>
+                                    <input type="text" disabled value="{{ message.topic }}">
+                                </div>
+                            </div>
+
+
+
+                        </div>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--end view modal -->
             {% endfor %}
             </ul>
         </div>
@@ -150,6 +223,8 @@
     </div>
     <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
     <script type="text/javascript">$SCRIPT_ROOT = {{ request.script_root|tojson|safe }}; </script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
     <script src="{{ url_for('static', filename='myscript.js') }}"></script>
+
 
 {%  endblock %}

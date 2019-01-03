@@ -22,7 +22,7 @@ from newbie.forms.pending_requests_form import PendingRequestsForm
 from newbie import app, session, redirect, current_host, wraps, slack_client, \
     message_frequency, client_id, client_secret, client_uri, us_holidays, ca_holidays, \
     make_response, slack_verification_token, render_template, auth0, logger, request, \
-    Response, url_for, all_timezones
+    Response, url_for, all_timezones, flash
 import json
 import datetime
 import pytz
@@ -614,10 +614,15 @@ def add_new_message():
                                   tags=tag[:-1])
             db.session.add(message)
             db.session.commit()
-            # return redirect(current_host + '/addMessage')
+            flash("Your message has been added. To view it, scroll to the bottom of the page. "
+                  "Need to make changes? Click on the pencil icon to the left of the Title.", 'success')
+            if current_host:
+                return redirect(current_host + '/addMessage')
             return redirect(url_for('add_new_message'))
         else:
             print('errors = {}'.format(form.errors))
+            if current_host:
+                return redirect(current_host + '/addMessage')
             return redirect(url_for('add_new_message'))
     return render_template('messages.html', messages=messages, form=form, user=user, admin=admin)
 
@@ -672,11 +677,13 @@ def edit_message(message_id):
             tag = [re.sub(r'\r\n\s+', '', x) for x in tag]
             messages.tags = tag[:-1]
             db.session.commit()
+            flash("Your message has been successfully updated.", 'success')
             if current_host:
                 return redirect(current_host + '/addMessage')
             return redirect(url_for('add_new_message'))
         else:
             print('errors = {}'.format(form.errors))
+            flash(f"There was a problem with the change you attempted to make: {form.errors}", 'error')
             if current_host:
                 return redirect(current_host + '/addMessage')
             return redirect(url_for('add_new_message'))
@@ -693,6 +700,7 @@ def delete_message(message_id):
     messages = Messages.query.get_or_404(message_id)
     db.session.delete(messages)
     db.session.commit()
+    flash("The message has been deleted.", 'success')
     if current_host:
         return redirect(current_host + '/addMessage')
     return redirect(url_for('add_new_message'))
@@ -727,7 +735,7 @@ def add_new_employee():
                 print('DuplicateKeyError {}'.format(error))
                 db.session.rollback()
             newly_added_user = People.query.filter_by(emp_id=form.emp_id.data).first()
-            print('newly added user = {}'.format(newly_added_user.first_name))
+            # print('newly added user = {}'.format(newly_added_user.first_name))
             add_messages_to_send(newly_added_user)
             if current_host:
                 return redirect(current_host + '/addEmployee')
@@ -839,12 +847,15 @@ def admin_role():
     form = AddAdminRoleForm(request.form)
     if request.method == 'POST':
         if form.validate():
+            admin_role_added = False
             role = AdminRoles(role_name=form.role_name.data, role_description=form.role_description.data)
             db.session.add(role)
             try:
                 db.session.commit()
+                admin_role_added = True
             except IntegrityError:
                 db.session.rollback()
+            flash("Admin role successfully added.", 'success')
             if current_host:
                 return redirect(current_host + '/admin')
             return redirect(url_for('admin_page'))
@@ -869,6 +880,7 @@ def delete_role(role_id):
     role = AdminRoles.query.get_or_404(role_id)
     db.session.delete(role)
     db.session.commit()
+    flash("Admin role successfully deleted.", 'success')
     if current_host:
         return redirect(current_host + '/admin')
     return redirect(url_for('admin_page'))
@@ -890,6 +902,7 @@ def admin_user():
     if request.method == 'POST':
         print('admin form {}'.format(admin_form.roles.data))
         if admin_form.validate():
+            admin_added = False
             try:
                 print(f'selected admin {admin_form.emp_id.data}')
                 selected_admin = admin_form.emp_id.data.split(' ')
@@ -899,10 +912,13 @@ def admin_user():
                 db.session.add(admin)
                 try:
                     db.session.commit()
+                    admin_added = True
                 except IntegrityError:
                     db.session.rollback()
             except:
                 print('unable to save admin')
+            if admin_added:
+                flash("Admin has been successfully added.", 'success')
             if current_host:
                 return redirect(current_host + '/admin')
             return redirect(url_for('admin_page'))
@@ -929,6 +945,7 @@ def delete_admin(admin_id):
     admin = Admin.query.get_or_404(admin_id)
     db.session.delete(admin)
     db.session.commit()
+    flash("Admin has been successfully deleted.", 'success')
     if current_host:
         return redirect(current_host + '/admin')
     return redirect(url_for('admin_page'))
@@ -1160,15 +1177,16 @@ def send_slack_message():
     form = SlackDirectMessage(request.form)
     slack_client.rtm_connect()
     users = slack_client.api_call('users.list')['members']
-    print(f'slack user {users}')
+    # print(f'slack user {users}')
     if request.method == 'POST':
         if form.validate():
             message_text = form.message_text.data
             message_user = form.message_user.data
             user = search(users, 'name', message_user)
-            print(f'user {user}')
+            # print(f'user {user}')
             dm = slack_client.api_call('im.open', user=user['id'])['channel']['id']
             slack_client.rtm_send_message(dm, message_text)
+            flash("Slack message sent!", 'success')
             if current_host:
                 return redirect(current_host + '/slackMessage')
             return redirect(url_for('send_slack_message'))

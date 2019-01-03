@@ -20,9 +20,12 @@ class Messages(db.Model):
     country = db.Column(db.String(3), nullable=False, default='ALL')
     callback_id = db.Column(db.String(15), nullable=True)
     tags = db.Column(ARRAY(String))
+    team = db.Column(db.String(50), nullable=True, default='HR')
+    topic = db.Column(db.String(50), nullable=True, default='ALL')
+    owner = db.Column(db.String(50), nullable=True, default='Mozilla')
 
     def __repr__(self):
         return f"Messages('{self.type}', '{self.category}', '{self.title}', '{self.title_link}'" \
             f"'{self.send_day}', '{self.send_hour}', '{self.frequency}', '{self.number_of_sends}', " \
             f"'{self.text}', '{self.send_date}', '{self.created_date}', '{self.country}', " \
-            f"'{self.callback_id}', '{self.tags}')"
+            f"'{self.callback_id}', '{self.tags}', '{self.team}', '{self.topic}', '{self.owner}')"
