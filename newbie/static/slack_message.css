@@ -1,0 +1,147 @@
+.c-message {
+  font-size: 15px;
+  min-width: 1px;
+  position: relative;
+  -moz-user-select: text;
+}
+
+.c-message--light {
+  padding: 6px 0;
+}
+
+.c-message__gutter {
+  width: 70px;
+  padding-right: 8px;
+  float: left;
+  text-align: right;
+}
+
+.c-avatar {
+  position: relative;
+  display: inline-block;
+}
+
+.c-avatar--interactive {
+  cursor: pointer;
+}
+
+.c-avatar__image {
+  border-radius: 3px;
+  display: block;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.c-message__content::before {
+  content: "";
+  display: block;
+  padding-top: 1px;
+}
+
+.c-message__content {
+  margin-top: -9px;
+  margin-left: 70px;
+  margin-right: 20px;
+  min-width: 1px;
+}
+
+.c-message__content_header {
+  margin: 9px 0 -5px;
+  line-height: 1;
+}
+
+.c-message__sender_link {
+  color: #2c2d30;
+  font-weight: 900;
+}
+
+.c-app_badge {
+  border-radius: 2px;
+  font-size: 10px;
+  padding: 1px 3px;
+  color: #717274;
+  background-color: #e8e8e8;
+  display: inline-block;
+  height: 14px;
+  line-height: 1.25;
+  font-weight: 700;
+  vertical-align: .125rem;
+}
+
+.c-timestamp {
+  margin-left: 5px;
+  color: #919193;
+}
+
+.c-message__body {
+  line-height: 1.46668;
+  margin: 8px 0 -4px;
+  text-align: left;
+  display: inline-block;
+  width: 100%;
+  color: #2c2d30;
+  word-wrap: break-word;
+}
+
+.c-message__attachments {
+  padding-bottom: 1px;
+  margin: 8px 0 -9px;
+  max-width: 600px;
+}
+
+.c-message_attachment {
+  display: flex;
+  align-items: stretch;
+  position: relative;
+  margin: 0 0 8px -20px;
+  padding-left: 20px;
+  max-width: 600px;
+  color: #2c2d30;
+}
+
+.c-message_attachment__border {
+  background-color: rgb(0, 137, 82);
+  border-radius: 8px;
+  flex-shrink: 0;
+  width: 4px;
+}
+
+.c-message_attachment__body {
+  line-height: 1.46666667;
+  font-size: 15px;
+  flex: 1;
+  padding: 0 12px;
+  overflow: hidden;
+  word-wrap: break-word;
+}
+
+.c-button--outline-primary:visited {
+  color: #008952;
+}
+
+.c-button {
+  min-width: 0;
+  max-width: 220px;
+  padding: 0 10px;
+  margin: 2px 8px 2px 0;
+  vertical-align: middle;
+  font-size: 13px;
+  height: 28px;
+  transition: all 75ms ease-in-out;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(0,137,82,.3);
+  font-weight: 700;
+  text-decoration: none;
+  outline: none;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  align-items: center;
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+  color: #008952;
+  -webkit-appearance: none;
+}

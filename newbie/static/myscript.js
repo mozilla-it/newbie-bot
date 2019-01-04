@@ -63,6 +63,18 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
             $('<li name="link_item" class="list-group-item row lilink">' +
             '<a style="margin-right: 20px; text-decoration: none;" class="clearlink"><i class="fas fa-times links" style="color:red"></i></a>' +
             link['name'] + ' | ' + link['url'] + '</li>').appendTo($("#link_list"));
+            $('<div class="c-message__attachments">' +
+            ' <div class="c-message_attachment">' +
+            '  <div class="c-message_attachment__border" style="background-color: rgb(0, 137, 82);"></div>' +
+            '    <div class="c-message_attachment__body">' +
+            '     <div class="c-message_attachment__row c-message_attachment__row--actions">' +
+            '       <a role="link" tabindex="0" target="_blank" class="c-button c-button--outline-primary c-button--small c-message_attachment__button null--outline-primary null--small" type="button" data-qa="message_attachment_button_primary" href="'+ link["url"] + '" rel="noopener noreferrer">' +
+            '        <span class="overflow_ellipsis" dir="auto"> '+ link["name"] +'</span>' +
+            '       </a>\n' +
+            '     </div>\n' +
+            '    </div>\n' +
+            '  </div>\n' +
+            ' </div>').appendTo($("#preview_list"));
             $('#linkitems').val(JSON.stringify(links));
             $('input[name="link_name"]').val('');
             $('input[name="link_url"]').val('');
@@ -118,6 +130,9 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
         } else {
             document.getElementById('add_tag').classList.add('moz-disabled');
         }
+        var textfield = document.getElementById('text');
+        document.getElementById('preview-message-body').textContent=textfield.value;
+
     };
 
 
@@ -134,3 +149,10 @@ var options = {
     };
 
 var userList = new List('users', options);
+var date=new Date();
+var time=date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+document.getElementById('current_time').innerHTML = time;
+var timeels = document.getElementsByClassName('current-time');
+for (let x = 0; x < timeels.length; x++){
+    timeels[x].innerHTML = time;
+}

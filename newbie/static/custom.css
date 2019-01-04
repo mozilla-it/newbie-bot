@@ -69,6 +69,11 @@ li .moz-group-item:after {
     margin-left: 2.8em;
 }
 
+.moz-preview {
+    margin-left: .9em;
+}
+
+
 .moz-left-title-tags {
     margin-left: 2em;
     text-overflow: ellipsis;

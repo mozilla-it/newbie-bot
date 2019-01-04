@@ -14,7 +14,7 @@
             <li class="nav-item"><a class="nav-link" href="/addEmployee">Employees</a></li>
                     {% endif %}
                 {% if 'Admin' in admin.roles or admin.super_admin %}
-            <li class="nav-item"><a class="nav-link" href="/addMessage">Messages</a></li>
+            <li class="nav-item"><a class="nav-link" href="/viewMessages">Messages</a></li>
                     {% endif %}
                 {% if admin.super_admin %}
             <li class="nav-item"><a class="nav-link" href="/slackMessage">Send Slack Message</a></li>

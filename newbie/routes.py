@@ -587,6 +587,16 @@ def help_page():
     return render_template('help.html', user=user, admin=admin)
 
 
+@app.route('/viewMessages')
+@requires_admin
+def view_messages():
+    user = get_user_info()
+    admin = get_user_admin()
+    form = AddMessageForm(request.form)
+    messages = Messages.query.all()
+    return render_template('messages.html', messages=messages, form=form, user=user, admin=admin)
+
+
 @app.route('/addMessage', methods=['GET', 'POST'])
 @requires_admin
 def add_new_message():
@@ -597,8 +607,12 @@ def add_new_message():
     user = get_user_info()
     admin = get_user_admin()
     form = AddMessageForm(request.form)
-    messages = Messages.query.all()
-    if request.method == 'POST':
+    links = []
+    form_text = ''
+    messageaction = 'Add'
+    if request.method == 'GET':
+        return render_template('message_edit.html', form=form, user=user, admin=admin, message='', links=links, form_text=form_text, messageaction=messageaction)
+    elif request.method == 'POST':
         if form.validate():
             title_link = json.loads(form.linkitems.data)
             date_start = form.send_date.data.split('-')
@@ -617,14 +631,14 @@ def add_new_message():
             flash("Your message has been added. To view it, scroll to the bottom of the page. "
                   "Need to make changes? Click on the pencil icon to the left of the Title.", 'success')
             if current_host:
-                return redirect(current_host + '/addMessage')
-            return redirect(url_for('add_new_message'))
+                return redirect(current_host + '/viewMessages')
+            return redirect(url_for('view_messages'))
         else:
             print('errors = {}'.format(form.errors))
             if current_host:
                 return redirect(current_host + '/addMessage')
             return redirect(url_for('add_new_message'))
-    return render_template('messages.html', messages=messages, form=form, user=user, admin=admin)
+    # return render_template('messages.html', messages=messages, form=form, user=user, admin=admin)
 
 
 @app.route('/editMessage/<int:message_id>', methods=['GET', 'POST'])
@@ -640,6 +654,7 @@ def edit_message(message_id):
     admin = get_user_admin()
     form = AddMessageForm(request.form)
     messages = Messages.query.get_or_404(message_id)
+    messageaction = 'Edit'
     if request.method == 'GET':
         # messages = Messages.objects(Q(id=message_id)).get()
         form.message_type.data = messages.type
@@ -655,7 +670,7 @@ def edit_message(message_id):
         form.number_of_sends.data = messages.number_of_sends
         form.country.data = messages.country
         form.tagitems.data = messages.tags
-        return render_template('message_edit.html', form=form, user=user, admin=admin, message=messages)
+        return render_template('message_edit.html', form=form, user=user, admin=admin, message=messages, messageaction=messageaction)
     elif request.method == 'POST':
         if form.validate():
             messages.type = form.message_type.data
