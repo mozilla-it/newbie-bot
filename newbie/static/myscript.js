@@ -122,8 +122,15 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
         var tag = document.getElementById('tag_val');
         if (name.value.length > 0 && link.value.length > 0 && (link.value.startsWith('http://') || link.value.startsWith('https://'))){
             document.getElementById('add_link').classList.remove('moz-disabled');
+            document.getElementById('submit-message').classList.add('moz-disabled');
         } else {
             document.getElementById('add_link').classList.add('moz-disabled');
+            document.getElementById('submit-message').classList.remove('moz-disabled')
+        }
+        if (name.value.length > 0 || link.value.length > 0 || tag.value.length > 0){
+            document.getElementById('submit-message').classList.add('moz-disabled');
+        } else {
+            document.getElementById('submit-message').classList.remove('moz-disabled')
         }
         if (tag.value.length > 0){
             document.getElementById('add_tag').classList.remove('moz-disabled');

@@ -717,8 +717,8 @@ def delete_message(message_id):
     db.session.commit()
     flash("The message has been deleted.", 'success')
     if current_host:
-        return redirect(current_host + '/addMessage')
-    return redirect(url_for('add_new_message'))
+        return redirect(current_host + '/viewMessages')
+    return redirect(url_for('view_messages'))
 
 
 @app.route('/addEmployee', methods=['GET', 'POST'])
