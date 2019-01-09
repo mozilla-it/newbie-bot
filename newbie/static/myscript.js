@@ -37,7 +37,6 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
     $(function (){
         $('#add_tag').bind('click', function () {
             var tags = $('input[name="tag_val"]').val().split(',');
-            console.log('tags ', tags);
             for (let x = 0; x < tags.length; x++){
                 $('<li name="tag_item" class="list-group-item litags">' +
                 '<a style="margin-left: 20px; margin-right: 20px; text-decoration: none;" class="clearitem" ><i class="fas fa-times tags" style="color:red"></i></a>' +
@@ -48,6 +47,7 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
             $('#tagitems').val(tagitems);
             $('input[name="tag_val"]').val('');
             document.getElementById('add_tag').classList.add('moz-disabled');
+            checkInputs();
         });
     });
 
@@ -79,6 +79,7 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
             $('input[name="link_name"]').val('');
             $('input[name="link_url"]').val('');
             document.getElementById('add_link').classList.add('moz-disabled');
+            checkInputs();
         });
     });
     // Function to remove links and tags
