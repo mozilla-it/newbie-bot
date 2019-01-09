@@ -11,10 +11,10 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
     message_type.classList.add('custom-select');
     const country = document.getElementById('country');
     country.classList.add('custom-select');
-    const category = document.getElementById('category');
-    category.classList.add('custom-select');
-    const frequency = document.getElementById('frequency');
-    frequency.classList.add('custom-select');
+    const loc = document.getElementById('location');
+    loc.classList.add('custom-select');
+    const emp_type = document.getElementById('emp_type');
+    emp_type.classList.add('custom-select');
     var tagitems = '';
     var links = [];
     var link = {};
@@ -152,7 +152,7 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
     });
 
 var options = {
-      valueNames: [ 'title', 'team', 'tags', 'owner', 'topic' ]
+      valueNames: [ 'team', 'tags', 'owner', 'topic' ]
     };
 
 var userList = new List('users', options);

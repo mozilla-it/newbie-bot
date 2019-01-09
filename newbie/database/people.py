@@ -25,9 +25,12 @@ class People(db.Model):
     admin_status = db.Column(db.String, nullable=True)
     admin_status_updated_date = db.Column(db.DateTime, nullable=True)
     admin_request_updated_by = db.Column(db.Integer, nullable=True)
+    admin_team = db.Column(db.String(100), nullable=True)
 
     def __repr__(self):
         return f"Person('{self.emp_id}', '{self.first_name}', '{self.last_name}', " \
             f"'{self.email}', '{self.slack_handle}', '{self.start_date}', '{self.last_modified}'," \
             f"'{self.timezone}', '{self.country}', '{self.manager_id}', '{self.manager_opt_out}', " \
-            f"'{self.user_opt_out}', '{self.admin_opt_out}', '{self.created_date}')"
+            f"'{self.user_opt_out}', '{self.admin_opt_out}', '{self.created_date}'," \
+               f"'{self.admin_requested}', '{self.admin_role_requested}', '{self.admin_requested_date}', '{self.admin_status}', '{self.admin_status_updated_date}'," \
+               f"'{self.admin_request_updated_by}', '{self.admin_team}')"

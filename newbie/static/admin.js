@@ -16,6 +16,16 @@
             document.getElementById('role_view').classList.add('collapse');
         });
     });
+    try{
+        const team = document.getElementById('team');
+        team.classList.add('custom-select');
+    }
+    catch
+    (e)
+    {
+        
+    }
+
 
 
 

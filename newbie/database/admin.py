@@ -10,6 +10,7 @@ class Admin(db.Model):
     super_admin = db.Column(db.Boolean, default=False)
     roles = db.Column(db.String(1000))
     created_date = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    team = db.Column(db.String(100), nullable=True)
 
     def __repr__(self):
-        return f"Admin('{self.emp_id}', '{self.name}', '{self.super_admin}', '{self.roles}', '{self.created_date}')"
+        return f"Admin('{self.emp_id}', '{self.name}', '{self.super_admin}', '{self.roles}', '{self.created_date}', '{self.team}')"

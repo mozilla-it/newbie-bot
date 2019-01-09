@@ -37,6 +37,10 @@ print(f'client secret {client_secret}')
 client_uri = settings.CLIENT_URI
 client_audience = settings.CLIENT_AUDIENCE
 
+admin_team_choices = [('infosec', 'IT: InfoSec'), ('servicedesk', 'IT: Service Desk'),
+                      ('benefits', 'People: Benefits'), ('onboarding', 'People: Onboarding'),
+                      ('diversity', 'People: Diversity and Inclusion'), ('wpr', 'WPR')]
+
 
 slack_verification_token = settings.SLACK_VERIFICATION_TOKEN
 
@@ -46,8 +50,6 @@ all_timezones = settings.all_timezones
 us_holidays = holidays.US()
 ca_holidays = holidays.CA()
 
-
-message_frequency = {'day': 1, 'week': 7, 'month': 30, 'year': 365}
 
 # auth
 oauth = OAuth(app)

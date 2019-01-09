@@ -1,4 +1,5 @@
-from wtforms import Form, StringField, RadioField, HiddenField, validators
+from wtforms import Form, StringField, RadioField, HiddenField, validators, SelectField
+from newbie import admin_team_choices
 
 
 class PendingRequestsForm(Form):
@@ -6,3 +7,5 @@ class PendingRequestsForm(Form):
                           validators=[validators.data_required()])
     comment = StringField('Comment')
     person = HiddenField()
+    team = SelectField('Team', validators=[validators.data_required()],
+                       choices=admin_team_choices)

@@ -14,15 +14,14 @@
     <div  style="margin-top: 25px">
         <h1>Messages</h1>
         <div id="users" style="overflow: scroll; height: 600px; margin-top: 25px">
+{#        <div class="row moz-left">#}
+{#            <input class=" search" placeholder="Search" />#}
+{#        </div>#}
         <div class="row moz-left">
-            <input class=" search" placeholder="Search" />
-        </div>
-        <div class="row moz-left">
-            <button class="sort" data-sort="title">Sort by Title</button>
+            <button class="sort" data-sort="topic">Sort by Topic</button>
             <button class="sort" data-sort="team">Sort by Team</button>
             <button class="sort" data-sort="tags">Sort by Tags</button>
             <button class="sort" data-sort="owner">Sort by Owner</button>
-            <button class="sort" data-sort="topic">Sort by Topic</button>
         </div>
 
             <ul class="list">
@@ -30,23 +29,19 @@
                 <li class="moz-group-item ">
                 <div class="row">
                     <div class="col">
-                        <a style="text-decoration: none;" href="/editMessage/{{ message.id }}" data-toggle="tooltip" data-placement="top" title="Click here to edit {{ message.title }} message."><i class="fas fa-edit" style="color: #000000"></i></a>
-                    <button type="button" class="moz-delete-button" data-toggle="modal" data-target="#deleteModal{{ message.id }}"><i class="fas fa-times" data-toggle="tooltip" data-placement="top" title="Click here to delete {{ message.title }} message."></i></button>
-                    </div>
-                    <div class="col">
-                        <span ><strong>Title: </strong></span><span class="moz-left title"> {{ message.title }}</span>
-                    </div>
-                    <div class="col">
-                        <span ><strong>Team: </strong></span><span class="moz-left team"> {{ message.team }}</span>
+                        <a style="text-decoration: none;" href="/editMessage/{{ message.id }}" data-toggle="tooltip" data-placement="top" title="Click here to edit {{ message.topic }} message."><i class="fas fa-edit" style="color: #000000"></i></a>
+                    <button type="button" class="moz-delete-button" data-toggle="modal" data-target="#deleteModal{{ message.id }}"><i class="fas fa-times" data-toggle="tooltip" data-placement="top" title="Click here to delete {{ message.topic }} message."></i></button>
                     </div>
                     <div class="col">
                         <span ><strong>Topic: </strong></span><span class="moz-left topic"> {{ message.topic }}</span>
                     </div>
-
+                    <div class="col">
+                        <span ><strong>Team: </strong></span><span class="moz-left team"> {{ message.team }}</span>
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col">
-                        <a type="button" data-toggle="modal" data-target="#viewModal{{ message.id }}"><i class="far fa-file fa-md" data-toggle="tooltip" data-placement="top" title="Click here to view {{ message.title }} details."></i></a>
+                        <a type="button" data-toggle="modal" data-target="#viewModal{{ message.id }}"><i class="far fa-file fa-md" data-toggle="tooltip" data-placement="top" title="Click here to view {{ message.topic }} details."></i></a>
                         <a class="moz-preview" type="button" data-toggle="modal" data-target="#previewModal{{ message.id }}"><i class="far fa-image fa-md" data-toggle="tooltip" data-placement="top" title="Click here to preview this message."></i></a>
                     </div>
                     <div class="col">
@@ -55,10 +50,6 @@
                     <div class="col">
                         <span ><strong>Owner: </strong></span><span class="moz-left owner"> {{ message.owner }}</span>
                     </div>
-                    <div class="col">
-
-                    </div>
-
                 </div>
 
 
@@ -69,7 +60,7 @@
               <div class="modal-dialog" role="document">
                 <div class="modal-content">
                   <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">Delete - {{ message.title }} - Message</h5>
+                    <h5 class="modal-title" id="deleteModalLabel">Delete - {{ message.topic }} - Message</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                     </button>
@@ -94,8 +85,8 @@
                         <div class="row">
                             <div class="col">
                                 <div class="form-group">
-                                    <strong><div>Title</div>
-                                    {{ message.title}}</strong>
+                                    <strong><div>Topic</div>
+                                    {{ message.topic}}</strong>
                                 </div>
                             </div>
                             <div class="col">
@@ -149,32 +140,6 @@
                                 <div class="form-group">
                                     <div><label for="country">Country</label></div>
                                     <input type="text" disabled value="{{ message.country }}">
-                                </div>
-                            </div>
-
-                            <div class="col">
-                                <div class="form-group">
-                                    <div><label for="timezone">Send Day</label></div>
-                                    <input type="text" disabled value="{{ message.send_day }}">
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <div><label for="send_hour">Send Hour</label></div>
-                                    <input type="text" disabled value="{{ message.send_hour }}">
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <div><label for="frequency">Frequency</label></div>
-                                    <input type="text" disabled value="{{ message.frequency }}">
-                                </div>
-                            </div>
-
-                            <div class="col">
-                                <div class="form-group">
-                                    <div><label for="number_of_sends">Send Number</label></div>
-                                    <input type="text" disabled value="{{ message.number_of_sends }}">
                                 </div>
                             </div>
                             <div class="col">

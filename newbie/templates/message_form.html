@@ -2,6 +2,62 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='slack_message.css') }}">
 <form action="" method="POST" class="form">
     <div class="row centered">
+         <div class="col ">
+            <div class="form-group">
+                {{ render_field(form.topic, class_="form_control") }}
+            </div>
+        </div>
+        <div class="col ">
+            <div id="text-field" class="form-group">
+                {{ render_field(form.text, class_="form_control") }}
+            </div>
+        </div>
+    </div>
+    <div class="row centered">
+
+        <div class="col ">
+            <div class="form-group ">
+                <div class="input-group">
+                    <p>{{ form.message_type.label }} {{ form.message_type }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="form-group" id="multiCollapseNo2">
+                <div class="input-group mb-3">
+                    <p>{{ form.country.label }} {{ form.country }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{#    <div class="row centered">#}
+
+{#        <div class="col">#}
+{#            <div class="form-group ">#}
+{#                <div class="input-group mb-3">#}
+{#                    <p>{{ form.category.label }} {{ form.category }}</p>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+
+{#    </div>#}
+    <div class="row centered">
+        <div class="col">
+            <div class="form-group">
+                <div class="input-group">
+                    <p>{{ form.location.label }} {{ form.location }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="form-group">
+                <div class="input-group">
+                    <p>{{ form.emp_type.label }} {{ form.emp_type }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row centered" >
         <div class="col">
             <div class="form-group">
                 <p>
@@ -14,80 +70,16 @@
             </div>
         </div>
         <div class="col">
-            <div class="form-group" id="multiCollapseNo2">
-                <div class="input-group mb-3">
-                    <p>{{ form.country.label }} {{ form.country }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row centered">
-         <div class="col ">
-            <div class="form-group">
-                {{ render_field(form.title, class_="form_control") }}
-            </div>
-        </div>
-        <div class="col ">
-            <div id="text-field" class="form-group">
-                {{ render_field(form.text, class_="form_control") }}
-            </div>
-        </div>
-    </div>
-    <div class="row centered">
-        <div class="col ">
-            <div class="form-group ">
-                <div class="input-group">
-                    <p>{{ form.message_type.label }} {{ form.message_type }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col">
-            <div class="form-group ">
-                <div class="input-group mb-3">
-                    <p>{{ form.category.label }} {{ form.category }}</p>
-                </div>
-            </div>
-        </div>
-
-    </div>
-    <div class="row centered" >
-        <div class="col">
             <div class="form-group multi-collapse collapse" id="multiCollapseYes">
                 <div><label for="start_date">Send Date</label></div>
                 <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="send_date" type="date" name="send_date"  />
             </div>
         </div>
     </div>
-    <div class="row centered" >
-        <div class="col  ">
-            <div class="form-group multi-collapse collapse show" id="multiCollapseNo">
-                {{ render_field(form.send_day, class_="form_control") }}
-            </div>
-        </div>
-        <div class="col">
-            <div class="form-group multi-collapse collapse show" id="multiCollapseNo1">
-                {{ render_field(form.send_time, class_="form_control") }}
-            </div>
-        </div>
-    </div>
-    <div class="row centered">
-        <div class="col">
-            <div class="form-group multi-collapse collapse show " id="multiCollapseNo2">
-                <div class="input-group">
-                    <p>{{ form.frequency.label }} {{ form.frequency }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col ">
-            <div class="form-group multi-collapse collapse show">
-                {{ render_field(form.number_of_sends, class_="form_control") }}
-            </div>
-        </div>
-    </div>
     <div class="row centered ">
         <div class="col ">
             <div class="form-group">
-                <div class="row">
+                <div class="row moz-left-pad">
                     <input type=text id=link_name name=link_name class="form-control moz-input" placeholder="Name" data-toggle="tooltip" data-placement="top" title="This value will be displayed as a button title.  Links require a name and a link value, once both fields have values you must click the Add Link button below. Links are not required for every message." >
                     <input type="text" id="link_url" name="link_url" placeholder="Link" data-toggle="tooltip" data-placement="top" title="URL must begin with http or https - ex https://mozilla.com  Links require a name and a link value, once both fields have values you must click the Add Link button below.  Links are not required for every message.">
                     <input name="linkitems" id="linkitems" type="hidden">
@@ -97,7 +89,7 @@
         </div>
         <div class="col ">
             <div class="form-group">
-                <div class="row">
+                <div class="row moz-left-pad">
                     <input type=text id=tag_val name=tag_val class="form-control" placeholder="Add a tag" data-toggle="tooltip" data-placement="top" title="Tags are used for searching messages from Newbie.  Tags can be entered one at a time or as a comma separated list.  Once you have entered the tag value you must click the Add Tag button below.  Tags are recommended but not required.">
                     <a class="btn btn-sm btn-outline-primary moz-drop-sm moz-disabled" name="add_tag" id="add_tag" >Add Tag</a>
                     <input name="tagitems" id="tagitems" type="hidden">

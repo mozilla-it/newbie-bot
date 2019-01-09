@@ -25,6 +25,10 @@
 
 }
 
+.moz-left-pad {
+    padding-left: 1em;
+}
+
 .moz-form {
     width: 100%;
     margin: 1rem;

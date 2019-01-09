@@ -7,6 +7,7 @@ from newbie.database.user_feedback import UserFeedback
 from newbie.database.auth_groups import AuthGroups
 from newbie import db
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 
 # form imports
 from newbie.forms.slack_direct_message import SlackDirectMessage
@@ -20,9 +21,9 @@ from newbie.forms.pending_requests_form import PendingRequestsForm
 
 
 from newbie import app, session, redirect, current_host, wraps, slack_client, \
-    message_frequency, client_id, client_secret, client_uri, us_holidays, ca_holidays, \
+    client_id, client_secret, client_uri, us_holidays, ca_holidays, \
     make_response, slack_verification_token, render_template, auth0, logger, request, \
-    Response, url_for, all_timezones, flash
+    Response, url_for, all_timezones, flash, admin_team_choices
 import json
 import datetime
 import pytz
@@ -233,28 +234,25 @@ def add_messages_to_send(person: People):
     messages = Messages.query.all()
     for m in messages:
         print(f'm = {m.id}')
-        for x in range(0, m.number_of_sends):
-            send_day = ''
-            if x == 0:
-                send_day = m.send_day
-            else:
-                send_day = send_day + message_frequency[m.frequency]
-            if m.send_once:
-                send_date_time = m.send_date
-            else:
-                send_date_time = start_date + datetime.timedelta(days=send_day)
-            send_date_time = my_timezone.localize(send_date_time)
-            send_date_time = send_date_time.replace(hour=m.send_hour, minute=0, second=0)
-            send_date_time = adjust_send_date_for_holidays_and_weekends(send_date_time, my_country)
-            if m.country == 'US' and my_country == 'US':
-                save_send_message(employee_id, m.id, x, send_date_time)
-            elif m.country == 'CA' and my_country == 'CA':
-                save_send_message(employee_id, m.id, x, send_date_time)
-            elif m.country == 'ALL':
-                save_send_message(employee_id, m.id, x, send_date_time)
-            else:
-                app.logger.info('No message to be sent, user country {} and message country {}'
-                                .format(my_country, m.country))
+        send_day = ''
+        send_day = m.send_day
+
+        if m.send_once:
+            send_date_time = m.send_date
+        else:
+            send_date_time = start_date + datetime.timedelta(days=send_day)
+        send_date_time = my_timezone.localize(send_date_time)
+        send_date_time = send_date_time.replace(hour=m.send_hour, minute=0, second=0)
+        send_date_time = adjust_send_date_for_holidays_and_weekends(send_date_time, my_country)
+        if m.country == 'US' and my_country == 'US':
+            save_send_message(employee_id, m.id, 0, send_date_time)
+        elif m.country == 'CA' and my_country == 'CA':
+            save_send_message(employee_id, m.id, 0, send_date_time)
+        elif m.country == 'ALL':
+            save_send_message(employee_id, m.id, 0, send_date_time)
+        else:
+            app.logger.info('No message to be sent, user country {} and message country {}'
+                            .format(my_country, m.country))
 
 
 def adjust_send_date_for_holidays_and_weekends(send_date_time, country):
@@ -296,13 +294,6 @@ def save_send_message(emp_id, message_id, send_order, send_dttm):
     :param send_dttm:
     :return:
     """
-    # to_send = Send()
-    # to_send.emp_id = emp_id
-    # to_send.message_id = message_id
-    # to_send.send_order = send_order
-    # to_send.send_dttm = send_dttm
-    # to_send.last_updated = datetime.datetime.now()
-    # to_send.save()
     dnow = datetime.datetime.utcnow()
     to_send = Send(emp_id=emp_id, message_id=message_id, send_dttm=send_dttm,
                       send_order=send_order, send_status=False, cancel_status=False,
@@ -416,23 +407,14 @@ def send_newhire_messages():
     print('send newhire messages')
     now = datetime.datetime.utcnow()
     lasthour = now - datetime.timedelta(minutes=59, seconds=59, days=7)
-    print('now {}'.format(now))
-    print('lasthour {}'.format(lasthour))
-    # send = Send.objects(Q(send_dttm__lte=now) & Q(send_dttm__gte=lasthour) & Q(send_status__exact=False))
-    send = Send.query.filter(Send.send_dttm < now, Send.send_dttm > lasthour,
-                                Send.send_status is False).all()
+    send = Send.query.filter(Send.send_dttm > lasthour).filter(Send.send_dttm < now).filter(Send.send_status.is_(False))
     slack_client.rtm_connect()
     users = slack_client.api_call('users.list')['members']
     for s in send:
-        print('new hire messages ={}'.format(s['send_status']))
-        print(f'emp {s["emp_id"]}')
-        emp = People.query.filter_by(emp_id=s['emp_id']).first()
+        emp = People.query.filter_by(emp_id=s.emp_id).first()
         if emp.user_opt_out is False and emp.manager_opt_out is False and emp.admin_opt_out is False:
-            # message = Messages.objects(Q(id=s['message_id'])).get().to_mongo()
-            message = Messages.get(s['message_id'])
-            print('emp = {}'.format(emp))
-            print('message = {}'.format(message))
-            message_user = emp['slack_handle']
+            message = Messages.query.get_or_404(s.message_id)
+            message_user = emp.slack_handle
             user = search(users, 'name', message_user)
             if user is not None:
                 dm = slack_client.api_call(
@@ -440,9 +422,11 @@ def send_newhire_messages():
                     user=user['id'],
                 )['channel']['id']
                 send_dm_message(dm, message)
-                s.update(set__send_status=True)
+                s.send_status = True
+                db.session.commit()
         else:
-            s.update(set__cancel_status=True)
+            s.cancel_status = True
+            db.session.commit()
             print('User has opted out of notifications')
 
 
@@ -451,12 +435,10 @@ def send_dm_message(dm, message):
     message_text = message.text.split('button:')
     message_link = message.title_link
     message_attachments = []
-    callback = message.title.lower()
+    callback = message.topic.lower()
     if len(message_link) > 0:
-        print(f'message link {message_link}')
         message_actions = []
         for x in message_link:
-            print(f'url {x["url"]}')
             action = {
                 "type": "button",
                 "text": x['name'],
@@ -473,7 +455,6 @@ def send_dm_message(dm, message):
             "actions": message_actions
         }
         message_attachments.insert(0, message_attach)
-        print(message_attachments)
     else:
         app.logger.info('No message attachments.')
 
@@ -614,6 +595,7 @@ def add_new_message():
         return render_template('message_edit.html', form=form, user=user, admin=admin, message='', links=links, form_text=form_text, messageaction=messageaction)
     elif request.method == 'POST':
         if form.validate():
+            send_day = db.session.query(func.max(Messages.send_day)).scalar()
             title_link = json.loads(form.linkitems.data)
             date_start = form.send_date.data.split('-')
             sdate = datetime.datetime(int(date_start[0]), int(date_start[1]), int(date_start[2]), 0, 0, 0)
@@ -621,11 +603,14 @@ def add_new_message():
             send_once = True if form.send_once.data is True else False
             tagitems = form.tagitems.data
             tag = tagitems.split('|')
-            message = Messages(type=form.message_type.data, category=form.category.data, title=form.title.data,
-                                  title_link=title_link, send_day=form.send_day.data, send_hour=form.send_time.data,
-                                  send_date=send_date, send_once=send_once, frequency=form.frequency.data,
-                                  text=form.text.data, number_of_sends=form.number_of_sends.data, country=form.country.data,
-                                  tags=tag[:-1])
+            person = People.query.filter_by(emp_id = admin.emp_id).first()
+            team = person.admin_team if person.admin_team else 'Mozilla'
+            owner = person.first_name + ' ' + person.last_name
+            message = Messages(type=form.message_type.data, topic=form.topic.data,
+                                  title_link=title_link, send_day=send_day+1, send_hour=9,
+                                  send_date=send_date, send_once=send_once,
+                                  text=form.text.data, country=form.country.data, team=team, owner=owner,
+                                  tags=tag[:-1], location=form.location.data, emp_type=form.emp_type.data)
             db.session.add(message)
             db.session.commit()
             flash("Your message has been added. To view it, scroll to the bottom of the page. "
@@ -635,10 +620,10 @@ def add_new_message():
             return redirect(url_for('view_messages'))
         else:
             print('errors = {}'.format(form.errors))
+            flash(form.errors, 'error')
             if current_host:
                 return redirect(current_host + '/addMessage')
             return redirect(url_for('add_new_message'))
-    # return render_template('messages.html', messages=messages, form=form, user=user, admin=admin)
 
 
 @app.route('/editMessage/<int:message_id>', methods=['GET', 'POST'])
@@ -659,38 +644,38 @@ def edit_message(message_id):
         # messages = Messages.objects(Q(id=message_id)).get()
         form.message_type.data = messages.type
         form.category.data = messages.category
-        form.title.data = messages.title
+        form.topic.data = messages.topic
         form.linkitems.data = messages.title_link
         form.send_day.data = messages.send_day
         form.send_time.data = messages.send_hour
         form.send_date.data = messages.send_date
         form.send_once.data = messages.send_once
-        form.frequency.data = messages.frequency
         form.text.data = messages.text
-        form.number_of_sends.data = messages.number_of_sends
         form.country.data = messages.country
         form.tagitems.data = messages.tags
+        form.emp_type = messages.emp_type
+        form.location = messages.location
         return render_template('message_edit.html', form=form, user=user, admin=admin, message=messages, messageaction=messageaction)
     elif request.method == 'POST':
         if form.validate():
             messages.type = form.message_type.data
             messages.category = form.category.data
-            messages.title = form.title.data
+            messages.topic = form.topic.data
             messages.title_link = json.loads(form.linkitems.data)
             messages.send_day = form.send_day.data
-            messages.send_hour = form.send_time.data
+            messages.send_hour = 9
             date_start = form.send_date.data.split('-')
             sdate = datetime.datetime(int(date_start[0]), int(date_start[1]), int(date_start[2]), 0, 0, 0)
             messages.send_date = datetime.datetime.strftime(sdate, '%Y-%m-%dT%H:%M:%S')
             messages.send_once = True if form.send_once.data is True else False
-            messages.frequency = form.frequency.data
             messages.text = form.text.data
-            messages.number_of_sends = form.number_of_sends.data
             messages.country = form.country.data
             tagitems = form.tagitems.data
             tag = tagitems.split('|')
             tag = [re.sub(r'\r\n\s+', '', x) for x in tag]
             messages.tags = tag[:-1]
+            messages.location = form.location.data
+            messages.emp_type = form.emp_type.data
             db.session.commit()
             flash("Your message has been successfully updated.", 'success')
             if current_host:
@@ -835,8 +820,16 @@ def admin_request(person_id):
                 super_admin = False
                 if 'Super Admin' in person.admin_role_requested:
                     super_admin = True
-                new_admin = Admin(emp_id=person.emp_id, name=name, super_admin=super_admin, roles=person.admin_role_requested)
-                db.session.add(new_admin)
+                admin = Admin.query.filter_by(emp_id=person.emp_id).first()
+                roles = ','.join(str(r) for r in person.admin_role_requested)
+                if not admin:
+                    new_admin = Admin(emp_id=person.emp_id, name=name, super_admin=super_admin, roles=roles, team=pending_form.team.data)
+                    db.session.add(new_admin)
+                else:
+                    print(f'roles {admin.roles[:-1]}')
+                    admin.super_admin = super_admin
+                    admin.roles = admin.roles[:-1] + ',' + roles + '}'
+                    admin.team = pending_form.team.data
                 try:
                     db.session.commit()
                 except IntegrityError:
@@ -846,6 +839,7 @@ def admin_request(person_id):
             person.admin_status_updated_date = datetime.datetime.utcnow()
             current_admin = People.query.filter_by(emp_id=session.get('profile')['user_id']).first()
             person.admin_request_updated_by = current_admin.id
+            person.admin_team = pending_form.team.data
             db.session.commit()
             if current_host:
                 return redirect(current_host + '/admin')
