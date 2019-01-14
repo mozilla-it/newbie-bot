@@ -41,6 +41,45 @@ admin_team_choices = [('infosec', 'IT: InfoSec'), ('servicedesk', 'IT: Service D
                       ('benefits', 'People: Benefits'), ('onboarding', 'People: Onboarding'),
                       ('diversity', 'People: Diversity and Inclusion'), ('wpr', 'WPR')]
 
+location_choices = [
+    ('All', 'All'),
+    ('Remote Workers', 'Remote Workers'),
+    ('Berlin', 'Berlin'),
+    ('London', 'London'),
+    ('Mountain View', 'Mountain View'),
+    ('Paris', 'Paris'),
+    ('Portland', 'Portland'),
+    ('San Francisco', 'San Francisco'),
+    ('Toronto', 'Toronto'),
+    ('Vancouver', 'Vancouver'),
+    ('Taipei', 'Taipei'),
+    ('Tokyo', 'Tokyo')
+]
+
+country_choices = [
+    ('All', 'All'),
+    ('AU', 'Australia'),
+    ('BE', 'Belgium'),
+    ('CA', 'Canada'),
+    ('DK', 'Denmark'),
+    ('FI', 'Finland'),
+    ('FR', 'France'),
+    ('DE', 'Germany'),
+    ('NL' , 'Netherlands'),
+    ('NZ', 'New Zealand'),
+    ('PL', 'Poland'),
+    ('ES', 'Spain'),
+    ('SE', 'Sweden'),
+    ('UK', 'United Kingdom'),
+    ('US', 'United States')
+]
+
+employee_type_choices = [
+    ('All', 'All'),
+    ('Full-time Employee', 'Full-time Employee'),
+    ('Contractor', 'Contractor'),
+    ('Intern', 'Intern')
+]
 
 slack_verification_token = settings.SLACK_VERIFICATION_TOKEN
 

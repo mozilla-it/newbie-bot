@@ -60,7 +60,8 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
             link['name'] = $('input[name="link_name"]').val();
             link['url'] = $('input[name="link_url"]').val();
             links.push(link);
-            $('<li name="link_item" class="list-group-item row lilink">' +
+            var linklen = "link_" + links.length;
+            $('<li id="' + linklen + '" name="link_item" class="list-group-item row lilink">' +
             '<a style="margin-right: 20px; text-decoration: none;" class="clearlink"><i class="fas fa-times links" style="color:red"></i></a>' +
             link['name'] + ' | ' + link['url'] + '</li>').appendTo($("#link_list"));
             $('<div class="c-message__attachments">' +
@@ -89,8 +90,9 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
         var classes = target.className.split(' ');
         for (var x = 0; x < classes.length; x++){
             if (classes[x] == 'links'){
-                $('#linkitems').val('');
+                $('#linkitems').val(null);
                 var liVal = target.parentNode.parentNode.valueOf().innerText.split(' ');
+                var liId = target.parentNode.parentNode.valueOf();
                 for (var i = 0; i < links.length; i++){
                     if(links[i]["name"] === liVal[0]){
                         links.splice(i, 1);
@@ -114,9 +116,12 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
 
 
     // Check inputs and enable/disable as appropriate
-    document.addEventListener('keyup', (e) => {
+    document.addEventListener('keyup', () => {
         checkInputs();
     }, false);
+    document.addEventListener("input", () => {
+        checkInputs();
+    });
     function checkInputs() {
         var name = document.getElementById('link_name');
         var link = document.getElementById('link_url');
@@ -144,7 +149,36 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
     };
 
 
+    // start search for tags
+    var typingTimer;                //timer identifier
+    var doneTypingInterval = 1000;  //time in ms, 5 second for example
+    var searchText = document.getElementById('text');
+    searchText.addEventListener('keyup', () => {
+        clearTimeout(typingTimer);
+        if (searchText.value.length > 4) {
+            typingTimer = setTimeout(searchForText(searchText.value), doneTypingInterval);
+        }
+    });
 
+
+    function searchForText(myText){
+        $.ajax({
+          url: "/searchForTags/"+ myText,
+          type: "get",
+          data: {jsdata: myText},
+          success: function(response) {
+              $("#tagsuggestions").empty();
+              var text_response = response.split(',');
+              for (var x = 0; x < text_response.length; x++){
+                  $('<option class="option-menu options" value="' + text_response[x] + '" >').appendTo($("#tagsuggestions"));
+              }
+          },
+          error: function(xhr) {
+            //Do Something to handle error
+          }
+        });
+    }
+    // end search for tags
 
 }(window, jQuery));
 // add tool tip to http link
@@ -164,3 +198,4 @@ var timeels = document.getElementsByClassName('current-time');
 for (let x = 0; x < timeels.length; x++){
     timeels[x].innerHTML = time;
 }
+

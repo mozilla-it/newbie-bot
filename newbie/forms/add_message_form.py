@@ -1,5 +1,5 @@
 from wtforms import Form, StringField, TextAreaField, validators, IntegerField, BooleanField, FieldList, SelectMultipleField, SelectField
-
+from newbie import location_choices, country_choices, employee_type_choices
 
 
 class AddMessageForm(Form):
@@ -34,10 +34,9 @@ class AddMessageForm(Form):
     #     'Number of Sends',
     #     [validators.number_range(min=1, max=10, message='Must be between 1 and 10.'), validators.data_required()],
     #     default=1)
-    country = SelectField('Country', validators=[validators.data_required()], choices=[('ALL', 'ALL'), ('US', 'US'),
-                                                                                       ('CA', 'CA')])
+    country = SelectField('Country', validators=[validators.data_required()], choices=country_choices)
     tagitems = StringField('Tags')
     location = SelectField('Office Location', validators=[validators.data_required()],
-                           choices=[('mozilla', 'Mozilla Offices'), ('remotees', 'Remote Workers')])
+                           choices=location_choices)
     emp_type = SelectField('Employee Type', validators=[validators.data_required()],
-                           choices=[('FTE', 'FTE'), ('contractor', 'Contractor'), ('intern', 'Intern')])
+                           choices=employee_type_choices)

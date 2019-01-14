@@ -166,6 +166,12 @@ ul li ul li {
 .sort:focus {
     outline:none;
 }
+
+.alert-error {
+    background-color: red;
+    color: #fff;
+}
+
 .sort:after {
     width: 0;
     height: 0;

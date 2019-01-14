@@ -8,6 +8,7 @@ from newbie.database.auth_groups import AuthGroups
 from newbie import db
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
+from werkzeug.exceptions import NotFound
 
 # form imports
 from newbie.forms.slack_direct_message import SlackDirectMessage
@@ -23,12 +24,15 @@ from newbie.forms.pending_requests_form import PendingRequestsForm
 from newbie import app, session, redirect, current_host, wraps, slack_client, \
     client_id, client_secret, client_uri, us_holidays, ca_holidays, \
     make_response, slack_verification_token, render_template, auth0, logger, request, \
-    Response, url_for, all_timezones, flash, admin_team_choices
+    Response, url_for, all_timezones, flash, admin_team_choices, location_choices, country_choices, employee_type_choices
+from newbie.nltk_processing import NltkProcess, get_tag_suggestions
+from profanity_check import predict_prob
 import json
 import datetime
 import pytz
 
 import re
+import random
 from authzero import AuthZero
 
 def get_user_admin():
@@ -191,6 +195,7 @@ def updates_from_slack():
             except:
                 timezone = 'US/Pacific'
             person.timezone = timezone
+            person.last_modified = datetime.datetime.utcnow()
             db.session.commit()
             print(actual_one_day_ago)
             start_date = person.start_date
@@ -413,16 +418,23 @@ def send_newhire_messages():
     for s in send:
         emp = People.query.filter_by(emp_id=s.emp_id).first()
         if emp.user_opt_out is False and emp.manager_opt_out is False and emp.admin_opt_out is False:
-            message = Messages.query.get_or_404(s.message_id)
-            message_user = emp.slack_handle
-            user = search(users, 'name', message_user)
-            if user is not None:
-                dm = slack_client.api_call(
-                    'im.open',
-                    user=user['id'],
-                )['channel']['id']
-                send_dm_message(dm, message)
+            try:
+                message = Messages.query.get_or_404(s.message_id)
+                message_user = emp.slack_handle
+                user = search(users, 'name', message_user)
+                if user is not None:
+                    dm = slack_client.api_call(
+                        'im.open',
+                        user=user['id'],
+                    )['channel']['id']
+                    send_dm_message(dm, message)
+                    s.send_status = True
+                    s.last_updated = datetime.datetime.utcnow()
+                    db.session.commit()
+            except NotFound as e:
+                print(e)
                 s.send_status = True
+                s.last_updated = datetime.datetime.utcnow()
                 db.session.commit()
         else:
             s.cancel_status = True
@@ -515,6 +527,19 @@ def login():
     return auth0.authorize_redirect(redirect_uri=app.config.get('AUTH_URL'), audience=app.config.get('AUTH_AUDIENCE'))
 
 
+@app.route('/searchForTags/<string:text>', methods=['GET'])
+def search_for_tags(text):
+    NltkProcess.get_stop_words('stopwords')
+    choices = get_tag_suggestions(text)
+    send_back = ''
+    for c in choices:
+        if c not in send_back:
+            is_profane = predict_prob([c.replace("_", " ")])
+            if is_profane < .3:
+                send_back = c.replace("_", " ") + ',' + send_back
+    return send_back
+
+
 @app.route('/callback/auth', methods=['GET', 'POST'])
 def callback_handling():
     # Handles response from token endpoint
@@ -531,7 +556,7 @@ def callback_handling():
     return redirect(current_host)
 
 
-@app.route('/logout', host='https://nhobot.ngrok.io')
+@app.route('/logout')
 def logout():
     """
     Logout and clear session
@@ -539,10 +564,12 @@ def logout():
     """
     # Clear session stored data
     session.clear()
-    return redirect('https://nhobot.ngrok.io/')
+    if current_host:
+        return redirect(current_host + '/')
+    return redirect(url_for('index'))
 
 
-@app.route('/', host='https://nhobot.ngrok.io')
+@app.route('/')
 def index():
     """
     Home page route
@@ -605,19 +632,32 @@ def add_new_message():
             tag = tagitems.split('|')
             person = People.query.filter_by(emp_id = admin.emp_id).first()
             team = person.admin_team if person.admin_team else 'Mozilla'
+            if team is not 'Mozilla':
+                print(f'admin team {admin_team_choices}')
+                print(f'team {team}')
+                team = [v for k, v in admin_team_choices if team == k]
+            print(f'location {form.location.data}')
             owner = person.first_name + ' ' + person.last_name
             message = Messages(type=form.message_type.data, topic=form.topic.data,
                                   title_link=title_link, send_day=send_day+1, send_hour=9,
                                   send_date=send_date, send_once=send_once,
-                                  text=form.text.data, country=form.country.data, team=team, owner=owner,
+                                  text=form.text.data, country=form.country.data, team=team[0], owner=owner,
                                   tags=tag[:-1], location=form.location.data, emp_type=form.emp_type.data)
             db.session.add(message)
-            db.session.commit()
-            flash("Your message has been added. To view it, scroll to the bottom of the page. "
-                  "Need to make changes? Click on the pencil icon to the left of the Title.", 'success')
-            if current_host:
-                return redirect(current_host + '/viewMessages')
-            return redirect(url_for('view_messages'))
+            try:
+                db.session.commit()
+                flash("Your message has been added and is the first message in the list below. "
+                      "Need to make changes? Click on the pencil icon to the left of the Title.", 'success')
+                if current_host:
+                    return redirect(current_host + '/viewMessages')
+                return redirect(url_for('view_messages'))
+            except IntegrityError as error:
+                print('DuplicateKeyError {}'.format(error))
+                flash(u'Duplicate key - The message value already exists.', 'error')
+                db.session.rollback()
+                if current_host:
+                    return redirect(current_host + '/addMessage')
+                return redirect(url_for('add_new_message'))
         else:
             print('errors = {}'.format(form.errors))
             flash(form.errors, 'error')
@@ -643,7 +683,6 @@ def edit_message(message_id):
     if request.method == 'GET':
         # messages = Messages.objects(Q(id=message_id)).get()
         form.message_type.data = messages.type
-        form.category.data = messages.category
         form.topic.data = messages.topic
         form.linkitems.data = messages.title_link
         form.send_day.data = messages.send_day
@@ -653,13 +692,12 @@ def edit_message(message_id):
         form.text.data = messages.text
         form.country.data = messages.country
         form.tagitems.data = messages.tags
-        form.emp_type = messages.emp_type
-        form.location = messages.location
+        form.emp_type.data = messages.emp_type
+        form.location.data = messages.location
         return render_template('message_edit.html', form=form, user=user, admin=admin, message=messages, messageaction=messageaction)
     elif request.method == 'POST':
         if form.validate():
             messages.type = form.message_type.data
-            messages.category = form.category.data
             messages.topic = form.topic.data
             messages.title_link = json.loads(form.linkitems.data)
             messages.send_day = form.send_day.data
@@ -679,14 +717,14 @@ def edit_message(message_id):
             db.session.commit()
             flash("Your message has been successfully updated.", 'success')
             if current_host:
-                return redirect(current_host + '/addMessage')
-            return redirect(url_for('add_new_message'))
+                return redirect(current_host + '/viewMessages')
+            return redirect(url_for('view_messages'))
         else:
             print('errors = {}'.format(form.errors))
             flash(f"There was a problem with the change you attempted to make: {form.errors}", 'error')
             if current_host:
-                return redirect(current_host + '/addMessage')
-            return redirect(url_for('add_new_message'))
+                return redirect(current_host + '/viewMessages')
+            return redirect(url_for('view_messages'))
 
 
 @app.route('/deleteMessage/<int:message_id>', methods=['POST'])
@@ -840,6 +878,7 @@ def admin_request(person_id):
             current_admin = People.query.filter_by(emp_id=session.get('profile')['user_id']).first()
             person.admin_request_updated_by = current_admin.id
             person.admin_team = pending_form.team.data
+            person.last_modified = datetime.datetime.utcnow()
             db.session.commit()
             if current_host:
                 return redirect(current_host + '/admin')
@@ -1021,14 +1060,16 @@ def message_actions():
         actions = form_json['actions'][0]['value']
         user = form_json['user']['name']
         print(f'user {user}')
+        print(f'callback id {callback_id}')
         message_text = ''
         if callback_id == 'opt_out':
             if 'keep' in actions.lower():
                 print('keep')
                 message_text = 'We\'ll keep sending you onboarding messages!'
                 # People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
-                person = People.query.filter_by(slack_handle=user)
+                person = People.query.filter_by(slack_handle=user).first()
                 person.user_opt_out = False
+                person.last_modified = datetime.datetime.utcnow()
                 db.session.commit()
                 slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text,
                                '')
@@ -1036,8 +1077,10 @@ def message_actions():
                 print('stop')
                 message_text = 'We\'ve unsubscribed you from onboarding messages.'
                 # People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
-                person = People.query.filter_by(slack_handle=user)
+                person = People.query.filter_by(slack_handle=user).first()
+                print(f'person {person.emp_id} {person.id}')
                 person.user_opt_out = True
+                person.last_modified = datetime.datetime.utcnow()
                 db.session.commit()
                 slack_client.api_call(
                     'chat.update',
@@ -1065,7 +1108,7 @@ def message_actions():
             if 'thumbsup' in actions.lower():
                 print('thumbsup')
                 message_attachments['state'] = 'thumbsup'
-                feedback = UserFeedback(emp_id=form_json['user']['name'], rating='thumbsup', comment='')
+                feedback = UserFeedback(emp_id=form_json['user']['name'], action='thumbsup', rating='thumbsup', comment='')
                 db.session.add(feedback)
                 db.session.commit()
                 slack_client.api_call(
@@ -1078,7 +1121,7 @@ def message_actions():
             elif 'thumbsdown' in actions.lower():
                 print('thumbsdown')
                 message_attachments['state'] = 'thumbsdown'
-                feedback = UserFeedback(emp_id=form_json['user']['name'], rating='thumbsdown', comment='')
+                feedback = UserFeedback(emp_id=form_json['user']['name'], action='thumbsdown', rating='thumbsdown', comment='')
                 db.session.add(feedback)
                 db.session.commit()
                 slack_client.api_call(
@@ -1152,9 +1195,10 @@ def new_hire_help():
     user = user.replace('"','')
     print(f'user {user}')
     if incoming_message == 'opt-in':
-        # People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
-        person = People.query.filter_by(slack_handle=user)
+        print('opt in')
+        person = People.query.filter_by(slack_handle=user).first()
         person.user_opt_out = False
+        person.last_modified = datetime.datetime.utcnow()
         db.session.commit()
         message_response = "Welcome back! You'll receive any scheduled notifications."
     elif incoming_message == 'help':

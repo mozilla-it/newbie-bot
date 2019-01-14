@@ -25,7 +25,7 @@
         </div>
 
             <ul class="list">
-            {%  for message in messages %}
+            {%  for message in messages|sort(attribute='id', reverse=True) %}
                 <li class="moz-group-item ">
                 <div class="row">
                     <div class="col">
@@ -124,12 +124,6 @@
                             </div>
                             <div class="col">
                                 <div class="form-group">
-                                    <div><label for="last_name">Category</label></div>
-                                    <input type="text" disabled value="{{ message.category }}">
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
                                     <div><label for="email">Send Once</label></div>
                                     <input type="text" disabled value="{{ message.send_once}}">
                                 </div>
@@ -166,9 +160,18 @@
                                     <input type="text" disabled value="{{ message.topic }}">
                                 </div>
                             </div>
-
-
-
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="owner">Office Location</label></div>
+                                    <input type="text" disabled value="{{ message.location }}">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <div><label for="owner">Employee Type</label></div>
+                                    <input type="text" disabled value="{{ message.emp_type }}">
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -245,6 +248,7 @@
 
     </div>
     <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script type="text/javascript">$SCRIPT_ROOT = {{ request.script_root|tojson|safe }}; </script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
     <script src="{{ url_for('static', filename='myscript.js') }}"></script>
