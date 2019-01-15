@@ -144,7 +144,12 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
             document.getElementById('add_tag').classList.add('moz-disabled');
         }
         var textfield = document.getElementById('text');
-        document.getElementById('preview-message-body').textContent=textfield.value;
+        try{
+            document.getElementById('preview-message-body').textContent=textfield.value;
+        } catch (e) {
+
+        }
+
 
     };
 
