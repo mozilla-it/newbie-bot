@@ -30,6 +30,7 @@ from profanity_check import predict_prob
 import json
 import datetime
 import pytz
+from dateutil.relativedelta import relativedelta
 
 import re
 import random
@@ -147,6 +148,7 @@ def get_auth_zero():
                         db.session.commit()
         connection = user['identities'][0]['connection']
         if 'Mozilla-LDAP' in connection:
+            # print(f'auth0 user {user}')
             user_id = user['user_id']
             current_user = People.query.filter_by(emp_id=user_id).first()
             if not current_user:
@@ -239,7 +241,6 @@ def add_messages_to_send(person: People):
     messages = Messages.query.all()
     for m in messages:
         print(f'm = {m.id}')
-        send_day = ''
         send_day = m.send_day
 
         if m.send_once:
@@ -254,10 +255,28 @@ def add_messages_to_send(person: People):
         elif m.country == 'CA' and my_country == 'CA':
             save_send_message(employee_id, m.id, 0, send_date_time)
         elif m.country == 'ALL':
-            save_send_message(employee_id, m.id, 0, send_date_time)
+            if m.repeatable:
+                spin_out_repeats(employee_id, m.id, m.repeat_type, m.repeat_number, m.repeat_times, send_date_time)
+            else:
+                save_send_message(employee_id, m.id, 0, send_date_time)
         else:
-            app.logger.info('No message to be sent, user country {} and message country {}'
-                            .format(my_country, m.country))
+            app.logger.info('No message to be sent, user country {} and message country {} for message {}'
+                            .format(my_country, m.country, m.id))
+
+
+def spin_out_repeats(employee_id, message_id, message_type, number, times, current_send_date):
+    for x in range(0, times):
+        save_send_message(employee_id, message_id, 0, current_send_date)
+        if message_type == 'week':
+            week_num = number * 7
+            date_increment = datetime.timedelta(days=week_num)
+            current_send_date = current_send_date + date_increment
+        elif message_type == 'month':
+            date_increment = relativedelta(months=+number)
+            current_send_date = current_send_date + date_increment
+        elif message_type == 'year':
+            date_increment = relativedelta(years=+number)
+            current_send_date = current_send_date + date_increment
 
 
 def adjust_send_date_for_holidays_and_weekends(send_date_time, country):
@@ -267,26 +286,21 @@ def adjust_send_date_for_holidays_and_weekends(send_date_time, country):
     :param country
     :return send_date_teime
     """
-    print('day num {}'.format(send_date_time.weekday()))
     weekday = send_date_time.weekday()
     if weekday > 4:
         if weekday == 6:
             send_date_time = send_date_time + datetime.timedelta(days=1)
         else:
             send_date_time = send_date_time + datetime.timedelta(days=2)
-        print('weekday {}'.format(send_date_time))
         adjust_send_date_for_holidays_and_weekends(send_date_time, country)
     if country == 'US':
-        print('US holiday {}'.format(send_date_time in us_holidays))
         if send_date_time in us_holidays:
             send_date_time = send_date_time + datetime.timedelta(days=1)
             adjust_send_date_for_holidays_and_weekends(send_date_time, country)
     if country == 'CA':
-        print('CA holiday {}'.format(send_date_time in ca_holidays))
         if send_date_time in ca_holidays:
             send_date_time = send_date_time + datetime.timedelta(days=1)
             adjust_send_date_for_holidays_and_weekends(send_date_time, country)
-    print('final send date {}'.format(send_date_time))
     return send_date_time
 
 
@@ -625,7 +639,10 @@ def add_new_message():
             send_day = db.session.query(func.max(Messages.send_day)).scalar()
             title_link = json.loads(form.linkitems.data)
             date_start = form.send_date.data.split('-')
-            sdate = datetime.datetime(int(date_start[0]), int(date_start[1]), int(date_start[2]), 0, 0, 0)
+            if date_start[0] == '':
+                sdate = datetime.date.today()
+            else:
+                sdate = datetime.datetime(int(date_start[0]), int(date_start[1]), int(date_start[2]), 0, 0, 0)
             send_date = datetime.datetime.strftime(sdate, '%Y-%m-%dT%H:%M:%S')
             send_once = True if form.send_once.data is True else False
             tagitems = form.tagitems.data
@@ -641,7 +658,7 @@ def add_new_message():
             message = Messages(type=form.message_type.data, topic=form.topic.data,
                                   title_link=title_link, send_day=send_day+1, send_hour=9,
                                   send_date=send_date, send_once=send_once,
-                                  text=form.text.data, country=form.country.data, team=team[0], owner=owner,
+                                  text=form.text.data, country=form.country.data.upper(), team=team[0], owner=owner,
                                   tags=tag[:-1], location=form.location.data, emp_type=form.emp_type.data)
             db.session.add(message)
             try:

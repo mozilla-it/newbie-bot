@@ -7,7 +7,6 @@ CONFIG = get_config.get_config()
 class Config(object):
     def __init__(self, app):
         self.app = app
-
         self.environment = CONFIG('environment', default='development')
         self.settings = self._init_env()
 
