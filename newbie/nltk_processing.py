@@ -17,6 +17,11 @@ class NltkProcess:
         nltk.download("stopwords")
         stopwords.words('english')
 
+def filter_stopwords(input_text):
+    stop_words = set(stopwords.words('english'))
+    word_tokens = word_tokenize(' '.join(input_text))
+    return [w for w in word_tokens if w not in stop_words]
+
 
 def get_tag_suggestions(input_text):
     input_text = input_text.strip()

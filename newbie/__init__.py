@@ -77,7 +77,7 @@ country_choices = [
 employee_type_choices = [
     ('All', 'All'),
     ('Full-time Employee', 'Full-time Employee'),
-    ('Contractor', 'Contractor'),
+    ('Contingent', 'Contingent'),
     ('Intern', 'Intern')
 ]
 

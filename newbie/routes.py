@@ -25,7 +25,7 @@ from newbie import app, session, redirect, current_host, wraps, slack_client, \
     client_id, client_secret, client_uri, us_holidays, ca_holidays, \
     make_response, slack_verification_token, render_template, auth0, logger, request, \
     Response, url_for, all_timezones, flash, admin_team_choices, location_choices, country_choices, employee_type_choices
-from newbie.nltk_processing import NltkProcess, get_tag_suggestions
+from newbie.nltk_processing import NltkProcess, get_tag_suggestions, filter_stopwords
 from profanity_check import predict_prob
 import json
 import datetime
@@ -1155,64 +1155,49 @@ def message_actions():
         return make_response('', 200)
 
 
-@app.route('/slack/newbiesearch', methods=['GET', 'POST'])
-def newbie_search():
-    """
-    Slack slash newbiesearch - performs search for topic that is inserted after the
-    slash command.
-    :return: Message sent with list of topics that are related to the search criteria
-    """
-    incoming_search_term = json.dumps(request.values['text']).replace('"', '')
-    print(f'incoming search {incoming_search_term}')
-    user = json.dumps(request.values['user_name'])
-    user = user.replace('"', '')
-    print(f'searching user {user}')
-    messages = Messages.query.all()
-    found_messages = []
-    for message in messages:
-        searchresult = search_messages(incoming_search_term, message)
-        if searchresult is not None:
-            found_messages.append(searchresult)
-    print(f'found messages {found_messages}')
-    for found in found_messages:
-        if user is not None:
-            dm = request.values['channel_id']
-            send_dm_message(dm, found)
-    if len(found_messages) == 0:
-        return make_response('I\'m sorry, I couldn\'t find '
-                      'any information on ' + incoming_search_term, 200)
-    return make_response('', 200)
-
-
-@app.route('/slack/newhirehelp', methods=['POST'])
-def new_hire_help():
+@app.route('/slack/newbie', methods=['POST'])
+def newbie_slash():
     """
     Slack slash newhbie - performs action based on slash message commands
     :return: Message sent to update user on action of slash command
     """
-    incoming_message = json.dumps(request.values['text']).replace('"', '')
+    incoming_message = json.dumps(request.values['text']).replace('"', '').split(' ')
     user = json.dumps(request.values['user_name'])
     user = user.replace('"','')
-    print(f'user {user}')
-    if incoming_message == 'opt-in':
-        print('opt in')
+    if incoming_message[0] == 'opt-in':
         person = People.query.filter_by(slack_handle=user).first()
         person.user_opt_out = False
         person.last_modified = datetime.datetime.utcnow()
         db.session.commit()
         message_response = "Welcome back! You'll receive any scheduled notifications."
-    elif incoming_message == 'help':
-        message_response = "To explore how I can help you, try using the slash command for " \
-                           "searching my topics.  It's easy, just type /newbiesearch followed" \
-                           "by the topic that you need more information on.  I'll respond " \
-                           "with any relevant information I find."
-    elif incoming_message == 'opt-out':
+    elif incoming_message[0] == 'help':
+        message_response = "To explore how I can help you, try using the slash command for searching my topics. " \
+                           "It's easy, just type /newbie search followed by the topic(s) that you need more " \
+                           "information on. I'll respond with any relevant information I find."
+    elif incoming_message[0] == 'opt-out':
         channel = request.values['channel_id']
         send_opt_out_message(channel)
         message_response = ''
-        # People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
-        # message_response = 'Okay, we\'ll stop sending you important tips and reminders. ' \
-        #                    'Hope you don\'t miss any deadlines!'
+    elif incoming_message[0] == 'search':
+        message_response = f'You searched for {" ".join(incoming_message[1:])}'
+        incoming_search_term = filter_stopwords(incoming_message[1:])
+        user = json.dumps(request.values['user_name'])
+        user = user.replace('"', '')
+        messages = Messages.query.all()
+        found_messages = []
+        for message in messages:
+            for searches in incoming_search_term:
+                search_result = search_messages(searches, message)
+                if search_result is not None:
+                    found_messages.append(search_result)
+        for found in found_messages:
+            if user is not None:
+                dm = request.values['channel_id']
+                send_dm_message(dm, found)
+        if len(found_messages) == 0:
+            return make_response('I\'m sorry, I couldn\'t find '
+                                 'any information on ' + incoming_search_term, 200)
+        return make_response(message_response, 200)
     else:
         message_response = 'Sorry, I don\'t know what you want.'
     return make_response(message_response, 200)
