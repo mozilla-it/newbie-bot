@@ -7,7 +7,7 @@
 {#    <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">#}
 {#        Add Message#}
 {#      </button>#}
-        <a class="btn btn-primary" href="/addMessage">Add Message</a>
+        <a class="btn btn-primary" href="/messages/add">Add Message</a>
     <div class="container collapse"  id="collapseExample" style="margin-top: 25px; margin-bottom: 25px;">
         {%  include 'message_form.html' %}
     </div>
@@ -29,8 +29,10 @@
                 <li class="moz-group-item ">
                 <div class="row">
                     <div class="col">
-                        <a style="text-decoration: none;" href="/editMessage/{{ message.id }}" data-toggle="tooltip" data-placement="top" title="Click here to edit {{ message.topic }} message."><i class="fas fa-edit" style="color: #000000"></i></a>
-                    <button type="button" class="moz-delete-button" data-toggle="modal" data-target="#deleteModal{{ message.id }}"><i class="fas fa-times" data-toggle="tooltip" data-placement="top" title="Click here to delete {{ message.topic }} message."></i></button>
+                        {% if message.team ==  admin.team %}
+                            <a style="text-decoration: none;" href="/messages/{{ message.id }}/edit" data-toggle="tooltip" data-placement="top" title="Click here to edit {{ message.topic }} message."><i class="fas fa-edit" style="color: #000000"></i></a>
+                            <button type="button" class="moz-delete-button" data-toggle="modal" data-target="#deleteModal{{ message.id }}"><i class="fas fa-times" data-toggle="tooltip" data-placement="top" title="Click here to delete {{ message.topic }} message."></i></button>
+                        {% endif %}
                     </div>
                     <div class="col">
                         <span ><strong>Topic: </strong></span><span class="moz-left topic"> {{ message.topic }}</span>

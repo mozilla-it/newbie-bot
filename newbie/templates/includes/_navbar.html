@@ -11,10 +11,10 @@
             <li class="nav-item"><a class="nav-link" href="/help">Help</a></li>
             {% if user is not none %}
                 {% if 'Manager' in admin.roles or admin.super_admin %}
-            <li class="nav-item"><a class="nav-link" href="/addEmployee">Employees</a></li>
+            <li class="nav-item"><a class="nav-link" href="/employees">Employees</a></li>
                     {% endif %}
                 {% if 'Admin' in admin.roles or admin.super_admin %}
-            <li class="nav-item"><a class="nav-link" href="/viewMessages">Messages</a></li>
+            <li class="nav-item"><a class="nav-link" href="/messages">Messages</a></li>
                     {% endif %}
                 {% if admin.super_admin %}
             <li class="nav-item"><a class="nav-link" href="/slackMessage">Send Slack Message</a></li>

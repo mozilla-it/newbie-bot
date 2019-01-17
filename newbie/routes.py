@@ -507,7 +507,7 @@ def get_user_info():
 @app.route('/profile', methods=['GET', 'POST'])
 @requires_auth
 def profile():
-    logger.info("User: {} authenticated proceeding to dashboard.".format(session.get('profile')['user_id']))
+    app.logger.info("User: {} authenticated proceeding to dashboard.".format(session.get('profile')['user_id']))
     user = get_user_info()
     admin = get_user_admin()
     form = AddAdminRequest(request.form)
@@ -609,17 +609,22 @@ def help_page():
     return render_template('help.html', user=user, admin=admin)
 
 
-@app.route('/viewMessages')
+@app.route('/messages')
 @requires_admin
 def view_messages():
     user = get_user_info()
     admin = get_user_admin()
     form = AddMessageForm(request.form)
     messages = Messages.query.all()
-    return render_template('messages.html', messages=messages, form=form, user=user, admin=admin)
+    return render_template(
+        'messages.html',
+        messages=messages,
+        form=form,
+        user=user,
+        admin=admin)
 
 
-@app.route('/addMessage', methods=['GET', 'POST'])
+@app.route('/messages/add', methods=['GET', 'POST'])
 @requires_admin
 def add_new_message():
     """
@@ -636,7 +641,7 @@ def add_new_message():
         return render_template('message_edit.html', form=form, user=user, admin=admin, message='', links=links, form_text=form_text, messageaction=messageaction)
     elif request.method == 'POST':
         if form.validate():
-            send_day = db.session.query(func.max(Messages.send_day)).scalar()
+            send_day = db.session.query(func.max(Messages.send_day)).scalar() + 1
             title_link = json.loads(form.linkitems.data)
             date_start = form.send_date.data.split('-')
             if date_start[0] == '':
@@ -650,13 +655,10 @@ def add_new_message():
             person = People.query.filter_by(emp_id = admin.emp_id).first()
             team = person.admin_team if person.admin_team else 'Mozilla'
             if team is not 'Mozilla':
-                print(f'admin team {admin_team_choices}')
-                print(f'team {team}')
                 team = [v for k, v in admin_team_choices if team == k]
-            print(f'location {form.location.data}')
             owner = person.first_name + ' ' + person.last_name
             message = Messages(type=form.message_type.data, topic=form.topic.data,
-                                  title_link=title_link, send_day=send_day+1, send_hour=9,
+                                  title_link=title_link, send_day=send_day, send_hour=9,
                                   send_date=send_date, send_once=send_once,
                                   text=form.text.data, country=form.country.data.upper(), team=team[0], owner=owner,
                                   tags=tag[:-1], location=form.location.data, emp_type=form.emp_type.data)
@@ -666,24 +668,25 @@ def add_new_message():
                 flash("Your message has been added and is the first message in the list below. "
                       "Need to make changes? Click on the pencil icon to the left of the Title.", 'success')
                 if current_host:
-                    return redirect(current_host + '/viewMessages')
+                    return redirect(current_host + '/messages')
                 return redirect(url_for('view_messages'))
             except IntegrityError as error:
-                print('DuplicateKeyError {}'.format(error))
+                app.logger.error(f'DuplicateKeyError {error}')
                 flash(u'Duplicate key - The message value already exists.', 'error')
                 db.session.rollback()
                 if current_host:
-                    return redirect(current_host + '/addMessage')
+                    return redirect(current_host + '/messages/add')
                 return redirect(url_for('add_new_message'))
         else:
             print('errors = {}'.format(form.errors))
+            app.logger.error(f'add message form error {form.errors}')
             flash(form.errors, 'error')
             if current_host:
-                return redirect(current_host + '/addMessage')
+                return redirect(current_host + '/messages/add')
             return redirect(url_for('add_new_message'))
 
 
-@app.route('/editMessage/<int:message_id>', methods=['GET', 'POST'])
+@app.route('/messages/<int:message_id>/edit', methods=['GET', 'POST'])
 @requires_admin
 def edit_message(message_id):
     """
@@ -734,17 +737,17 @@ def edit_message(message_id):
             db.session.commit()
             flash("Your message has been successfully updated.", 'success')
             if current_host:
-                return redirect(current_host + '/viewMessages')
+                return redirect(current_host + '/messages')
             return redirect(url_for('view_messages'))
         else:
             print('errors = {}'.format(form.errors))
             flash(f"There was a problem with the change you attempted to make: {form.errors}", 'error')
             if current_host:
-                return redirect(current_host + '/viewMessages')
+                return redirect(current_host + '/messages')
             return redirect(url_for('view_messages'))
 
 
-@app.route('/deleteMessage/<int:message_id>', methods=['POST'])
+@app.route('/messages/<int:message_id>/delete', methods=['POST'])
 @requires_admin
 def delete_message(message_id):
     """
@@ -757,11 +760,11 @@ def delete_message(message_id):
     db.session.commit()
     flash("The message has been deleted.", 'success')
     if current_host:
-        return redirect(current_host + '/viewMessages')
+        return redirect(current_host + '/messages')
     return redirect(url_for('view_messages'))
 
 
-@app.route('/addEmployee', methods=['GET', 'POST'])
+@app.route('/employees', methods=['GET', 'POST'])
 @requires_manager
 def add_new_employee():
     """
@@ -793,7 +796,7 @@ def add_new_employee():
             # print('newly added user = {}'.format(newly_added_user.first_name))
             add_messages_to_send(newly_added_user)
             if current_host:
-                return redirect(current_host + '/addEmployee')
+                return redirect(current_host + '/employees')
             return redirect(url_for('add_new_employee'))
         else:
             print('errors = {}'.format(form.errors))
@@ -816,7 +819,7 @@ def add_new_employee():
         return render_template('employees.html', employees=employees, form=form, selectedEmp=None,  timezones=all_timezones, user=user, admin=admins)
 
 
-@app.route('/deleteEmployee/<int:emp_id>')
+@app.route('/employees/<int:emp_id>/delete')
 @requires_super
 def delete_employee(emp_id):
     """
@@ -831,7 +834,7 @@ def delete_employee(emp_id):
     db.session.delete(person)
     db.session.commit()
     if current_host:
-        return redirect(current_host + '/addEmployee')
+        return redirect(current_host + '/employees')
     return redirect(url_for('add_new_employee'))
 
 
@@ -1213,7 +1216,7 @@ def newbie_slash():
                 send_dm_message(dm, found)
         if len(found_messages) == 0:
             return make_response('I\'m sorry, I couldn\'t find '
-                                 'any information on ' + incoming_search_term, 200)
+                                 'any information on ' + " ".join(incoming_message[1:]), 200)
         return make_response(message_response, 200)
     else:
         message_response = 'Sorry, I don\'t know what you want.'

@@ -37,9 +37,13 @@ print(f'client secret {client_secret}')
 client_uri = settings.CLIENT_URI
 client_audience = settings.CLIENT_AUDIENCE
 
-admin_team_choices = [('infosec', 'IT: InfoSec'), ('servicedesk', 'IT: Service Desk'),
-                      ('benefits', 'People: Benefits'), ('onboarding', 'People: Onboarding'),
-                      ('diversity', 'People: Diversity and Inclusion'), ('wpr', 'WPR')]
+admin_team_choices = [
+    ('IT: InfoSec', 'IT: InfoSec'),
+    ('IT: Service Desk', 'IT: Service Desk'),
+    ('People: Benefits', 'People: Benefits'),
+    ('People: Onboarding', 'People: Onboarding'),
+    ('People: Diversity and Inclusion', 'People: Diversity and Inclusion'),
+    ('WPR', 'WPR')]
 
 location_choices = [
     ('All', 'All'),
