@@ -965,38 +965,36 @@ def admin_user():
     admin_roles = AdminRoles.query.all()
     role_names = [(role.role_name, role.role_description) for role in admin_roles]
     role_names = role_names[1:]
-    print(f'admin people {admin_people[11]}')
     admin_form.roles.choices = role_names
     if request.method == 'POST':
-        print('admin form {}'.format(admin_form.roles.data))
         if admin_form.validate():
             admin_added = False
+            selected_admin = admin_form.emp_id.data.split(' ')
+            name = ' '.join(selected_admin[1:])
+            admin = Admin(
+                emp_id=selected_admin[0],
+                name=name,
+                super_admin=admin_form.super_admin.data,
+                roles=admin_form.roles.data)
+            db.session.add(admin)
             try:
-                print(f'selected admin {admin_form.emp_id.data}')
-                selected_admin = admin_form.emp_id.data.split(' ')
-                name = ' '.join(selected_admin[1:])
-                admin = Admin(emp_id=selected_admin[0], name=name, super_admin=admin_form.super_admin.data,
-                                 roles=admin_form.roles.data)
-                db.session.add(admin)
-                try:
-                    db.session.commit()
-                    admin_added = True
-                except IntegrityError:
-                    db.session.rollback()
-            except:
-                print('unable to save admin')
+                db.session.commit()
+                admin_added = True
+            except IntegrityError as e:
+                app.logger.error(f'Newbie AddAdmin DB IntegrityError {e}')
+                db.session.rollback()
             if admin_added:
                 flash("Admin has been successfully added.", 'success')
             if current_host:
                 return redirect(current_host + '/admin')
             return redirect(url_for('admin_page'))
         else:
-            print('errors = {}'.format(admin_form.errors))
+            app.logger.error(f'errors = {admin_form.errors}')
             if current_host:
                 return redirect(current_host + '/admin')
             return redirect(url_for('admin_page'))
     else:
-        print('errors = {}'.format(admin_form.errors))
+        app.logger.error(f'errors = {admin_form.errors}')
         if current_host:
             return redirect(current_host + '/admin')
         return redirect(url_for('admin_page'))
@@ -1123,7 +1121,6 @@ def message_actions():
                             "hint": "We would love to hear your thoughts."
                         }
                     ],
-
                 }
             if 'thumbsup' in actions.lower():
                 print('thumbsup')
