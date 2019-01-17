@@ -240,9 +240,7 @@ def add_messages_to_send(person: People):
     my_country = person.country
     messages = Messages.query.all()
     for m in messages:
-        print(f'm = {m.id}')
         send_day = m.send_day
-
         if m.send_once:
             send_date_time = m.send_date
         else:
@@ -250,6 +248,8 @@ def add_messages_to_send(person: People):
         send_date_time = my_timezone.localize(send_date_time)
         send_date_time = send_date_time.replace(hour=m.send_hour, minute=0, second=0)
         send_date_time = adjust_send_date_for_holidays_and_weekends(send_date_time, my_country)
+        utc = pytz.UTC
+        send_date_time = send_date_time.astimezone(utc)
         if m.country == 'US' and my_country == 'US':
             save_send_message(employee_id, m.id, 0, send_date_time)
         elif m.country == 'CA' and my_country == 'CA':
@@ -314,9 +314,9 @@ def save_send_message(emp_id, message_id, send_order, send_dttm):
     :return:
     """
     dnow = datetime.datetime.utcnow()
-    to_send = Send(emp_id=emp_id, message_id=message_id, send_dttm=send_dttm,
-                      send_order=send_order, send_status=False, cancel_status=False,
-                      last_updated=dnow, created_date=dnow)
+    send_dttm = send_dttm.replace(tzinfo=None)
+    to_send = Send(emp_id=emp_id, message_id=message_id, send_dttm=send_dttm, send_order=send_order, send_status=False,
+                   cancel_status=False, last_updated=dnow, created_date=dnow)
     db.session.add(to_send)
     db.session.commit()
 

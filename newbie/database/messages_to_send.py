@@ -6,7 +6,7 @@ class MessagesToSend(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     emp_id = db.Column(db.String(50), unique=False, nullable=False)
     message_id = db.Column(db.String(), nullable=False)
-    send_dttm = db.Column(db.DateTime, nullable=False)
+    send_dttm = db.Column(db.DateTime(timezone=True), nullable=False)
     send_order = db.Column(db.Integer, nullable=False)
     send_status = db.Column(db.Boolean, nullable=False, default=False)
     cancel_status = db.Column(db.Boolean, nullable=False, default=False)
