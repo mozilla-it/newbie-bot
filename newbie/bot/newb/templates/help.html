@@ -1,0 +1,65 @@
+{%  extends 'layout.html' %}
+
+{%  block body %}
+    <div class="container newbie-bottom">
+            <div class="col align-self-center">
+                <h1 class="text-center">Help Page</h1>
+                <p class="text-center">(This is page is about the upcoming Newbie Slackbot)</p>
+            </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">What is it?</h2>
+                <p class="card-text">Newbie is a Slackbot that helps new hires ease into life at Mozilla via timed Slack messages about topics essential to Mozilla employees.</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">How it works</h2>
+                <p class="card-text">Newbie will send new hires links to information about topics such as benefits, Workday goals, travel policies, password protection, and All Hands.
+            Messages will be sent to new hires once per day – excluding opt-out, feedback, and help messages – over the course of the new hire's first 30 days.
+            At any time, the new hire can reach this Help page by sending "/newbiehelp help" to Newbie.</p>
+            </div>
+        </div>
+
+
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">Want to opt-out?</h2>
+                <p class="card-text">Newbie will send an opt-out message to new hires once a week. Select "Stop messages" button at the bottom of the opt-out message and the bot will stop sending the new hire messages.
+                    <br><br>New hires can also send "/newbiehelp opt-out" to Newbie, and they will stop receiving messages.</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">Need to file a bug?</h2>
+                <p class="card-text">Please file a ticket if you experience any issues with Newbie bot, please file a ticket on Jira.
+                </p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">Questions about Newbie?</h2>
+                <p class="card-text">For product questions, contact Josephine Leung (@jojo) on Slack or email her at jojo@mozilla.com.
+                <br><br>For technical questions, contact Scott Idler (@escote / escote@mozilla.com)  or Marty Ballard (@marty /  mballard@mozilla.com)</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">Phase 1 POC Scope</h2>
+                <h3 class="card-subtitle mb-2 text-muted">Timeline</h3>
+                <p class="card-text">Q4 2018</p>
+                <h3 class="card-subtitle mb-2 text-muted">Functionality</h3>
+                <p class="card-text">For the Phase 1 POC, the Slackbot will push messages out to the user. The user cannot send questions or requests to the bot, except to ask for help.</p>
+                <h3 class="card-subtitle mb-2 text-muted">Content</h3>
+                <p class="card-text">For the Phase 1 POC, content will be restricted to essential, procedural content essential to employees.</p>
+                <h3 class="card-subtitle mb-2 text-muted">Users</h3>
+                <div>
+                    <ul>
+                        <li>United States and Canada-based</li>
+                        <li>Full-time employees</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+{% endblock %}

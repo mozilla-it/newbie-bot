@@ -1,0 +1,19 @@
+<html>
+<head>
+
+  <title>Log in</title></head><body><div>
+    <script src="https://cdn.auth0.com/js/auth0/9.5.1/auth0.min.js"></script>
+    <script type="text/javascript">
+
+    var params = Object.assign({
+      domain: '{{ app.config.get('AUTH_HOST') }}',
+      clientID: '{{ app.config.get('AUTH_ID') }}',
+      redirectUri: '{{ app.config.get('AUTH_URL') }}',
+      responseType: 'token id_token'
+    });
+    var webAuth = new auth0.WebAuth(params);
+    webAuth.authorize();
+
+
+    </script>
+</div>

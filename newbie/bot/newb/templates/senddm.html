@@ -1,0 +1,32 @@
+{%  extends 'layout.html' %}
+
+{%  block body %}
+    <div class="container">
+        <h1>Send Slack DM</h1>
+        <div class="row" style="margin-top: 25px; margin-bottom: 25px;">
+            {% from "includes/_formhelpers.html" import render_field %}
+            <form action="" method="POST" class="form">
+            <div class="row ">
+                    <div class="col-md-4 col-sm-12 ">
+                        <div class="form-group">
+{#                            {{ render_field(form.message_user, class_="form_control") }}#}
+                            <div><label for="message_user">Select User</label></div>
+                            <select name="message_user" class="custom-select" id="inputGroupSelect01">
+                            <option selected>Choose...</option>
+                            {% for user in users %}
+                            <option value="{{ user['name'] }}">{{ user['profile']['real_name'] }}</option>
+                            {%  endfor %}
+                          </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            {{ render_field(form.message_text, class_="form_control") }}
+                        </div>
+                    </div>
+                </div>
+            <p><input type="submit" class="btn btn-primary" value="Submit" data-toggle="collapse" data-target="#collapseExample"></p>
+            </form>
+        </div>
+    </div>
+{%  endblock %}

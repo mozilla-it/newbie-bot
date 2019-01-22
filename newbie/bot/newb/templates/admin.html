@@ -1,0 +1,42 @@
+{%  extends 'layout.html' %}
+
+{%  block body %}
+    <div class="container">
+        <h1>Administration Page</h1>
+        <div class="row mb-2 justify-content-center">
+            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+              <label class="btn btn-secondary active" id="role_toggle">
+                <input type="radio" name="options" id="option1" autocomplete="off" checked> Roles
+              </label>
+              <label class="btn btn-secondary" id="admin_toggle">
+                <input type="radio" name="options" id="option2" autocomplete="off"> Admins
+              </label>
+              <label class="btn btn-secondary" id="pending_toggle">
+                <input type="radio" name="options" id="option3" autocomplete="off"> Pending Requests
+              </label>
+{#                <label class="btn btn-secondary" id="messages_toggle">#}
+{#                    <input type="radio" name="options" id="option4" autocomplete="off"> Messages Upload#}
+{#                </label>#}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col mx-auto " id="role_view">
+                {%  include 'admin_roles.html' %}
+            </div>
+            <div class="col mx-auto collapse" id="admin_view">
+                {% include 'admin_users.html' %}
+            </div>
+            <div class="col mx-auto collapse" id="pending_view">
+                {% include 'admin_pending_requests.html' %}
+            </div>
+{#            <div class="col mx-auto collapse" id="messages_view">#}
+{#                {% include 'message_upload.html' %}#}
+{#            </div>#}
+        </div>
+    </div>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript">$SCRIPT_ROOT = {{ request.script_root|tojson|safe }}; </script>
+    <script src="{{ url_for('static', filename='admin.js') }}"></script>
+
+{%  endblock %}
