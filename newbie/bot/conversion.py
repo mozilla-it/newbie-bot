@@ -1,14 +1,9 @@
 import bson
-from newbie.database.people import People
-from newbie.database.messages import Messages
-from newbie.database.messages_to_send import MessagesToSend as NewSend
-from newbie.database.admin import Admin
-from newbie.database.admin_roles import AdminRoles
-from newbie.database.user_feedback import UserFeedback
-from newbie import db
+from newbie.bot.database.people import People
+from newbie.bot.database.messages import Messages
+from newbie.bot import db
 import datetime
 dnow = datetime.datetime.utcnow()
-import json
 
 # Convert Admins
 # with open('/Users/mballard/Dev/newbie/admin.bson', 'rb') as f:

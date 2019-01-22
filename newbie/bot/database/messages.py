@@ -1,5 +1,5 @@
 import datetime
-from newbie import db
+from newbie.bot import db
 from sqlalchemy import String, ARRAY, JSON
 
 

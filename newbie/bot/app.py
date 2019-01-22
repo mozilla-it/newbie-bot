@@ -1,6 +1,8 @@
-from newbie import app, scheduler
+import sys
+sys.path.append(".")
+from newbie.bot import app, scheduler
 import atexit
-from newbie.routes import send_newhire_messages, get_auth_zero, updates_from_slack
+from newbie.bot.routes import send_newhire_messages, get_auth_zero, updates_from_slack
 
 
 @atexit.register

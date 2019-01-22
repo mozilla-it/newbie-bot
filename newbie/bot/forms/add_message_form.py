@@ -1,5 +1,5 @@
 from wtforms import Form, StringField, TextAreaField, validators, IntegerField, BooleanField, FieldList, SelectMultipleField, SelectField
-from newbie import location_choices, country_choices, employee_type_choices
+from newbie.bot import location_choices, country_choices, employee_type_choices
 
 
 class AddMessageForm(Form):

@@ -1,10 +1,8 @@
 import pytest
 import datetime
 import newbie
-import app
-import tempfile
-from newbie.database.people import People
-from newbie.database.messages import Messages
+from newbie.bot.database.people import People
+from newbie.bot.database import Messages
 
 
 

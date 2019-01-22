@@ -1,31 +1,31 @@
-from newbie.database.people import People
-from newbie.database.messages import Messages
-from newbie.database.messages_to_send import MessagesToSend as Send
-from newbie.database.admin import Admin
-from newbie.database.admin_roles import AdminRoles
-from newbie.database.user_feedback import UserFeedback
-from newbie.database.auth_groups import AuthGroups
-from newbie import db
+from newbie.bot.database.people import People
+from newbie.bot.database.messages import Messages
+from newbie.bot.database.messages_to_send import MessagesToSend as Send
+from newbie.bot.database.admin import Admin
+from newbie.bot.database.admin_roles import AdminRoles
+from newbie.bot.database.user_feedback import UserFeedback
+from newbie.bot.database.auth_groups import AuthGroups
+from newbie.bot import db
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
 from werkzeug.exceptions import NotFound
 
 # form imports
-from newbie.forms.slack_direct_message import SlackDirectMessage
-from newbie.forms.add_employee_form import AddEmployeeForm
-from newbie.forms.add_message_form import AddMessageForm
-from newbie.forms.add_admin_role_form import AddAdminRoleForm
-from newbie.forms.add_admin_form import AddAdminForm
-from newbie.forms.add_admin_request import AddAdminRequest
-from newbie.forms.pending_requests_form import PendingRequestsForm
+from newbie.bot.forms.slack_direct_message import SlackDirectMessage
+from newbie.bot.forms.add_employee_form import AddEmployeeForm
+from newbie.bot.forms.add_message_form import AddMessageForm
+from newbie.bot.forms.add_admin_role_form import AddAdminRoleForm
+from newbie.bot.forms.add_admin_form import AddAdminForm
+from newbie.bot.forms.add_admin_request import AddAdminRequest
+from newbie.bot.forms.pending_requests_form import PendingRequestsForm
 # end form imports
 
 
-from newbie import app, session, redirect, current_host, wraps, slack_client, \
+from newbie.bot import app, session, redirect, current_host, wraps, slack_client, \
     client_id, client_secret, client_uri, us_holidays, ca_holidays, \
-    make_response, slack_verification_token, render_template, auth0, logger, request, \
-    Response, url_for, all_timezones, flash, admin_team_choices, location_choices, country_choices, employee_type_choices
-from newbie.nltk_processing import NltkProcess, get_tag_suggestions, filter_stopwords
+    make_response, slack_verification_token, render_template, auth0, request, \
+    Response, url_for, all_timezones, flash, admin_team_choices
+from newbie.bot.nltk_processing import NltkProcess, get_tag_suggestions, filter_stopwords
 from profanity_check import predict_prob
 import json
 import datetime
@@ -33,7 +33,6 @@ import pytz
 from dateutil.relativedelta import relativedelta
 
 import re
-import random
 from authzero import AuthZero
 
 def get_user_admin():
@@ -803,7 +802,7 @@ def add_new_employee():
             return redirect(url_for('add_new_employee'))
         else:
             print('errors = {}'.format(form.errors))
-            return render_template('employees.html', employees=None, form=form, selectedEmp=None,  timezones=all_timezones, user=user, admin=admins)
+            return render_template('employees.html', employees=None, form=form, selectedEmp=None, timezones=all_timezones, user=user, admin=admins)
     else:
         admin = user['userid'].split('|')
         admin = admin[2]
@@ -819,7 +818,7 @@ def add_new_employee():
             for emp in employee_list:
                 if re.findall(admin, emp.manager_id):
                     employees.append(emp)
-        return render_template('employees.html', employees=employees, form=form, selectedEmp=None,  timezones=all_timezones, user=user, admin=admins)
+        return render_template('employees.html', employees=employees, form=form, selectedEmp=None, timezones=all_timezones, user=user, admin=admins)
 
 
 @app.route('/employees/<int:emp_id>/delete')
