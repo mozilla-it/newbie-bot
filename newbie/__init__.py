@@ -9,10 +9,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import holidays
 
 import logging.config
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('newbie')
-scheduler = BackgroundScheduler()
-
 # auth
 from flask_cors import CORS as cors
 from flask_environ import get, collect, word_for_true
@@ -21,6 +17,12 @@ from functools import wraps
 from newbie import auth, config, settings
 
 # endauth
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('newbie')
+scheduler = BackgroundScheduler()
+
+
 
 current_host = 'https://nhobot.ngrok.io'
 
@@ -69,7 +71,7 @@ country_choices = [
     ('FI', 'Finland'),
     ('FR', 'France'),
     ('DE', 'Germany'),
-    ('NL' , 'Netherlands'),
+    ('NL', 'Netherlands'),
     ('NZ', 'New Zealand'),
     ('PL', 'Poland'),
     ('ES', 'Spain'),

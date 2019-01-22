@@ -652,11 +652,13 @@ def add_new_message():
             send_once = True if form.send_once.data is True else False
             tagitems = form.tagitems.data
             tag = tagitems.split('|')
-            person = People.query.filter_by(emp_id = admin.emp_id).first()
-            team = person.admin_team if person.admin_team else 'Mozilla'
+            admin = Admin.query.filter_by(emp_id=admin.emp_id).first()
+            team = admin.team if admin.team else 'Mozilla'
+            app.logger.info(f'team {team}')
             if team is not 'Mozilla':
                 team = [v for k, v in admin_team_choices if team == k]
-            owner = person.first_name + ' ' + person.last_name
+
+            owner = admin.name
             message = Messages(type=form.message_type.data, topic=form.topic.data,
                                   title_link=title_link, send_day=send_day, send_hour=9,
                                   send_date=send_date, send_once=send_once,
@@ -729,6 +731,7 @@ def edit_message(message_id):
             messages.text = form.text.data
             messages.country = form.country.data
             tagitems = form.tagitems.data
+            print(f'tags items {tagitems}')
             tag = tagitems.split('|')
             tag = [re.sub(r'\r\n\s+', '', x) for x in tag]
             messages.tags = tag[:-1]
