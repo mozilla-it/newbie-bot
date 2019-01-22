@@ -1,9 +1,12 @@
-import newbie.database.people as people
-import newbie.database.messages as messages
-import newbie.database.mongo_setup as mongo
 import pytest
 import datetime
 import newbie
+import app
+import tempfile
+from newbie.database.people import People
+from newbie.database.messages import Messages
+
+
 
 """
 Run with:
@@ -13,28 +16,30 @@ class TestClass(object):
 
 
     def teardown(self):
-        people.People.objects(emp_id='123').delete()
-        messages.Messages.objects(title='Test Message').delete()
+        people = People.objects(emp_id='123')
+        newbie.db.session.delete(people)
+        message = Messages.query.filter_by(topic='Test Message')
+        newbie.db.session.delete(message)
+        newbie.db.session.commit()
 
     @pytest.fixture(scope='module')
     def new_employee(self):
-        mongo.global_init()
-        person = people.People()
-        person.first_name = 'Bob'
-        person.last_name = 'Jones'
-        person.start_date = datetime.datetime.now()
-        person.emp_id = '123'
-        person.title = 'Tester'
-        person.country = 'US'
-        person.city = 'Houston'
-        person.picture = 'https://testimage.com'
-        person.timezone = 'Americas/Chicago'
-        person.email = 'bob@jones.com'
-        person.slack_handle = 'tester123'
-        person.manager_id = '456'
-        person.phone = '212-555-1212'
-        person.last_modified = datetime.datetime.now()
-        person.save()
+        person = People(
+            first_name='Bob',
+            last_name='Jones',
+            start_date=datetime.datetime.now(),
+            emp_id='123',
+            country='US',
+            city='Houston',
+            picture='https://testimage.com',
+            timezone='Americas/Chicago',
+            email='bob@jones.com',
+            slack_handle='tester123',
+            manager_id='456',
+            phone='212-555-1212'
+        )
+        newbie.db.session.add(person)
+        newbie.db.session.commit()
         return person
 
 
@@ -48,7 +53,6 @@ class TestClass(object):
         assert new_employee.last_name == 'Jones'
         assert not new_employee.start_date == ''
         assert new_employee.emp_id == '123'
-        assert new_employee.title == 'Tester'
         assert new_employee.country == 'US'
         assert new_employee.city == 'Houston'
         assert new_employee.picture == 'https://testimage.com'
@@ -61,28 +65,29 @@ class TestClass(object):
 
     @pytest.fixture(scope='module')
     def new_message(self):
-        mongo.global_init()
-        message = messages.Messages()
-        message.type = 'test_practice'
-        message.category = 'Test'
-        message.title = 'Test Message'
-        message.title_link = [{"name": "test", "url": "https://www.example.com"}]
-        message.send_day = 7
-        message.send_hour = 9
-        message.send_date = datetime.datetime.now()
-        message.send_once = True
-        message.frequency = 'day'
-        message.text = 'Hi, I\'m a test message and you\'re not.'
-        message.number_of_sends = 1
-        message.country = 'ALL'
-        message.tags = ['test', 'code', 'success']
-        message.save()
+        message = Messages(
+            type='test_practice',
+            topic='Test Message',
+            title_link=[{"name": "test", "url": "https://www.example.com"}],
+            send_day=7,
+            send_hour=9,
+            repeatable=False,
+            text='Hi, I\'m a test message and you\'re not.',
+            send_date=datetime.datetime.now(),
+            send_once=True,
+            country='ALL',
+            tags=['test', 'code', 'success'],
+            team='testers',
+        )
+        newbie.db.session.add(message)
+        newbie.db.session.commit()
         return message
 
     def test_new_message(self, new_message):
         assert new_message.type == 'test_practice'
-        assert new_message.category == 'Test'
-        assert new_message.title == 'Test Message'
+        assert new_message.team == 'testers'
+        assert new_message.owner == 'Mozilla'
+        assert new_message.topic == 'Test Message'
 
 
     def test_adjust_send_date_for_holidays(self):
