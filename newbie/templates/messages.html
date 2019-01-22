@@ -29,7 +29,7 @@
                 <li class="moz-group-item ">
                 <div class="row">
                     <div class="col">
-                        {% if message.team ==  admin.team %}
+                        {% if message.team ==  admin.team or admin.super_admin %}
                             <a style="text-decoration: none;" href="/messages/{{ message.id }}/edit" data-toggle="tooltip" data-placement="top" title="Click here to edit {{ message.topic }} message."><i class="fas fa-edit" style="color: #000000"></i></a>
                             <button type="button" class="moz-delete-button" data-toggle="modal" data-target="#deleteModal{{ message.id }}"><i class="fas fa-times" data-toggle="tooltip" data-placement="top" title="Click here to delete {{ message.topic }} message."></i></button>
                         {% endif %}
