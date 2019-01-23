@@ -1,6 +1,5 @@
 from decouple import config
 
-
 CLIENT_ID = config("CLIENT_ID")
 CLIENT_SECRET = config("CLIENT_SECRET")
 CLIENT_URI = config("CLIENT_URI")
@@ -20,6 +19,7 @@ AUTH_AUDIENCE = config('AUTH_AUDIENCE')
 AUTH_ISSUER = config('AUTH_ISSUER')
 SQLALCHEMY_DATABASE_URI = 'postgresql://localhost/newbie'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+
 
 all_timezones = [
     {'zone': 'Africa/Abidjan', 'name': 'Africa/Abidjan'},
