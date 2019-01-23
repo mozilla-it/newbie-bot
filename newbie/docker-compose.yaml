@@ -2,8 +2,7 @@ version: '3'
 services:
   db:
     build:
-      context: .
-      dockerfile: db/Dockerfile
+      context: ./db
     image: itcw/newbie_db:${APP_VERSION:-latest}
     restart: always
     ports:
@@ -19,8 +18,7 @@ services:
     - database_data:/var/lib/postgresql/data
   bot:
     build:
-      context: .
-      dockerfile: bot/Dockerfile
+      context: ./bot
     image: itcw/newbie_bot:${APP_VERSION:-latest}
     expose:
     - 8080
