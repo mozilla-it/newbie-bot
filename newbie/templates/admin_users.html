@@ -43,6 +43,11 @@
                 {{ admin_form.roles.label }} {{ admin_form.roles(rows=3, multiple=True) }}
             </div>
         </div>
+        <div class="row " >
+            <div class=" col-md-6 form-group">
+                {{ admin_form.team.label }} {{ admin_form.team(rows=3, multiple=False) }}
+            </div>
+        </div>
 
         <p><input type="submit" class="btn btn-primary" value="Submit" data-toggle="collapseAdmin" data-target="#collapseAdmin"></p>
 

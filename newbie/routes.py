@@ -35,6 +35,7 @@ from dateutil.relativedelta import relativedelta
 import re
 import random
 from authzero import AuthZero
+import os
 
 def get_user_admin():
     try:
@@ -131,9 +132,14 @@ def get_auth_zero():
                                 "groups,picture,nickname,_HRData,created_at,"
                                 "user_metadata.groups,userinfo,app_metadata.groups,app_metadata.hris,"
                                 "app_metadata")
+    office_group = False
     for user in users:
         if 'app_metadata' in user:
             groups = user["app_metadata"]["groups"]
+            matching = [s for s in groups if s.startswith('office')]
+            if matching:
+                app.logger.info(f'groups {matching}')
+                office_group = True
             for group in groups:
                 auth_group = AuthGroups.query.filter_by(groups=group).first()
                 if not auth_group:
@@ -175,6 +181,8 @@ def get_auth_zero():
                 except IntegrityError as error:
                     print('DuplicateKeyError {}'.format(error))
                     db.session.rollback()
+    if office_group:
+        os.system('say "I found an office group"')
 
 
 def updates_from_slack():
@@ -978,7 +986,8 @@ def admin_user():
                 emp_id=selected_admin[0],
                 name=name,
                 super_admin=admin_form.super_admin.data,
-                roles=admin_form.roles.data)
+                roles=admin_form.roles.data,
+                team=admin_form.team.data)
             db.session.add(admin)
             try:
                 db.session.commit()
@@ -1253,5 +1262,3 @@ def send_slack_message():
             return render_template('senddm.html', form=form, users=users, user=user, admin=admin)
     else:
         return render_template('senddm.html', form=form, users=users, user=user, admin=admin)
-
-
