@@ -1,20 +1,22 @@
 import nltk
 from nltk.corpus import wordnet as wn
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords, wordnet
 from nltk.tokenize import word_tokenize
 
 wn.ensure_loaded()
 
-nltk.download("stopwords")
+nltk.download("stopwords", download_dir='/usr/src/app/nltk_data')
+nltk.download("wordnet", download_dir='/usr/src/app/nltk_data')
 cachedStopWords = stopwords.words("english")
 
 
 class NltkProcess:
     def __init__(self):
-        nltk.download("stopwords")
+        nltk.download("stopwords", download_dir='/usr/src/app/nltk_data')
+        nltk.download("wordnet", download_dir='/usr/src/app/nltk_data')
 
     def get_stop_words(self):
-        nltk.download("stopwords")
+        nltk.download("stopwords", download_dir='/usr/src/app/nltk_data')
         stopwords.words('english')
 
 def filter_stopwords(input_text):
