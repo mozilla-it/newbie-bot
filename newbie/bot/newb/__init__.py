@@ -1,5 +1,3 @@
-import sys
-sys.path.append(".")
 from flask import Flask, request, render_template, redirect, url_for, session, make_response, Response, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -10,21 +8,19 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 import holidays
 
-import logging.config
 # auth
 from flask_cors import CORS as cors
 from flask_environ import get, collect, word_for_true
 from authlib.flask.client import OAuth
-from functools import wraps
-from newbie.bot import auth, config, settings
+from newb import auth, config, settings
 
 # endauth
+
+import logging.config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('newbie')
 scheduler = BackgroundScheduler()
-
-
 
 current_host = 'https://nhobot.ngrok.io'
 
@@ -40,54 +36,6 @@ client_secret = settings.CLIENT_SECRET
 print(f'client secret {client_secret}')
 client_uri = settings.CLIENT_URI
 client_audience = settings.CLIENT_AUDIENCE
-
-admin_team_choices = [
-    ('IT: InfoSec', 'IT: InfoSec'),
-    ('IT: Service Desk', 'IT: Service Desk'),
-    ('People: Benefits', 'People: Benefits'),
-    ('People: Onboarding', 'People: Onboarding'),
-    ('People: Diversity and Inclusion', 'People: Diversity and Inclusion'),
-    ('WPR', 'WPR')]
-
-location_choices = [
-    ('All', 'All'),
-    ('Remote Workers', 'Remote Workers'),
-    ('Berlin', 'Berlin'),
-    ('London', 'London'),
-    ('Mountain View', 'Mountain View'),
-    ('Paris', 'Paris'),
-    ('Portland', 'Portland'),
-    ('San Francisco', 'San Francisco'),
-    ('Toronto', 'Toronto'),
-    ('Vancouver', 'Vancouver'),
-    ('Taipei', 'Taipei'),
-    ('Tokyo', 'Tokyo')
-]
-
-country_choices = [
-    ('All', 'All'),
-    ('AU', 'Australia'),
-    ('BE', 'Belgium'),
-    ('CA', 'Canada'),
-    ('DK', 'Denmark'),
-    ('FI', 'Finland'),
-    ('FR', 'France'),
-    ('DE', 'Germany'),
-    ('NL', 'Netherlands'),
-    ('NZ', 'New Zealand'),
-    ('PL', 'Poland'),
-    ('ES', 'Spain'),
-    ('SE', 'Sweden'),
-    ('UK', 'United Kingdom'),
-    ('US', 'United States')
-]
-
-employee_type_choices = [
-    ('All', 'All'),
-    ('Full-time Employee', 'Full-time Employee'),
-    ('Contingent', 'Contingent'),
-    ('Intern', 'Intern')
-]
 
 slack_verification_token = settings.SLACK_VERIFICATION_TOKEN
 
@@ -138,5 +86,3 @@ authentication = auth.OpenIDConnect(
 )
 oidc = authentication.auth(app)
 # endauth
-
-admin_people = []

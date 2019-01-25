@@ -1,9 +1,6 @@
-import sys
-sys.path.append(".")
-from newbie.bot import app, scheduler
+from newb import app, scheduler
 import atexit
-from newbie.bot.routes import send_newhire_messages, get_auth_zero, updates_from_slack
-
+from newb.jobs import send_newhire_messages, get_auth_zero, updates_from_slack
 
 @atexit.register
 def shutdown():
@@ -17,6 +14,7 @@ if __name__ == '__main__':
     print('starting app')
     print('scheduler = {}'.format(scheduler.running))
     if scheduler.running is False:
+        print(f'schedule running {scheduler.running}')
         scheduler.start()
         with app.app_context():
             scheduler.add_job(func=send_newhire_messages, trigger='cron', hour='*', minute='*/10')
@@ -25,4 +23,4 @@ if __name__ == '__main__':
     app.debug = False
     app.use_reloader = False
     app.jinja_env.cache = {}
-    app.run(ssl_context=('cert.pem', 'key.pem'), host='0.0.0.0')
+    app.run(ssl_context=('cert.pem', 'key.pem'), host='0.0.0.0', debug=False)

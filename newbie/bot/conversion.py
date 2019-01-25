@@ -1,7 +1,5 @@
 import bson
-from newbie.bot.database.people import People
-from newbie.bot.database.messages import Messages
-from newbie.bot import db
+from newbie.bot.newb.models import db, People, Messages
 import datetime
 dnow = datetime.datetime.utcnow()
 

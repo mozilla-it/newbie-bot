@@ -1,39 +1,27 @@
-from newbie.bot.database.people import People
-from newbie.bot.database.messages import Messages
-from newbie.bot.database.messages_to_send import MessagesToSend as Send
-from newbie.bot.database.admin import Admin
-from newbie.bot.database.admin_roles import AdminRoles
-from newbie.bot.database.user_feedback import UserFeedback
-from newbie.bot.database.auth_groups import AuthGroups
-from newbie.bot import db
+from models import db, People, Messages, Admin, AdminRoles, UserFeedback, AuthGroups, MessagesToSend as Send
+from jobs import add_messages_to_send
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
 from werkzeug.exceptions import NotFound
 
 # form imports
-from newbie.bot.forms.slack_direct_message import SlackDirectMessage
-from newbie.bot.forms.add_employee_form import AddEmployeeForm
-from newbie.bot.forms.add_message_form import AddMessageForm
-from newbie.bot.forms.add_admin_role_form import AddAdminRoleForm
-from newbie.bot.forms.add_admin_form import AddAdminForm
-from newbie.bot.forms.add_admin_request import AddAdminRequest
-from newbie.bot.forms.pending_requests_form import PendingRequestsForm
+from forms import SlackDirectMessage, AddEmployeeForm, AddMessageForm, AddAdminRoleForm, \
+    AddAdminForm, AddAdminRequest, PendingRequestsForm
 # end form imports
 
 
-from newbie.bot import app, session, redirect, current_host, wraps, slack_client, \
-    client_id, client_secret, client_uri, us_holidays, ca_holidays, \
+from newb import app, session, redirect, current_host, wraps, slack_client, \
+    client_id, client_secret, client_uri, \
     make_response, slack_verification_token, render_template, auth0, request, \
-    Response, url_for, all_timezones, flash, admin_team_choices
-from newbie.bot.nltk_processing import NltkProcess, get_tag_suggestions, filter_stopwords
+    Response, url_for, all_timezones, flash
+from config import admin_team_choices
+from nltk_processing import NltkProcess, get_tag_suggestions, filter_stopwords
 from profanity_check import predict_prob
 import json
 import datetime
-import pytz
-from dateutil.relativedelta import relativedelta
 
 import re
-from authzero import AuthZero
+
 
 def get_user_admin():
     try:
@@ -117,105 +105,6 @@ def connect_slack_client():
     slack_client.rtm_connect()
 
 
-def get_auth_zero():
-    """
-    Get Auth0 users
-    :return: Auth0 user list
-    """
-    print('get auth zero')
-    config = {'client_id': client_id, 'client_secret': client_secret, 'uri': client_uri}
-    az = AuthZero(config)
-    az.get_access_token()
-    users = az.get_users(fields="username,user_id,name,email,identities,"
-                                "groups,picture,nickname,_HRData,created_at,"
-                                "user_metadata.groups,userinfo,app_metadata.groups,app_metadata.hris,"
-                                "app_metadata")
-    for user in users:
-        if 'app_metadata' in user:
-            groups = user["app_metadata"]["groups"]
-            for group in groups:
-                auth_group = AuthGroups.query.filter_by(groups=group).first()
-                if not auth_group:
-                    auth = AuthGroups(groups=group)
-                    db.session.add(auth)
-                    db.session.commit()
-                if 'manager' in group:
-                    admin = Admin.query.filter_by(emp_id=user['user_id']).first()
-                    if not admin:
-                        new_admin = Admin(emp_id=user['user_id'], name=user['name'], roles=['Manager'])
-                        db.session.add(new_admin)
-                        db.session.commit()
-        connection = user['identities'][0]['connection']
-        if 'Mozilla-LDAP' in connection:
-            # print(f'auth0 user {user}')
-            user_id = user['user_id']
-            current_user = People.query.filter_by(emp_id=user_id).first()
-            if not current_user:
-                name = user['name'].split()
-                try:
-                    manager_email = user['_HRData']['manager_email']
-                except:
-                    manager_email = ''
-                first_name = name[0]
-                last_name = name[-1]
-                country = [item for item in user['groups'] if item[:7] == 'egencia']
-                person_country = ''
-                if country:
-                    person_country = country[0][8:].upper()
-                dnow = datetime.datetime.utcnow()
-                person = People(emp_id=user_id, first_name=first_name, last_name=last_name,
-                                   email=user['email'], slack_handle='', start_date=user['created_at'],
-                                   last_modified=dnow, timezone='', country=person_country,
-                                   manager_id=manager_email, user_opt_out=False, manager_opt_out=False,
-                                   admin_opt_out=False, created_date=dnow)
-                db.session.add(person)
-                try:
-                    db.session.commit()
-                except IntegrityError as error:
-                    print('DuplicateKeyError {}'.format(error))
-                    db.session.rollback()
-
-
-def updates_from_slack():
-    print('updates from slack')
-    actual_one_day_ago = measure_date()
-    slack_users = slack_client.api_call('users.list')['members']
-    print(len(slack_users))
-    people = People.query.filter_by(slack_handle=None).all()
-    for person in people:
-        slackinfo = searchemail(slack_users, 'email', person.email)
-        print(slackinfo)
-        if slackinfo:
-            try:
-                slack_handle = slackinfo['name']
-                person.slack_handle = slack_handle
-            except:
-                slack_handle = None
-            try:
-                timezone = slackinfo['tz']
-            except:
-                timezone = 'US/Pacific'
-            person.timezone = timezone
-            person.last_modified = datetime.datetime.utcnow()
-            db.session.commit()
-            print(actual_one_day_ago)
-            start_date = person.start_date
-            # .strptime('%Y-%m-%d')
-            print('start_date {}'.format(start_date))
-            print(start_date > actual_one_day_ago)
-            if start_date > actual_one_day_ago:
-                print('start date within 30 days {}'.format(start_date > actual_one_day_ago))
-                add_messages_to_send(person)
-
-
-def measure_date():
-    current_day = datetime.datetime.today()
-    thirty_days_ago = datetime.timedelta(days=31)
-    actual_thirty_days_ago = datetime.datetime.strptime(
-        datetime.datetime.strftime(current_day - thirty_days_ago, '%Y-%m-%d'), '%Y-%m-%d')
-    return actual_thirty_days_ago
-
-
 def find_slack_handle(socials: dict):
     """Search social media values for slack
     :param socials:
@@ -225,99 +114,6 @@ def find_slack_handle(socials: dict):
         return socials['slack']
     else:
         return 'mballard'
-
-
-def add_messages_to_send(person: People):
-    """
-    Add each message from the messages table to the messages_to_send table when a new user is added
-    :param person:
-    :return:
-    """
-    employee_id = person.emp_id
-    start_date = person.start_date
-    my_timezone = pytz.timezone(person.timezone)
-    my_country = person.country
-    messages = Messages.query.all()
-    for m in messages:
-        send_day = m.send_day
-        if m.send_once:
-            send_date_time = m.send_date
-        else:
-            send_date_time = start_date + datetime.timedelta(days=send_day)
-        send_date_time = my_timezone.localize(send_date_time)
-        send_date_time = send_date_time.replace(hour=m.send_hour, minute=0, second=0)
-        send_date_time = adjust_send_date_for_holidays_and_weekends(send_date_time, my_country)
-        utc = pytz.UTC
-        send_date_time = send_date_time.astimezone(utc)
-        if m.country == 'US' and my_country == 'US':
-            save_send_message(employee_id, m.id, 0, send_date_time)
-        elif m.country == 'CA' and my_country == 'CA':
-            save_send_message(employee_id, m.id, 0, send_date_time)
-        elif m.country == 'ALL':
-            if m.repeatable:
-                spin_out_repeats(employee_id, m.id, m.repeat_type, m.repeat_number, m.repeat_times, send_date_time)
-            else:
-                save_send_message(employee_id, m.id, 0, send_date_time)
-        else:
-            app.logger.info('No message to be sent, user country {} and message country {} for message {}'
-                            .format(my_country, m.country, m.id))
-
-
-def spin_out_repeats(employee_id, message_id, message_type, number, times, current_send_date):
-    for x in range(0, times):
-        save_send_message(employee_id, message_id, 0, current_send_date)
-        if message_type == 'week':
-            week_num = number * 7
-            date_increment = datetime.timedelta(days=week_num)
-            current_send_date = current_send_date + date_increment
-        elif message_type == 'month':
-            date_increment = relativedelta(months=+number)
-            current_send_date = current_send_date + date_increment
-        elif message_type == 'year':
-            date_increment = relativedelta(years=+number)
-            current_send_date = current_send_date + date_increment
-
-
-def adjust_send_date_for_holidays_and_weekends(send_date_time, country):
-    """"
-    Adjust date to non-holiday or weekend
-    :param send_date_time
-    :param country
-    :return send_date_teime
-    """
-    weekday = send_date_time.weekday()
-    if weekday > 4:
-        if weekday == 6:
-            send_date_time = send_date_time + datetime.timedelta(days=1)
-        else:
-            send_date_time = send_date_time + datetime.timedelta(days=2)
-        adjust_send_date_for_holidays_and_weekends(send_date_time, country)
-    if country == 'US':
-        if send_date_time in us_holidays:
-            send_date_time = send_date_time + datetime.timedelta(days=1)
-            adjust_send_date_for_holidays_and_weekends(send_date_time, country)
-    if country == 'CA':
-        if send_date_time in ca_holidays:
-            send_date_time = send_date_time + datetime.timedelta(days=1)
-            adjust_send_date_for_holidays_and_weekends(send_date_time, country)
-    return send_date_time
-
-
-def save_send_message(emp_id, message_id, send_order, send_dttm):
-    """
-    Save to Messages to Send table
-    :param emp_id:
-    :param message_id:
-    :param send_order:
-    :param send_dttm:
-    :return:
-    """
-    dnow = datetime.datetime.utcnow()
-    send_dttm = send_dttm.replace(tzinfo=None)
-    to_send = Send(emp_id=emp_id, message_id=message_id, send_dttm=send_dttm, send_order=send_order, send_status=False,
-                   cancel_status=False, last_updated=dnow, created_date=dnow)
-    db.session.add(to_send)
-    db.session.commit()
 
 
 def verify_slack_token(request_token):
@@ -336,15 +132,6 @@ def search(dict_list, key, value):
     for item in dict_list:
         if item[key] == value:
             return item
-
-
-def searchemail(dict_list, key, value):
-    for item in dict_list:
-        try:
-            if item['profile'][key] == value:
-                return item
-        except:
-            pass
 
 
 def slack_call_api(call_type, channel, ts, text, attachments):
@@ -1252,5 +1039,3 @@ def send_slack_message():
             return render_template('senddm.html', form=form, users=users, user=user, admin=admin)
     else:
         return render_template('senddm.html', form=form, users=users, user=user, admin=admin)
-
-
