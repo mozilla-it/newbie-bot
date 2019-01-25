@@ -1,6 +1,6 @@
 import datetime
 
-from newbie import db
+from newb import db
 
 
 class Admin(db.Model):

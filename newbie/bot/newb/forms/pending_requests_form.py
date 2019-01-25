@@ -1,5 +1,5 @@
 from wtforms import Form, StringField, RadioField, HiddenField, validators, SelectField
-from newbie import admin_team_choices
+from newb import admin_team_choices
 
 
 class PendingRequestsForm(Form):

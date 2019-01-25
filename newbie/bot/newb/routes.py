@@ -1,31 +1,31 @@
-from newbie.database.people import People
-from newbie.database.messages import Messages
-from newbie.database.messages_to_send import MessagesToSend as Send
-from newbie.database.admin import Admin
-from newbie.database.admin_roles import AdminRoles
-from newbie.database.user_feedback import UserFeedback
-from newbie.database.auth_groups import AuthGroups
-from newbie import db
+from newb.database.people import People
+from newb.database.messages import Messages
+from newb.database.messages_to_send import MessagesToSend as Send
+from newb.database.admin import Admin
+from newb.database.admin_roles import AdminRoles
+from newb.database.user_feedback import UserFeedback
+from newb.database.auth_groups import AuthGroups
+from newb import db
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
 from werkzeug.exceptions import NotFound
 
 # form imports
-from newbie.forms.slack_direct_message import SlackDirectMessage
-from newbie.forms.add_employee_form import AddEmployeeForm
-from newbie.forms.add_message_form import AddMessageForm
-from newbie.forms.add_admin_role_form import AddAdminRoleForm
-from newbie.forms.add_admin_form import AddAdminForm
-from newbie.forms.add_admin_request import AddAdminRequest
-from newbie.forms.pending_requests_form import PendingRequestsForm
+from newb.forms.slack_direct_message import SlackDirectMessage
+from newb.forms.add_employee_form import AddEmployeeForm
+from newb.forms.add_message_form import AddMessageForm
+from newb.forms.add_admin_role_form import AddAdminRoleForm
+from newb.forms.add_admin_form import AddAdminForm
+from newb.forms.add_admin_request import AddAdminRequest
+from newb.forms.pending_requests_form import PendingRequestsForm
 # end form imports
 
 
-from newbie import app, session, redirect, current_host, wraps, slack_client, \
+from newb import app, session, redirect, current_host, wraps, slack_client, \
     client_id, client_secret, client_uri, us_holidays, ca_holidays, \
-    make_response, slack_verification_token, render_template, auth0, logger, request, \
-    Response, url_for, all_timezones, flash, admin_team_choices, location_choices, country_choices, employee_type_choices
-from newbie.nltk_processing import NltkProcess, get_tag_suggestions, filter_stopwords
+    make_response, slack_verification_token, render_template, auth0, request, \
+    Response, url_for, all_timezones, flash, admin_team_choices
+from newb.nltk_processing import NltkProcess, get_tag_suggestions, filter_stopwords
 from profanity_check import predict_prob
 import json
 import datetime
@@ -33,7 +33,6 @@ import pytz
 from dateutil.relativedelta import relativedelta
 
 import re
-import random
 from authzero import AuthZero
 
 def get_user_admin():

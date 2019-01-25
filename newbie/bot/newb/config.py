@@ -1,5 +1,5 @@
 """Configuration loader for different environments."""
-from newbie import get_config
+from newb import get_config
 
 CONFIG = get_config.get_config()
 

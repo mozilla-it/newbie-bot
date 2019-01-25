@@ -1,6 +1,6 @@
-from newbie import app, scheduler
+from newb import app, scheduler
 import atexit
-from newbie.routes import send_newhire_messages, get_auth_zero, updates_from_slack
+from newb.routes import send_newhire_messages, get_auth_zero, updates_from_slack
 
 
 @atexit.register
