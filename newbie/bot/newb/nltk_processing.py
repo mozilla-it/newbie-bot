@@ -5,8 +5,12 @@ from nltk.tokenize import word_tokenize
 
 wn.ensure_loaded()
 
-nltk.download("stopwords", download_dir='/usr/src/app/nltk_data')
-nltk.download("wordnet", download_dir='/usr/src/app/nltk_data')
+try:
+    nltk.download("stopwords", download_dir='/usr/src/app/nltk_data')
+    nltk.download("wordnet", download_dir='/usr/src/app/nltk_data')
+except FileNotFoundError:
+    nltk.download("stopwords")
+    nltk.download("wordnet")
 cachedStopWords = stopwords.words("english")
 
 
@@ -15,7 +19,8 @@ class NltkProcess:
         nltk.download("stopwords", download_dir='/usr/src/app/nltk_data')
         nltk.download("wordnet", download_dir='/usr/src/app/nltk_data')
 
-    def get_stop_words(self):
+    @staticmethod
+    def get_stop_words():
         nltk.download("stopwords", download_dir='/usr/src/app/nltk_data')
         stopwords.words('english')
 

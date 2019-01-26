@@ -944,7 +944,7 @@ def admin_role():
 def delete_role(role_id):
     """
     Delete employee from database
-    :param role_name:
+    :param role_id:
     :return:
     """
     role = AdminRoles.query.get_or_404(role_id)

@@ -10,7 +10,8 @@ class Config(object):
         self.environment = CONFIG('environment', default='development')
         self.settings = self._init_env()
 
-    def _init_env(self):
+    @staticmethod
+    def _init_env():
         return DefaultConfig()
 
 
