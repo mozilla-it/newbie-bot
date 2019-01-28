@@ -15,7 +15,7 @@ ENV APP_GID=1000
 ENV APP_USER=slack
 ENV APP_PORT=8080
 ENV APP_WORKERS=2
-ENV APP_MODULE=main:app
+ENV APP_MODULE=newb:app
 ENV APP_SRCTAR=.src.tar.gz
 
 RUN mkdir -p /usr/local/share/nltk_data \
