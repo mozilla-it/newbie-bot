@@ -1,13 +1,41 @@
-FROM itsre/slack-py:3.6-onbuild
+FROM python:3.6
+
+# lifted straight from https://github.com/docker-library/python/blob/7eca63adca38729424a9bab957f006f5caad870f/3.6/onbuild/Dockerfile
+WORKDIR /usr/src/app/
+RUN mkdir -p /usr/src/app/
+RUN mkdir /usr/local/share/nltk_data
+RUN mkdir /usr/local/share/nltk_data/chunkers
+RUN mkdir /usr/local/share/nltk_data/corpora
+RUN mkdir /usr/local/share/nltk_data/taggers
+RUN mkdir /usr/local/share/nltk_data/tokenizers
+RUN pip install nltk && \
+    python -c "import nltk; nltk.download(['punkt', 'wordnet', 'stopwords'], download_dir='/usr/local/share/nltk_data')"
+
+
+# build args with defaults
+ENV APP_UID=1000
+ENV APP_GID=1000
+ENV APP_USER=slack
+ENV APP_PORT=8080
+ENV APP_WORKERS=2
+ENV APP_MODULE=main:app
+ENV APP_SRCTAR=.src.tar.gz
 
 COPY . /usr/src/app/
+RUN pip install --no-cache-dir -r requirements.txt
 
-ONBUILD RUN pip install nltk
-ONBUILD RUN python -m nltk.downloader punkt -d /usr/local/share/nltk_data all
-RUN [ "python", "-c", "import nltk; nltk.data.path.append('/usr/local/share/nltk_data')"]
-RUN [ "python", "-c", "import nltk; nltk.data.path.remove('/home/slack/nltk_data')"]
-RUN [ "python", "-c", "import nltk; nltk.download('wordnet', download_dir='/usr/src/app/nltk_data')" ]
-RUN [ "python", "-c", "import nltk; nltk.download('stopwords', download_dir='/usr/src/app/nltk_data')" ]
+# add non-priviledged user
+RUN groupadd --gid $APP_GID $APP_USER && \
+    adduser --uid $APP_UID --disabled-password --gecos '' --ingroup $APP_USER --no-create-home $APP_USER
+
+# change user
+RUN chown $APP_USER:$APP_USER -R .
+USER $APP_USER
+
+
+
+
+
 
 EXPOSE 5000
 
