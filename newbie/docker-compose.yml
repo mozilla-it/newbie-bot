@@ -1,0 +1,50 @@
+version: '3.3'
+services:
+  db:
+    build:
+      context: ./db
+      labels:
+        APP_PROJNAME: ${APP_PROJNAME}
+        APP_VERSION: ${APP_VERSION}
+        APP_BRANCH: ${APP_BRANCH}
+        APP_REVISION: ${APP_REVISION}
+    image: itcw/${APP_PROJNAME}_db:${APP_VERSION:-latest}
+    restart: always
+    ports:
+    - 5432:5432
+    environment:
+      APP_VERSION: ${APP_VERSION}
+      APP_BRANCH: ${APP_BRANCH}
+      APP_REVISION: ${APP_REVISION}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+    - database_data:/var/lib/postgresql/data
+  bot:
+    build:
+      context: ./bot
+      labels:
+        APP_PROJNAME: ${APP_PROJNAME}
+        APP_VERSION: ${APP_VERSION}
+        APP_BRANCH: ${APP_BRANCH}
+        APP_REVISION: ${APP_REVISION}
+    image: itcw/${APP_PROJNAME}_bot:${APP_VERSION:-latest}
+    expose:
+    - 8080
+    ports:
+    - 8080:8080
+    links:
+    - db
+    environment:
+      APP_VERSION: ${APP_VERSION}
+      APP_BRANCH: ${APP_BRANCH}
+      APP_REVISION: ${APP_REVISION}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+    - ${APP_PROJPATH}/bot/.env:/usr/src/app/.env
+volumes:
+  database_data:
+    driver: local

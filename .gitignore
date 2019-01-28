@@ -1,5 +1,3 @@
-# Created by .ignore support plugin (hsz.mobi)
-### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -105,6 +103,18 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# pycharm
 .idea/
 
+# cert files
 *.pem
+
+# pydoit
+.doit.db
+
+# env files
+git.env
+env-file
+
+# ignore the source tarball
+.src.tar.gz
