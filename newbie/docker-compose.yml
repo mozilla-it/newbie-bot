@@ -13,12 +13,10 @@ services:
     ports:
     - 5432:5432
     environment:
+      APP_PROJNAME: ${APP_PROJNAME}
       APP_VERSION: ${APP_VERSION}
       APP_BRANCH: ${APP_BRANCH}
       APP_REVISION: ${APP_REVISION}
-      POSTGRES_DB: ${POSTGRES_DB:-postgres}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
     - database_data:/var/lib/postgresql/data
   bot:
@@ -37,12 +35,10 @@ services:
     links:
     - db
     environment:
+      APP_PROJNAME: ${APP_PROJNAME}
       APP_VERSION: ${APP_VERSION}
       APP_BRANCH: ${APP_BRANCH}
       APP_REVISION: ${APP_REVISION}
-      POSTGRES_DB: ${POSTGRES_DB:-postgres}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
     - ${APP_PROJPATH}/bot/.env:/usr/src/app/.env
 volumes:
