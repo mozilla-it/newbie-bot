@@ -298,7 +298,8 @@ def task_tar():
         f'--exclude={CFG.APP_SRCTAR}',
         '--exclude=__pycache__',
         '--exclude=*.pyc',
-        '--exclude-vcs',
+        '--exclude=.env',
+        '--exclude=.git',
     ])
     for svc in SVCS:
         ## it is important to not that this is required to keep the tarballs from
