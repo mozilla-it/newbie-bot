@@ -407,7 +407,7 @@ def task_stop():
 
 def task_rmtagged():
     '''
-    remove all tagged images matching: itcw/{CFG.PROJNAME}_
+    remove all tagged images matching: itcw/{CFG.APP_PROJNAME}_
     '''
     awk = """awk '{print $1 ":" $2}'"""
     query = f'$(docker images | grep itcw/{CFG.APP_PROJNAME}_ | {awk})'
