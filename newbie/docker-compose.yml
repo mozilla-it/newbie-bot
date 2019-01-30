@@ -13,6 +13,7 @@ services:
     ports:
     - 5433:5432
     environment:
+      APP_PROJNAME: ${APP_PROJNAME}
       APP_VERSION: ${APP_VERSION}
       APP_BRANCH: ${APP_BRANCH}
       APP_REVISION: ${APP_REVISION}
@@ -37,6 +38,7 @@ services:
     links:
     - db
     environment:
+      APP_PROJNAME: ${APP_PROJNAME}
       APP_VERSION: ${APP_VERSION}
       APP_BRANCH: ${APP_BRANCH}
       APP_REVISION: ${APP_REVISION}

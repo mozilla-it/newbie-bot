@@ -13,7 +13,7 @@ bson==0.5.7
 certifi==2018.8.24
 cffi==1.11.5
 chardet==3.0.4
-Click==7.0
+#Click==7.0
 cloudpickle==0.7.0
 configobj==5.0.6
 constants==0.6.0
@@ -61,7 +61,7 @@ pycryptodome==3.7.0
 pycryptodomex==3.6.6
 pyjwkest==1.4.0
 pyOpenSSL==18.0.0
-pytest==3.8.2
+#pytest==3.8.2
 python-crontab==2.3.5
 python-dateutil==2.7.3
 python-decouple==3.1
