@@ -17,9 +17,6 @@ services:
       APP_VERSION: ${APP_VERSION}
       APP_BRANCH: ${APP_BRANCH}
       APP_REVISION: ${APP_REVISION}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
     - database_data:/var/lib/postgresql/data
   bot:
@@ -32,9 +29,9 @@ services:
         APP_REVISION: ${APP_REVISION}
     image: itcw/${APP_PROJNAME}_bot:${APP_VERSION:-latest}
     expose:
-    - 8000
+    - 8080
     ports:
-    - 8000:5000
+    - 8080:8080
     links:
     - db
     environment:
@@ -42,9 +39,6 @@ services:
       APP_VERSION: ${APP_VERSION}
       APP_BRANCH: ${APP_BRANCH}
       APP_REVISION: ${APP_REVISION}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
     - ${APP_PROJPATH}/bot/.env:/usr/src/app/.env
 volumes:
