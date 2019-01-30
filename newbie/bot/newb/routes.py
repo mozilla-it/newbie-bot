@@ -503,6 +503,44 @@ def get_user_info():
     return user
 
 
+SCRIPT_FILE = os.path.abspath(__file__)
+SCRIPT_NAME = os.path.basename(SCRIPT_FILE)
+SCRIPT_PATH = os.path.dirname(SCRIPT_FILE)
+CONTRIBUTE_JSON = yaml.safe_load(open(f'{SCRIPT_PATH}/contribute.json'))
+
+
+def jsonify(status=200, indent=4, sort_keys=True, **kwargs):
+    '''
+    jsonify
+    '''
+    response = make_response(dumps(dict(**kwargs), indent=indent, sort_keys=sort_keys)+'\n')
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    response.headers['mimetype'] = 'application/json'
+    response.status_code = status
+    return response
+
+
+@app.route('/version', methods=['GET'])
+def version():
+    '''
+    version route
+    '''
+    return f'{CFG.APP_VERSION}\n', 200
+
+
+@app.route('/contribute.json', methods=['GET'])
+def contribute_json():
+    '''
+    contribute.json route
+    '''
+    json = merge(CONTRIBUTE_JSON, dict(
+        repository=dict(
+            version=CFG.APP_VERSION,
+            revision=CFG.APP_REVISION)))
+    response = jsonify(**json), 200
+    return response
+
+
 @app.route('/profile', methods=['GET', 'POST'])
 @requires_auth
 def profile():
