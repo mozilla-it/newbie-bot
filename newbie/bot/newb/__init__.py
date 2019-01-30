@@ -24,18 +24,25 @@ scheduler = BackgroundScheduler()
 
 
 
-current_host = 'https://nhobot.ngrok.io'
+# current_host = 'https://nhobot.ngrok.io'
+current_host = None
 
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = settings.MONGODB_SECRET
-app.config['SQLALCHEMY_DATABASE_URI'] = settings.SQLALCHEMY_DATABASE_URI
+sdu = settings.SQLALCHEMY_DATABASE_URI + settings.SQLALCHEMY_DATABASE_USER + ':' + \
+      settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@' + settings.SQLALCHEMY_DATABASE_HOST + ':' + \
+      settings.SQLALCHEMY_DATABASE_PORT + '/' + settings.SQLALCHEMY_DATABASE_DB
+app.config['SQLALCHEMY_DATABASE_URI'] = settings.SQLALCHEMY_DATABASE_URI + settings.SQLALCHEMY_DATABASE_USER \
+                                        + ':' + settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@' + \
+                                        settings.SQLALCHEMY_DATABASE_HOST + ':' + settings.SQLALCHEMY_DATABASE_PORT \
+                                        + '/' + settings.SQLALCHEMY_DATABASE_DB
 cors(app)
-db = SQLAlchemy(app)
+db = SQLAlchemy()
+db.init_app(app)
 migrate = Migrate(app, db)
 
 client_id = settings.CLIENT_ID
 client_secret = settings.CLIENT_SECRET
-print(f'client secret {client_secret}')
 client_uri = settings.CLIENT_URI
 client_audience = settings.CLIENT_AUDIENCE
 
@@ -127,7 +134,8 @@ if AUTH_AUDIENCE is '':
 
 # This will be the callback URL Auth0 returns the authenticate to.
 # app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
-app.config['AUTH_URL'] = 'https://nhobot.ngrok.io/callback/auth'
+app.config['AUTH_URL'] = 'http://{}:{}/callback/auth'.format(app.config.get('HOST'), 8000)
+# app.config['AUTH_URL'] = 'https://nhobot.ngrok.io/callback/auth'
 
 
 oidc_config = config.OIDCConfig()

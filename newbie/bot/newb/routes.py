@@ -24,7 +24,7 @@ from newb.forms.pending_requests_form import PendingRequestsForm
 from newb import app, session, redirect, current_host, wraps, slack_client, \
     client_id, client_secret, client_uri, us_holidays, ca_holidays, \
     make_response, slack_verification_token, render_template, auth0, request, \
-    Response, url_for, all_timezones, flash, admin_team_choices
+    Response, url_for, all_timezones, flash, admin_team_choices, sdu
 from newb.nltk_processing import NltkProcess, get_tag_suggestions, filter_stopwords
 from profanity_check import predict_prob
 import json
@@ -537,12 +537,14 @@ def profile():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    print(f"auth url {app.config.get('AUTH_URL')}")
+    print(f"sqlalchemy database uri {sdu}")
     return auth0.authorize_redirect(redirect_uri=app.config.get('AUTH_URL'), audience=app.config.get('AUTH_AUDIENCE'))
 
 
 @app.route('/searchForTags/<string:text>', methods=['GET'])
 def search_for_tags(text):
-    NltkProcess.get_stop_words('stopwords')
+    NltkProcess.get_stop_words()
     choices = get_tag_suggestions(text)
     send_back = ''
     for c in choices:
@@ -566,7 +568,10 @@ def callback_handling():
         'name': userinfo['name'],
         'picture': userinfo['picture']
     }
-    return redirect(current_host)
+    if current_host:
+        print(f'callback current host {current_host}')
+        return redirect(current_host + '/')
+    return redirect(url_for('index'))
 
 
 @app.route('/logout')

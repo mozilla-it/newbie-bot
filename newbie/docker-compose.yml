@@ -11,14 +11,14 @@ services:
     image: itcw/${APP_PROJNAME}_db:${APP_VERSION:-latest}
     restart: always
     ports:
-    - 5432:5432
+    - 5433:5432
     environment:
       APP_VERSION: ${APP_VERSION}
       APP_BRANCH: ${APP_BRANCH}
       APP_REVISION: ${APP_REVISION}
-      POSTGRES_DB: ${POSTGRES_DB:-postgres}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
     - database_data:/var/lib/postgresql/data
   bot:
@@ -31,18 +31,18 @@ services:
         APP_REVISION: ${APP_REVISION}
     image: itcw/${APP_PROJNAME}_bot:${APP_VERSION:-latest}
     expose:
-    - 8080
+    - 8000
     ports:
-    - 8080:8080
+    - 8000:5000
     links:
     - db
     environment:
       APP_VERSION: ${APP_VERSION}
       APP_BRANCH: ${APP_BRANCH}
       APP_REVISION: ${APP_REVISION}
-      POSTGRES_DB: ${POSTGRES_DB:-postgres}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
     - ${APP_PROJPATH}/bot/.env:/usr/src/app/.env
 volumes:

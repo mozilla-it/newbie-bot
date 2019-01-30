@@ -15,7 +15,7 @@ ENV APP_GID=1000
 ENV APP_USER=slack
 ENV APP_PORT=8080
 ENV APP_WORKERS=2
-ENV APP_MODULE=main:app
+ENV APP_MODULE=newb:app
 ENV APP_SRCTAR=.src.tar.gz
 
 RUN mkdir -p /usr/local/share/nltk_data \
@@ -28,6 +28,7 @@ RUN pip install nltk && \
     python -c "import nltk; nltk.download(['punkt', 'wordnet', 'stopwords'], download_dir='/usr/local/share/nltk_data')"
 
 # add bundled source code
+
 ADD $APP_SRCTAR /usr/src/app/
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -39,11 +40,5 @@ RUN groupadd --gid $APP_GID $APP_USER && \
 RUN chown $APP_USER:$APP_USER -R .
 USER $APP_USER
 
-
-
-
-
-
-EXPOSE 5000
 
 CMD sh -c "/usr/local/bin/gunicorn -w ${APP_WORKERS} -b :${APP_PORT} ${APP_MODULE}"
