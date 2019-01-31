@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, redirect, url_for, session, make_response, Response, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from sqlalchemy_utils import create_database, database_exists
 
 import slackclient
 
@@ -17,6 +18,7 @@ from functools import wraps
 from newb import auth, config, settings
 
 # endauth
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('newbie')
@@ -29,14 +31,14 @@ current_host = None
 
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = settings.MONGODB_SECRET
-sdu = settings.SQLALCHEMY_DATABASE_URI + settings.SQLALCHEMY_DATABASE_USER + ':' + \
-      settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@' + settings.SQLALCHEMY_DATABASE_HOST + ':' + \
-      settings.SQLALCHEMY_DATABASE_PORT + '/' + settings.SQLALCHEMY_DATABASE_DB
-app.config['SQLALCHEMY_DATABASE_URI'] = settings.SQLALCHEMY_DATABASE_URI + settings.SQLALCHEMY_DATABASE_USER \
-                                        + ':' + settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@' + \
-                                        settings.SQLALCHEMY_DATABASE_HOST + ':' + settings.SQLALCHEMY_DATABASE_PORT \
-                                        + '/' + settings.SQLALCHEMY_DATABASE_DB
+sdu = settings.SQLALCHEMY_DATABASE_URI + settings.SQLALCHEMY_DATABASE_USER \
+      + ':' + settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@' + 'newbie_db_1' \
+      + '/' + settings.SQLALCHEMY_DATABASE_DB
+app.config['SQLALCHEMY_DATABASE_URI'] = sdu
 cors(app)
+db_url = app.config["SQLALCHEMY_DATABASE_URI"]
+if not database_exists(db_url):
+    create_database(db_url)
 db = SQLAlchemy()
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -139,6 +141,7 @@ app.config['AUTH_URL'] = 'http://{}:{}/callback/auth'.format(app.config.get('HOS
 
 
 oidc_config = config.OIDCConfig()
+print(f'oidc config {oidc_config}')
 authentication = auth.OpenIDConnect(
     oidc_config
 )

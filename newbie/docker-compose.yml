@@ -10,6 +10,8 @@ services:
         APP_REVISION: ${APP_REVISION}
     image: itcw/${APP_PROJNAME}_db:${APP_VERSION:-latest}
     restart: always
+    networks:
+      - db-tunnel
     ports:
     - 5433:5432
     environment:
@@ -17,6 +19,9 @@ services:
       APP_VERSION: ${APP_VERSION}
       APP_BRANCH: ${APP_BRANCH}
       APP_REVISION: ${APP_REVISION}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
     - database_data:/var/lib/postgresql/data
   bot:
@@ -28,10 +33,14 @@ services:
         APP_BRANCH: ${APP_BRANCH}
         APP_REVISION: ${APP_REVISION}
     image: itcw/${APP_PROJNAME}_bot:${APP_VERSION:-latest}
+    networks:
+      - db-tunnel
     expose:
-    - 8080
+    - 5000
     ports:
-    - 8080:8080
+    - 8000:5000
+    depends_on:
+      - db
     links:
     - db
     environment:
@@ -39,8 +48,39 @@ services:
       APP_VERSION: ${APP_VERSION}
       APP_BRANCH: ${APP_BRANCH}
       APP_REVISION: ${APP_REVISION}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_PROJPATH: ${APP_PROJPATH}
+      DEVCLIENT_ID: ${DEVCLIENT_ID}
+      DEVCLIENT_SECRET: ${DEVCLIENT_SECRET}
+      DEVCLIENT_URI: ${DEVCLIENT_URI}
+      CLIENT_ID: ${CLIENT_ID}
+      CLIENT_SECRET: ${CLIENT_SECRET}
+      CLIENT_URI: ${CLIENT_URI}
+      DEV_CLIENT_AUDIENCE: ${DEV_CLIENT_AUDIENCE}
+      CLIENT_AUDIENCE: ${CLIENT_AUDIENCE}
+      CLIENT_GRANT_TYPE: ${CLIENT_GRANT_TYPE}
+      PROFILE_KEY: ${PROFILE_KEY}
+      JWT_PAYLOAD: ${JWT_PAYLOAD}
+      AUTH0_CALLBACK_URL: ${AUTH0_CALLBACK_URL}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      SLACK_VERIFICATION_TOKEN: ${SLACK_VERIFICATION_TOKEN}
+      MONGODB_SECRET: ${MONGODB_SECRET}
+      AUTH0_DOMAIN: ${AUTH0_DOMAIN}
+      AUTH_ID: ${AUTH_ID}
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_HOST: ${AUTH_HOST}
+      AUTH_SECRET_KEY: ${AUTH_SECRET_KEY}
+      AUTH_AUDIENCE: ${AUTH_AUDIENCE}
+      AUTH_ISSUER: ${AUTH_ISSUER}
+      APP_MODULE: ${APP_MODULE}
+      SQLALCHEMY_DATABASE_HOST: ${SQLALCHEMY_DATABASE_HOST}
+      SQLALCHEMY_DATABASE_PORT: ${SQLALCHEMY_DATABASE_PORT}
     volumes:
-    - ${APP_PROJPATH}/bot/.env:/usr/src/app/.env
+    - ./${APP_PROJPATH}/bot/.env:/usr/src/app/.env
+networks:
+  db-tunnel:
 volumes:
   database_data:
     driver: local
