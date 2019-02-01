@@ -233,7 +233,7 @@ class AutoConfigPlus(AutoConfig): #pylint: disable=too-many-public-methods
         '''
         reponame
         '''
-        pattern = r'(ssh|https)://([A-Za-z0-9\-_]+@)?github.com/(?P<reponame>[A-Za-z0-9\/\-_]+)(.git)?'
+        pattern = r'((ssh|https)://)?(git@)?github.com[:/](?P<reponame>[A-Za-z0-9\/\-_]+)(.git)?'
         match = re.search(pattern, self.APP_REMOTE_ORIGIN_URL)
         return match.group('reponame')
 
