@@ -18,7 +18,7 @@ from functools import wraps
 from newb import auth, config, settings
 
 # endauth
-import os
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('newbie')
@@ -35,6 +35,9 @@ sdu = settings.SQLALCHEMY_DATABASE_URI + settings.SQLALCHEMY_DATABASE_USER \
       + ':' + settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@' + 'newbie_db_1' \
       + '/' + settings.SQLALCHEMY_DATABASE_DB
 app.config['SQLALCHEMY_DATABASE_URI'] = sdu
+app.debug = False
+app.use_reloader = False
+app.jinja_env.cache = {}
 cors(app)
 db_url = app.config["SQLALCHEMY_DATABASE_URI"]
 if not database_exists(db_url):
@@ -147,5 +150,3 @@ authentication = auth.OpenIDConnect(
 )
 oidc = authentication.auth(app)
 # endauth
-
-admin_people = []

@@ -41,4 +41,4 @@ RUN chown $APP_USER:$APP_USER -R .
 USER $APP_USER
 
 
-CMD sh -c "/usr/local/bin/gunicorn -w ${APP_WORKERS} -b :${APP_PORT} ${APP_MODULE}"
+ENTRYPOINT ["./boot.sh"]
