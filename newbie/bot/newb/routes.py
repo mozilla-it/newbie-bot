@@ -9,6 +9,8 @@ from newb import db
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
 from werkzeug.exceptions import NotFound
+from flask_uploads import UploadSet, configure_uploads, DATA
+import os
 
 # form imports
 from newb.forms.slack_direct_message import SlackDirectMessage
@@ -34,6 +36,11 @@ from dateutil.relativedelta import relativedelta
 
 import re
 from authzero import AuthZero
+ALLOWED_EXTENSIONS = set(['txt'])
+UPLOAD_FOLDER = '/tmp/'
+app.config['UPLOADS_DEFAULT_DEST'] = UPLOAD_FOLDER
+csvs = UploadSet('csvs', DATA)
+configure_uploads(app, csvs)
 
 def get_user_admin():
     try:
@@ -895,6 +902,22 @@ def delete_employee(emp_id):
         if current_host:
             return redirect(current_host + '/employees')
         return redirect(url_for('add_new_employee'))
+
+
+@app.route('/messages_uploader', methods=['GET', 'POST'])
+@requires_super
+def messages_uploader():
+    with app.app_context():
+        # if request.method == 'POST' and 'csvfile' in request.files:
+        #     app.logger.info(f'messages uploader POST')
+        #     filename = csvs.save(request.files['csvfile'])
+        #     f = open(r'/tmp/csvs/' + filename, 'r')
+        #     cursor = db.session.connection().connection.cursor()
+        #     cursor.copy_from(f, 'messages', sep=',')
+        #     f.close()
+        #     flash(f'Successfully loaded {filename}', 'success')
+        #     return redirect(url_for('admin_page'))
+        return render_template('message_upload.html')
 
 
 @app.route('/admin', methods=['GET', 'POST'])

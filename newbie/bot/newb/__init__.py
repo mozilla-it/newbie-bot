@@ -26,15 +26,17 @@ scheduler = BackgroundScheduler()
 
 
 
+
 # current_host = 'https://nhobot.ngrok.io'
 current_host = None
 
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = settings.MONGODB_SECRET
 sdu = settings.SQLALCHEMY_DATABASE_URI + settings.SQLALCHEMY_DATABASE_USER \
-      + ':' + settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@' + 'newbie_db_1' \
+      + ':' + settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@' + settings.APP_CONTAINER_NAME \
       + '/' + settings.SQLALCHEMY_DATABASE_DB
 app.config['SQLALCHEMY_DATABASE_URI'] = sdu
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/newbie'
 app.debug = False
 app.use_reloader = False
 app.jinja_env.cache = {}

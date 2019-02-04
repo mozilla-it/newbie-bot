@@ -14,6 +14,9 @@
               <label class="btn btn-secondary" id="pending_toggle">
                 <input type="radio" name="options" id="option3" autocomplete="off"> Pending Requests
               </label>
+{#                <label class="btn btn-secondary" id="messages_toggle">#}
+{#                    <input type="radio" name="options" id="option4" autocomplete="off"> Messages Upload#}
+{#                </label>#}
             </div>
         </div>
 
@@ -27,6 +30,9 @@
             <div class="col mx-auto collapse" id="pending_view">
                 {% include 'admin_pending_requests.html' %}
             </div>
+{#            <div class="col mx-auto collapse" id="messages_view">#}
+{#                {% include 'message_upload.html' %}#}
+{#            </div>#}
         </div>
     </div>
     <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>

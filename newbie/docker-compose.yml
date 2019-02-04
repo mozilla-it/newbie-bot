@@ -22,6 +22,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
     volumes:
     - database_data:/var/lib/postgresql/data
   bot:
@@ -77,6 +78,7 @@ services:
       APP_MODULE: ${APP_MODULE}
       SQLALCHEMY_DATABASE_HOST: ${SQLALCHEMY_DATABASE_HOST}
       SQLALCHEMY_DATABASE_PORT: ${SQLALCHEMY_DATABASE_PORT}
+      APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
     volumes:
     - ./${APP_PROJPATH}/bot/.env:/usr/src/app/.env
 networks:
