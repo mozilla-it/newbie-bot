@@ -35,8 +35,8 @@ app.secret_key = settings.MONGODB_SECRET
 sdu = settings.SQLALCHEMY_DATABASE_URI + settings.SQLALCHEMY_DATABASE_USER \
       + ':' + settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@' + settings.APP_CONTAINER_NAME \
       + '/' + settings.SQLALCHEMY_DATABASE_DB
-# app.config['SQLALCHEMY_DATABASE_URI'] = sdu
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/newbie'
+app.config['SQLALCHEMY_DATABASE_URI'] = sdu
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/newbie'
 app.debug = False
 app.use_reloader = False
 app.jinja_env.cache = {}
