@@ -31,7 +31,8 @@ class OpenIDConnect(object):
 
         )
 
-    def auth(self, app):
+    @staticmethod
+    def auth(app):
         o = OIDCAuthentication(
             app
         )
@@ -46,6 +47,7 @@ class nullOpenIDConnect(OpenIDConnect):
 
     def __init__(self, configuration):
         """None based versions of OIDC Object."""
+        super().__init__(configuration)
         self.oidc_config = None
 
     def client_info(self):
@@ -89,7 +91,8 @@ class tokenVerification(object):
     def redirect_uri(self):
         return self.jws_data.get('redirect_uri', 'https://sso.mozilla.com')
 
-    def _get_connection_name(self, connection):
+    @staticmethod
+    def _get_connection_name(connection):
         CONNECTION_NAMES = {
             'google-oauth2': 'Google',
             'github': 'GitHub',

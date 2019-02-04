@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, redirect, url_for, session, make_response, Response, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from sqlalchemy_utils import create_database, database_exists
 
 import slackclient
 
@@ -8,34 +9,97 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 import holidays
 
+import logging.config
 # auth
 from flask_cors import CORS as cors
 from flask_environ import get, collect, word_for_true
 from authlib.flask.client import OAuth
+from functools import wraps
 from newb import auth, config, settings
 
 # endauth
 
-import logging.config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('newbie')
 scheduler = BackgroundScheduler()
 
-current_host = 'https://nhobot.ngrok.io'
+
+
+
+# current_host = 'https://nhobot.ngrok.io'
+current_host = None
 
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = settings.MONGODB_SECRET
-app.config['SQLALCHEMY_DATABASE_URI'] = settings.SQLALCHEMY_DATABASE_URI
+sdu = settings.SQLALCHEMY_DATABASE_URI + settings.SQLALCHEMY_DATABASE_USER \
+      + ':' + settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@' + settings.APP_CONTAINER_NAME \
+      + '/' + settings.SQLALCHEMY_DATABASE_DB
+# app.config['SQLALCHEMY_DATABASE_URI'] = sdu
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/newbie'
+app.debug = False
+app.use_reloader = False
+app.jinja_env.cache = {}
 cors(app)
-db = SQLAlchemy(app)
+db_url = app.config["SQLALCHEMY_DATABASE_URI"]
+if not database_exists(db_url):
+    create_database(db_url)
+db = SQLAlchemy()
+db.init_app(app)
 migrate = Migrate(app, db)
 
 client_id = settings.CLIENT_ID
 client_secret = settings.CLIENT_SECRET
-print(f'client secret {client_secret}')
 client_uri = settings.CLIENT_URI
 client_audience = settings.CLIENT_AUDIENCE
+
+admin_team_choices = [
+    ('IT: InfoSec', 'IT: InfoSec'),
+    ('IT: Service Desk', 'IT: Service Desk'),
+    ('People: Benefits', 'People: Benefits'),
+    ('People: Onboarding', 'People: Onboarding'),
+    ('People: Diversity and Inclusion', 'People: Diversity and Inclusion'),
+    ('WPR', 'WPR')]
+
+location_choices = [
+    ('All', 'All'),
+    ('Remote Workers', 'Remote Workers'),
+    ('Berlin', 'Berlin'),
+    ('London', 'London'),
+    ('Mountain View', 'Mountain View'),
+    ('Paris', 'Paris'),
+    ('Portland', 'Portland'),
+    ('San Francisco', 'San Francisco'),
+    ('Toronto', 'Toronto'),
+    ('Vancouver', 'Vancouver'),
+    ('Taipei', 'Taipei'),
+    ('Tokyo', 'Tokyo')
+]
+
+country_choices = [
+    ('All', 'All'),
+    ('AU', 'Australia'),
+    ('BE', 'Belgium'),
+    ('CA', 'Canada'),
+    ('DK', 'Denmark'),
+    ('FI', 'Finland'),
+    ('FR', 'France'),
+    ('DE', 'Germany'),
+    ('NL', 'Netherlands'),
+    ('NZ', 'New Zealand'),
+    ('PL', 'Poland'),
+    ('ES', 'Spain'),
+    ('SE', 'Sweden'),
+    ('UK', 'United Kingdom'),
+    ('US', 'United States')
+]
+
+employee_type_choices = [
+    ('All', 'All'),
+    ('Full-time Employee', 'Full-time Employee'),
+    ('Contingent', 'Contingent'),
+    ('Intern', 'Intern')
+]
 
 slack_verification_token = settings.SLACK_VERIFICATION_TOKEN
 
@@ -77,10 +141,12 @@ if AUTH_AUDIENCE is '':
 
 # This will be the callback URL Auth0 returns the authenticate to.
 # app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
-app.config['AUTH_URL'] = 'https://nhobot.ngrok.io/callback/auth'
+app.config['AUTH_URL'] = 'http://{}:{}/callback/auth'.format(app.config.get('HOST'), 8000)
+# app.config['AUTH_URL'] = 'https://nhobot.ngrok.io/callback/auth'
 
 
 oidc_config = config.OIDCConfig()
+print(f'oidc config {oidc_config}')
 authentication = auth.OpenIDConnect(
     oidc_config
 )
