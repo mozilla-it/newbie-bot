@@ -33,14 +33,15 @@ current_host = None
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = settings.MONGODB_SECRET
 sdu = settings.SQLALCHEMY_DATABASE_URI + settings.SQLALCHEMY_DATABASE_USER \
-      + ':' + settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@' + settings.APP_CONTAINER_NAME \
-      + '/' + settings.SQLALCHEMY_DATABASE_DB
+      + ':' + settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@newbie_db' + '/' \
+      + settings.SQLALCHEMY_DATABASE_DB
 app.config['SQLALCHEMY_DATABASE_URI'] = sdu
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/newbie'
-app.debug = False
+app.debug = True
 app.use_reloader = False
 app.jinja_env.cache = {}
 cors(app)
+app.logger.info(f'SQLALCHEMY_DATABASE_URI {app.config["SQLALCHEMY_DATABASE_URI"]}')
 db_url = app.config["SQLALCHEMY_DATABASE_URI"]
 if not database_exists(db_url):
     create_database(db_url)
