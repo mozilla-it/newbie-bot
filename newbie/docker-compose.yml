@@ -8,6 +8,7 @@ services:
         APP_VERSION: ${APP_VERSION}
         APP_BRANCH: ${APP_BRANCH}
         APP_REVISION: ${APP_REVISION}
+        APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
     image: itcw/${APP_PROJNAME}_db:${APP_VERSION:-latest}
     restart: always
     networks:
@@ -19,6 +20,8 @@ services:
       APP_VERSION: ${APP_VERSION}
       APP_BRANCH: ${APP_BRANCH}
       APP_REVISION: ${APP_REVISION}
+      APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
+
     volumes:
     - database_data:/var/lib/postgresql/data
   bot:
@@ -29,6 +32,7 @@ services:
         APP_VERSION: ${APP_VERSION}
         APP_BRANCH: ${APP_BRANCH}
         APP_REVISION: ${APP_REVISION}
+        APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
     image: itcw/${APP_PROJNAME}_bot:${APP_VERSION:-latest}
     networks:
       - db-tunnel
@@ -45,6 +49,7 @@ services:
       APP_VERSION: ${APP_VERSION}
       APP_BRANCH: ${APP_BRANCH}
       APP_REVISION: ${APP_REVISION}
+      APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
     volumes:
     - ${APP_PROJPATH}/bot/.env:/usr/src/app/.env
 networks:
