@@ -80,7 +80,7 @@ services:
       SQLALCHEMY_DATABASE_PORT: ${SQLALCHEMY_DATABASE_PORT}
       APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
     volumes:
-    - ./${APP_PROJPATH}/bot/.env:/usr/src/app/.env
+    - ${APP_PROJPATH}/bot/.env:/usr/src/app/.env
 networks:
   db-tunnel:
 volumes:

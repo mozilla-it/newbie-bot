@@ -17,6 +17,8 @@ ENV APP_PORT=5000
 ENV APP_WORKERS=2
 ENV APP_MODULE=newb:app
 ENV APP_SRCTAR=.src.tar.gz
+ENV PYTHONPATH=/
+ENV PYTHONPATH=/usr/src/app/
 
 RUN mkdir -p /usr/local/share/nltk_data \
     /usr/local/share/nltk_data/chunkers \
@@ -41,4 +43,4 @@ RUN chown $APP_USER:$APP_USER -R .
 USER $APP_USER
 
 
-ENTRYPOINT ["./boot.sh"]
+CMD sh -c "/usr/local/bin/gunicorn -w ${APP_WORKERS} -b :${APP_PORT} ${APP_MODULE}"

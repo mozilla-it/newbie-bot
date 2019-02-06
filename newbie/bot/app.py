@@ -21,7 +21,6 @@ def start_schedule():
             scheduler.add_job(func=get_auth_zero, trigger='cron', hour='*', minute=0)
             scheduler.add_job(func=updates_from_slack, trigger='cron', hour=1, minute=6)
 
-print(f'app py called')
 start_schedule()
 
 

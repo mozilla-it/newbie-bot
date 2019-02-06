@@ -146,7 +146,6 @@ app.config['AUTH_URL'] = 'http://{}:{}/callback/auth'.format(app.config.get('HOS
 
 
 oidc_config = config.OIDCConfig()
-print(f'oidc config {oidc_config}')
 authentication = auth.OpenIDConnect(
     oidc_config
 )

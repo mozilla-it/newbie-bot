@@ -45,7 +45,6 @@ configure_uploads(app, csvs)
 def get_user_admin():
     try:
         userid = session.get('profile')['user_id']
-        print(f'userid {userid}')
         return Admin.query.filter_by(emp_id=userid).first()
     except:
         return None
@@ -67,9 +66,7 @@ def requires_super(f):
         if 'profile' not in session:
             return redirect(current_host)
         userid = session.get('profile')['user_id']
-        print(f'super userid {userid}')
         admin = Admin.query.filter_by(emp_id=userid).first()
-        print(f'super admin {admin}')
         if admin is None or admin.super_admin is not True:
             return redirect(current_host)
         return f(*args, **kwargs)
@@ -79,26 +76,17 @@ def requires_super(f):
 def requires_admin(f):
     @wraps(f)
     def decorated_admin(*args, **kwargs):
-        print(f'args {args}')
-        print(f'kwargs {kwargs}')
         if session is None:
             return redirect(current_host)
         elif 'profile' not in session:
             return redirect(current_host)
         userid = session.get('profile')['user_id']
-        print(f'requires admin {userid}')
         admin = Admin.query.filter_by(emp_id=userid).first()
-        try:
-            print(f'Admin {admin.emp_id}')
-            print(f'Super {admin.super_admin}')
-        except AttributeError:
-            pass
         if admin is None:
             return redirect(current_host)
         elif admin.super_admin:
             return f(*args, **kwargs)
         elif admin is None or 'Admin' not in admin.roles:
-            print('not admin')
             return redirect(current_host)
         return f(*args, **kwargs)
     return decorated_admin
@@ -110,14 +98,12 @@ def requires_manager(f):
         if 'profile' not in session:
             return redirect(current_host)
         userid = session.get('profile')['user_id']
-        print(f'requires manager {userid}')
         admin = Admin.query.filter_by(emp_id=userid).first()
         if admin is None:
             return redirect(current_host)
         elif admin.super_admin:
             return f(*args, **kwargs)
         elif admin is None or 'Manager' not in admin.roles:
-            print('not manager')
             return redirect(current_host)
         return f(*args, **kwargs)
     return decorated_manager

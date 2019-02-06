@@ -49,7 +49,6 @@ josepy==1.1.0
 Mako==1.0.7
 markdown2==2.3.7
 MarkupSafe==1.0
-mongoengine==0.15.3
 more-itertools==4.3.0
 multidict==4.5.2
 Naked==0.1.31
