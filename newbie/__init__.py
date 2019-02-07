@@ -22,8 +22,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('newbie')
 scheduler = BackgroundScheduler()
 
-
-
 current_host = 'https://nhobot.ngrok.io'
 
 app = Flask(__name__, static_url_path='/static')

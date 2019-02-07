@@ -37,6 +37,8 @@ import random
 from authzero import AuthZero
 import os
 
+current_send_date_time = None
+
 def get_user_admin():
     try:
         userid = session.get('profile')['user_id']
@@ -146,7 +148,7 @@ def get_auth_zero():
                     auth = AuthGroups(groups=group)
                     db.session.add(auth)
                     db.session.commit()
-                if 'manager' in group:
+                if 'manager' in group and group != 'hris_nonmanagers':
                     admin = Admin.query.filter_by(emp_id=user['user_id']).first()
                     if not admin:
                         new_admin = Admin(emp_id=user['user_id'], name=user['name'], roles=['Manager'])
@@ -181,8 +183,6 @@ def get_auth_zero():
                 except IntegrityError as error:
                     print('DuplicateKeyError {}'.format(error))
                     db.session.rollback()
-    if office_group:
-        os.system('say "I found an office group"')
 
 
 def updates_from_slack():
@@ -234,7 +234,52 @@ def find_slack_handle(socials: dict):
         return socials['slack']
     else:
         return 'mballard'
+message_send_map = []
 
+def create_message_send_map(messages: Messages, start_date, my_country, my_timezone):
+    newlist = sorted(messages, key=lambda k: k.send_day)
+    updated_list = []
+    previously_sent = []
+    previously_ids = []
+    last_sent = None
+    new_date = None
+    def date_in_previously_sent(current_send, id):
+        app.logger.info(f'DIPS {current_send} id {id}')
+        current_send = current_send + datetime.timedelta(days=1)
+        current_send = adjust_send_date_for_holidays_and_weekends(current_send, my_country)
+        if current_send in previously_sent:
+            current_send = date_in_previously_sent(current_send, id)
+        app.logger.info(f'return DIPS {current_send} id {id}')
+        return current_send
+    for n in newlist:
+        send_date_time = start_date + datetime.timedelta(days=n.send_day)
+        send_date_time = my_timezone.localize(send_date_time)
+        send_date_time = send_date_time.replace(hour=n.send_hour, minute=0, second=0, microsecond=0)
+        if n.send_day == 1:
+            new_date = adjust_send_date_for_holidays_and_weekends(send_date_time, my_country)
+            if n.id not in previously_ids:
+                updated_list.append({'id': n.id, 'date': new_date})
+                previously_sent.append(new_date)
+                previously_ids.append(n.id)
+                last_sent = new_date
+        elif n.send_day == 7:
+            new_date = adjust_send_date_for_holidays_and_weekends(send_date_time, my_country)
+            if n.id not in previously_ids:
+                updated_list.append({'id': n.id, 'date': new_date})
+                previously_sent.append(new_date)
+                previously_ids.append(n.id)
+                last_sent = new_date
+        else:
+            new_date = adjust_send_date_for_holidays_and_weekends(send_date_time, my_country)
+            if new_date in previously_sent:
+                app.logger.info(f'new date {new_date} weekday {new_date.weekday()}')
+                new_date = date_in_previously_sent(new_date, n.id)
+            if n.id not in previously_ids:
+                updated_list.append({'id': n.id, 'date': new_date})
+                previously_sent.append(new_date)
+                previously_ids.append(n.id)
+                last_sent = new_date
+    return updated_list
 
 def add_messages_to_send(person: People):
     """
@@ -246,16 +291,45 @@ def add_messages_to_send(person: People):
     start_date = person.start_date
     my_timezone = pytz.timezone(person.timezone)
     my_country = person.country
-    messages = Messages.query.all()
+    messages = Messages.query.order_by(Messages.send_day.asc())
+    send_day_check = 0
+    current_send_date_time = None
+    my_new_dates = create_message_send_map(messages, start_date, my_country, my_timezone)
+    for m in my_new_dates:
+        app.logger.info(f'new dates {m}')
     for m in messages:
-        send_day = m.send_day
-        if m.send_once:
-            send_date_time = m.send_date
-        else:
-            send_date_time = start_date + datetime.timedelta(days=send_day)
-        send_date_time = my_timezone.localize(send_date_time)
-        send_date_time = send_date_time.replace(hour=m.send_hour, minute=0, second=0)
-        send_date_time = adjust_send_date_for_holidays_and_weekends(send_date_time, my_country)
+        # app.logger.info(f'm start send day check {send_day_check}')
+        # send_day = m.send_day
+        # if send_day_check == 0:
+        #     send_day_check = send_day
+        # if send_day > send_day_check:
+        #     send_day_check = send_day
+        # # app.logger.info(f'message {m.id} send day check {send_day_check} function send day {send_day}')
+        # if m.send_once:
+        #     send_date_time = m.send_date
+        # else:
+        #     send_date_time = start_date + datetime.timedelta(days=send_day_check)
+        #     # app.logger.info(f'current send date {current_send_date_time} send date time {send_date_time}')
+        # send_date_time = my_timezone.localize(send_date_time)
+        # send_date_time = send_date_time.replace(hour=m.send_hour, minute=0, second=0, microsecond=0)
+        # # app.logger.info(f'current and send equal {current_send_date_time == send_date_time}')
+        # if current_send_date_time == send_date_time:
+        #     send_date_time = send_date_time + datetime.timedelta(days=1)
+        # if send_day != send_day_check:
+        #     # app.logger.info(f'send check diff {send_day_check - send_day}')
+        #     date_diff = send_day_check - send_day
+        #     send_date_time = send_date_time + datetime.timedelta(days=date_diff)
+        # send_date_time = adjust_send_date_for_holidays_and_weekends(send_date_time, my_country)
+        # app.logger.info(f'send date time {send_date_time} current send date time {current_send_date_time}')
+        # if current_send_date_time == send_date_time:
+        #     current_send_date_time = current_send_date_time + datetime.timedelta(days=1)
+        #     # app.logger.info(f'send day {send_day_check} send date time {send_date_time}')
+        #     utc = pytz.UTC
+        #     send_date_time = current_send_date_time.astimezone(utc)
+        # else:
+        #     utc = pytz.UTC
+        #     send_date_time = send_date_time.astimezone(utc)
+        send_date_time = next((l['date'] for l in my_new_dates if l['id'] == m.id), None)
         utc = pytz.UTC
         send_date_time = send_date_time.astimezone(utc)
         if m.country == 'US' and my_country == 'US':
@@ -273,6 +347,7 @@ def add_messages_to_send(person: People):
 
 
 def spin_out_repeats(employee_id, message_id, message_type, number, times, current_send_date):
+    current_send_date_time = current_send_date
     for x in range(0, times):
         save_send_message(employee_id, message_id, 0, current_send_date)
         if message_type == 'week':
@@ -292,23 +367,28 @@ def adjust_send_date_for_holidays_and_weekends(send_date_time, country):
     Adjust date to non-holiday or weekend
     :param send_date_time
     :param country
-    :return send_date_teime
+    :return send_date_time
     """
+    # app.logger.info(f'adjust start send date {send_date_time}')
     weekday = send_date_time.weekday()
     if weekday > 4:
         if weekday == 6:
             send_date_time = send_date_time + datetime.timedelta(days=1)
         else:
             send_date_time = send_date_time + datetime.timedelta(days=2)
+        current_send_date_time = send_date_time
         adjust_send_date_for_holidays_and_weekends(send_date_time, country)
     if country == 'US':
         if send_date_time in us_holidays:
             send_date_time = send_date_time + datetime.timedelta(days=1)
+            current_send_date_time = send_date_time
             adjust_send_date_for_holidays_and_weekends(send_date_time, country)
     if country == 'CA':
         if send_date_time in ca_holidays:
             send_date_time = send_date_time + datetime.timedelta(days=1)
+            current_send_date_time = send_date_time
             adjust_send_date_for_holidays_and_weekends(send_date_time, country)
+    app.logger.info(f'adjust end send date {send_date_time}')
     return send_date_time
 
 
