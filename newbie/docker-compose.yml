@@ -12,7 +12,9 @@ services:
     image: itcw/${APP_PROJNAME}_db:${APP_VERSION:-latest}
     restart: always
     networks:
-      - db-tunnel
+      db-tunnel:
+        aliases:
+          - db
     ports:
     - 5433:5432
     environment:
