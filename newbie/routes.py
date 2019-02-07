@@ -298,37 +298,6 @@ def add_messages_to_send(person: People):
     for m in my_new_dates:
         app.logger.info(f'new dates {m}')
     for m in messages:
-        # app.logger.info(f'm start send day check {send_day_check}')
-        # send_day = m.send_day
-        # if send_day_check == 0:
-        #     send_day_check = send_day
-        # if send_day > send_day_check:
-        #     send_day_check = send_day
-        # # app.logger.info(f'message {m.id} send day check {send_day_check} function send day {send_day}')
-        # if m.send_once:
-        #     send_date_time = m.send_date
-        # else:
-        #     send_date_time = start_date + datetime.timedelta(days=send_day_check)
-        #     # app.logger.info(f'current send date {current_send_date_time} send date time {send_date_time}')
-        # send_date_time = my_timezone.localize(send_date_time)
-        # send_date_time = send_date_time.replace(hour=m.send_hour, minute=0, second=0, microsecond=0)
-        # # app.logger.info(f'current and send equal {current_send_date_time == send_date_time}')
-        # if current_send_date_time == send_date_time:
-        #     send_date_time = send_date_time + datetime.timedelta(days=1)
-        # if send_day != send_day_check:
-        #     # app.logger.info(f'send check diff {send_day_check - send_day}')
-        #     date_diff = send_day_check - send_day
-        #     send_date_time = send_date_time + datetime.timedelta(days=date_diff)
-        # send_date_time = adjust_send_date_for_holidays_and_weekends(send_date_time, my_country)
-        # app.logger.info(f'send date time {send_date_time} current send date time {current_send_date_time}')
-        # if current_send_date_time == send_date_time:
-        #     current_send_date_time = current_send_date_time + datetime.timedelta(days=1)
-        #     # app.logger.info(f'send day {send_day_check} send date time {send_date_time}')
-        #     utc = pytz.UTC
-        #     send_date_time = current_send_date_time.astimezone(utc)
-        # else:
-        #     utc = pytz.UTC
-        #     send_date_time = send_date_time.astimezone(utc)
         send_date_time = next((l['date'] for l in my_new_dates if l['id'] == m.id), None)
         utc = pytz.UTC
         send_date_time = send_date_time.astimezone(utc)
