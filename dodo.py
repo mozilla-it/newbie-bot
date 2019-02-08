@@ -471,7 +471,8 @@ def task_logs():
     '''
     return {
         'actions': [
-            f'cd {CFG.APP_PROJPATH} && docker-compose logs',
+            f'echo "cd {CFG.APP_PROJPATH} && {env()} docker-compose logs"',
+            f'cd {CFG.APP_PROJPATH} && {env()} docker-compose logs',
         ],
     }
 
