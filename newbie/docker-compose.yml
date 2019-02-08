@@ -23,7 +23,6 @@ services:
       APP_BRANCH: ${APP_BRANCH}
       APP_REVISION: ${APP_REVISION}
       APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
-
     volumes:
     - database_data:/var/lib/postgresql/data
   bot:
@@ -53,7 +52,7 @@ services:
       APP_REVISION: ${APP_REVISION}
       APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
     volumes:
-    - ${APP_PROJPATH}/bot/.env:/usr/src/app/.env
+    - /Users/mballard/PycharmProjects/newbie-bot/newbie/bot/.env:/usr/src/app/.env
 networks:
   db-tunnel:
 volumes:

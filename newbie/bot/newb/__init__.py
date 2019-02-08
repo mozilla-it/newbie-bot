@@ -33,7 +33,7 @@ current_host = None
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = settings.MONGODB_SECRET
 sdu = settings.SQLALCHEMY_DATABASE_URI + settings.SQLALCHEMY_DATABASE_USER \
-      + ':' + settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@newbie_db' + '/' \
+      + ':' + settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@db:5432' + '/' \
       + settings.SQLALCHEMY_DATABASE_DB
 app.config['SQLALCHEMY_DATABASE_URI'] = sdu
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/newbie'

@@ -14,10 +14,11 @@ ENV APP_UID=1000
 ENV APP_GID=1000
 ENV APP_USER=slack
 ENV APP_PORT=5000
-ENV APP_WORKERS=2
-ENV APP_MODULE=newb:app
+ENV APP_WORKERS=1
+ENV APP_MODULE=app:app
 ENV APP_SRCTAR=.src.tar.gz
 ENV PYTHONPATH=.:/usr/src/app/:/usr/src/app/bot:$PYTHONPATH
+ENV CLIENT_ID=${CLIENT_ID}
 
 RUN mkdir -p /usr/local/share/nltk_data \
     /usr/local/share/nltk_data/chunkers \
