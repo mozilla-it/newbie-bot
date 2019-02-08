@@ -52,7 +52,7 @@ services:
       APP_REVISION: ${APP_REVISION}
       APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
     volumes:
-    - /Users/mballard/PycharmProjects/newbie-bot/newbie/bot/.env:/usr/src/app/.env
+    - ${APP_PROJPATH}/bot/.env:/usr/src/app/.env
 networks:
   db-tunnel:
 volumes:
