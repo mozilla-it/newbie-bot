@@ -28,12 +28,12 @@ scheduler = BackgroundScheduler()
 
 
 # current_host = 'https://nhobot.ngrok.io'
-current_host = None
+current_host = 'https://newbie-stage.mozilla-slack.app'
 
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = settings.MONGODB_SECRET
 sdu = settings.SQLALCHEMY_DATABASE_URI + settings.SQLALCHEMY_DATABASE_USER \
-      + ':' + settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@db:5432' + '/' \
+      + ':' + settings.SQLALCHEMY_DATABASE_USER_PASSWORD + '@' + settings.SQLALCHEMY_DATABASE_HOST + '/' \
       + settings.SQLALCHEMY_DATABASE_DB
 app.config['SQLALCHEMY_DATABASE_URI'] = sdu
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/newbie'
@@ -142,8 +142,9 @@ if AUTH_AUDIENCE is '':
 
 # This will be the callback URL Auth0 returns the authenticate to.
 # app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
-app.config['AUTH_URL'] = 'http://{}:{}/callback/auth'.format(app.config.get('HOST'), 8000)
+# app.config['AUTH_URL'] = 'http://{}:{}/callback/auth'.format(app.config.get('HOST'), 8000)
 # app.config['AUTH_URL'] = 'https://nhobot.ngrok.io/callback/auth'
+app.config['AUTH_URL'] = 'https://newbie-stage.mozilla-slack.app/callback/auth'
 
 
 oidc_config = config.OIDCConfig()
