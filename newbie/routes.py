@@ -31,6 +31,7 @@ import json
 import datetime
 import pytz
 from dateutil.relativedelta import relativedelta
+import requests
 
 import re
 import random
@@ -301,15 +302,15 @@ def add_messages_to_send(person: People):
         send_date_time = next((l['date'] for l in my_new_dates if l['id'] == m.id), None)
         utc = pytz.UTC
         send_date_time = send_date_time.astimezone(utc)
-        if m.country == 'US' and my_country == 'US':
-            save_send_message(employee_id, m.id, 0, send_date_time)
-        elif m.country == 'CA' and my_country == 'CA':
-            save_send_message(employee_id, m.id, 0, send_date_time)
-        elif m.country == 'ALL':
+        if 'ALL' in m.country:
             if m.repeatable:
                 spin_out_repeats(employee_id, m.id, m.repeat_type, m.repeat_number, m.repeat_times, send_date_time)
             else:
                 save_send_message(employee_id, m.id, 0, send_date_time)
+        elif 'US' in m.country and my_country == 'US':
+                save_send_message(employee_id, m.id, 0, send_date_time)
+        elif 'CA' in m.country and my_country == 'CA':
+            save_send_message(employee_id, m.id, 0, send_date_time)
         else:
             app.logger.info('No message to be sent, user country {} and message country {} for message {}'
                             .format(my_country, m.country, m.id))
@@ -712,6 +713,10 @@ def add_new_message():
             admin = Admin.query.filter_by(emp_id=admin.emp_id).first()
             team = admin.team if admin.team else 'Mozilla'
             app.logger.info(f'team {team}')
+            country = ','.join(str(r) for r in form.country.data)
+            app.logger.info(f'country {country.upper()}')
+            location = ','.join(str(r) for r in form.location.data)
+            emp_type = ','.join(str(r) for r in form.emp_type.data)
             if team is not 'Mozilla':
                 team = [v for k, v in admin_team_choices if team == k]
 
@@ -719,8 +724,8 @@ def add_new_message():
             message = Messages(type=form.message_type.data, topic=form.topic.data,
                                   title_link=title_link, send_day=send_day, send_hour=9,
                                   send_date=send_date, send_once=send_once,
-                                  text=form.text.data, country=form.country.data.upper(), team=team[0], owner=owner,
-                                  tags=tag[:-1], location=form.location.data, emp_type=form.emp_type.data)
+                                  text=form.text.data, country=country, team=team[0], owner=owner,
+                                  tags=tag[:-1], location=location, emp_type=emp_type)
             db.session.add(message)
             try:
                 db.session.commit()
@@ -1135,6 +1140,8 @@ def message_actions():
     """
     form_json = json.loads(request.form['payload'])
     callback_id = form_json['callback_id']
+    app.logger.info(f'callback id {callback_id}')
+    app.logger.info(f'form json type {form_json["type"]}')
     if form_json['type'] == 'interactive_message':
         actions = form_json['actions'][0]['value']
         user = form_json['user']['name']
@@ -1218,9 +1225,18 @@ def message_actions():
         feedback = UserFeedback.query.filter_by(emp_id=form_json['user']['name']).all()
         created = feedback[len(feedback) - 1].created_date
         for feed in feedback:
-            if feed.created_date == created:
-                feed.comment = form_json['submission']['comment']
-                db.session.commit()
+            submission = form_json['submission']
+            app.logger.info(f'submission {submission}')
+            if 'comment' in submission:
+                if feed.created_date == created:
+                    feed.comment = form_json['submission']['comment']
+                    db.session.commit()
+            if 'newbie_issue' in submission:
+                app.logger.info(f'Jira Issue {form_json}')
+                slack_client.api_call(
+                    'chat.postMessage',
+                    channel='GE97V74BD',
+                    text=f'{form_json["submission"]["user_name"]} is reporting the following issue {form_json["submission"]["newbie_issue"]} ')
         if form_json['state'] == 'thumbsdown':
             channel = form_json['channel']['id']
             send_opt_out_message(channel)
@@ -1231,12 +1247,60 @@ def message_actions():
                 text='Thanks for your feedback!',
                 )
         return make_response('', 200)
+    elif form_json['type'] == 'message_action':
+        if callback_id == 'newbie_ticket':
+            app.logger.info(f'newbie_ticket')
+            app.logger.info(f'form json {form_json}')
+            response_url = form_json['response_url']
+            response = {
+                "text": "It's 80 degrees right now.",
+                "attachments": [
+                    {
+                        "text":"Partly cloudy today and tomorrow"
+                    }
+                ],
+                "response_type": "in_channel"
+            }
+            token = form_json['token']
+            app.logger.info(f'token {token}')
+            headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + token}
+            # app.logger.info(f'headers {headers}')
+            # app.logger.info(f'response_url {response_url}')
+            # app.logger.info(f'response {response}')
+            r = requests.post(response_url, data = response, headers=headers)
+            app.logger.info(f'response status {r.status_code}')
+            app.logger.info(f'respone complete {r.json()}')
+            message_attachments = {"callback_id": callback_id,
+                "title": "Report an Issue",
+                "submit_label": "Send",
+                "state": "Limo",
+                "elements": [
+                    {
+                        "type": "text",
+                        "label": "User ID",
+                        "value": form_json['user']['name'],
+                        "name": "user_name"
+                    },
+                    {
+                        "type": "text",
+                        "label": "Jira Issue",
+                        "value": form_json['message']['text'],
+                        "name": "newbie_issue"
+                    }
+                ]}
+            slack_client.api_call(
+                "dialog.open",
+                trigger_id=form_json["trigger_id"],
+                dialog=message_attachments
+            )
+            return make_response('', 200)
+
 
 
 @app.route('/slack/newbie', methods=['POST'])
 def newbie_slash():
     """
-    Slack slash newhbie - performs action based on slash message commands
+    Slack slash newbie - performs action based on slash message commands
     :return: Message sent to update user on action of slash command
     """
     incoming_message = json.dumps(request.values['text']).replace('"', '').split(' ')

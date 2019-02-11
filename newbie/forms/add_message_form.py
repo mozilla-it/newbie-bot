@@ -34,9 +34,9 @@ class AddMessageForm(Form):
     #     'Number of Sends',
     #     [validators.number_range(min=1, max=10, message='Must be between 1 and 10.'), validators.data_required()],
     #     default=1)
-    country = SelectField('Country', validators=[validators.data_required()], choices=country_choices)
+    country = SelectMultipleField('Country', validators=[validators.data_required()], choices=country_choices)
     tagitems = StringField('Tags')
-    location = SelectField('Office Location', validators=[validators.data_required()],
+    location = SelectMultipleField('Office Location', validators=[validators.data_required()],
                            choices=location_choices)
-    emp_type = SelectField('Employee Type', validators=[validators.data_required()],
+    emp_type = SelectMultipleField('Employee Type', validators=[validators.data_required()],
                            choices=employee_type_choices)
