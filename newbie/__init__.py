@@ -46,7 +46,7 @@ admin_team_choices = [
     ('WPR', 'WPR')]
 
 location_choices = [
-    ('All', 'All'),
+    ('ALL', 'All'),
     ('Remote Workers', 'Remote Workers'),
     ('Berlin', 'Berlin'),
     ('London', 'London'),
@@ -61,7 +61,7 @@ location_choices = [
 ]
 
 country_choices = [
-    ('All', 'All'),
+    ('ALL', 'All'),
     ('AU', 'Australia'),
     ('BE', 'Belgium'),
     ('CA', 'Canada'),
@@ -79,7 +79,7 @@ country_choices = [
 ]
 
 employee_type_choices = [
-    ('All', 'All'),
+    ('ALL', 'All'),
     ('Full-time Employee', 'Full-time Employee'),
     ('Contingent', 'Contingent'),
     ('Intern', 'Intern')
