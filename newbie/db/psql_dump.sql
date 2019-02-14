@@ -380,7 +380,7 @@ ALTER TABLE ONLY public.user_feedback ALTER COLUMN id SET DEFAULT nextval('publi
 --
 
 COPY public.admin (id, emp_id, name, super_admin, roles, created_date, team) FROM stdin;
-1	ad|Mozilla-LDAP|postgres	Marty Ballard	t	[,Admin,Managers,Super Admin}	2019-01-01 12:00:00	IT: InfoSec
+1	ad|Mozilla-LDAP|mballard	Marty Ballard	t	[,Admin,Managers,Super Admin}	2019-01-01 12:00:00	IT: InfoSec
 \.
 
 
