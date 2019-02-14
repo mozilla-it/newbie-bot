@@ -768,7 +768,7 @@ def edit_message(message_id):
                 messages.type = form.message_type.data
                 messages.topic = form.topic.data
                 messages.title_link = json.loads(form.linkitems.data)
-                messages.send_day = form.send_day.data
+                # messages.send_day = form.send_day.data
                 messages.send_hour = 9
                 date_start = form.send_date.data.split('-')
                 sdate = datetime.datetime(int(date_start[0]), int(date_start[1]), int(date_start[2]), 0, 0, 0)
