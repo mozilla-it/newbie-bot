@@ -1,5 +1,4 @@
 FROM python:3.6
-
 # lifted straight from https://github.com/docker-library/python/blob/7eca63adca38729424a9bab957f006f5caad870f/3.6/onbuild/Dockerfile
 WORKDIR /usr/src/app/
 RUN mkdir -p /usr/src/app/
@@ -18,7 +17,6 @@ ENV APP_WORKERS=1
 ENV APP_MODULE=app:app
 ENV APP_SRCTAR=.src.tar.gz
 ENV PYTHONPATH=.:/usr/src/app/:/usr/src/app/bot:$PYTHONPATH
-ENV CLIENT_ID=${CLIENT_ID}
 
 RUN mkdir -p /usr/local/share/nltk_data \
     /usr/local/share/nltk_data/chunkers \
@@ -41,6 +39,4 @@ RUN groupadd --gid $APP_GID $APP_USER && \
 # change user
 RUN chown $APP_USER:$APP_USER -R .
 USER $APP_USER
-
-
-CMD sh -c "/usr/local/bin/gunicorn -w ${APP_WORKERS} -b :${APP_PORT} ${APP_MODULE}"
+CMD sh -c "/usr/src/app/convert_env.sh && /usr/local/bin/gunicorn -w ${APP_WORKERS} -b :${APP_PORT} ${APP_MODULE}"
