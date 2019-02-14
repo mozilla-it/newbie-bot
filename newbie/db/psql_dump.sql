@@ -20,7 +20,7 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: admin; Type: TABLE; Schema: public; Owner: mballard
+-- Name: admin; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.admin (
@@ -34,10 +34,10 @@ CREATE TABLE public.admin (
 );
 
 
-ALTER TABLE public.admin OWNER TO mballard;
+ALTER TABLE public.admin OWNER TO postgres;
 
 --
--- Name: admin_id_seq; Type: SEQUENCE; Schema: public; Owner: mballard
+-- Name: admin_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.admin_id_seq
@@ -49,17 +49,17 @@ CREATE SEQUENCE public.admin_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.admin_id_seq OWNER TO mballard;
+ALTER TABLE public.admin_id_seq OWNER TO postgres;
 
 --
--- Name: admin_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mballard
+-- Name: admin_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.admin_id_seq OWNED BY public.admin.id;
 
 
 --
--- Name: admin_roles; Type: TABLE; Schema: public; Owner: mballard
+-- Name: admin_roles; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.admin_roles (
@@ -70,10 +70,10 @@ CREATE TABLE public.admin_roles (
 );
 
 
-ALTER TABLE public.admin_roles OWNER TO mballard;
+ALTER TABLE public.admin_roles OWNER TO postgres;
 
 --
--- Name: admin_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: mballard
+-- Name: admin_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.admin_roles_id_seq
@@ -85,17 +85,17 @@ CREATE SEQUENCE public.admin_roles_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.admin_roles_id_seq OWNER TO mballard;
+ALTER TABLE public.admin_roles_id_seq OWNER TO postgres;
 
 --
--- Name: admin_roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mballard
+-- Name: admin_roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.admin_roles_id_seq OWNED BY public.admin_roles.id;
 
 
 --
--- Name: alembic_version; Type: TABLE; Schema: public; Owner: mballard
+-- Name: alembic_version; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.alembic_version (
@@ -103,10 +103,10 @@ CREATE TABLE public.alembic_version (
 );
 
 
-ALTER TABLE public.alembic_version OWNER TO mballard;
+ALTER TABLE public.alembic_version OWNER TO postgres;
 
 --
--- Name: auth_groups; Type: TABLE; Schema: public; Owner: mballard
+-- Name: auth_groups; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.auth_groups (
@@ -116,10 +116,10 @@ CREATE TABLE public.auth_groups (
 );
 
 
-ALTER TABLE public.auth_groups OWNER TO mballard;
+ALTER TABLE public.auth_groups OWNER TO postgres;
 
 --
--- Name: auth_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: mballard
+-- Name: auth_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.auth_groups_id_seq
@@ -131,17 +131,17 @@ CREATE SEQUENCE public.auth_groups_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.auth_groups_id_seq OWNER TO mballard;
+ALTER TABLE public.auth_groups_id_seq OWNER TO postgres;
 
 --
--- Name: auth_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mballard
+-- Name: auth_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.auth_groups_id_seq OWNED BY public.auth_groups.id;
 
 
 --
--- Name: messages; Type: TABLE; Schema: public; Owner: mballard
+-- Name: messages; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.messages (
@@ -169,10 +169,10 @@ CREATE TABLE public.messages (
 );
 
 
-ALTER TABLE public.messages OWNER TO mballard;
+ALTER TABLE public.messages OWNER TO postgres;
 
 --
--- Name: messages_id_seq; Type: SEQUENCE; Schema: public; Owner: mballard
+-- Name: messages_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.messages_id_seq
@@ -184,17 +184,17 @@ CREATE SEQUENCE public.messages_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.messages_id_seq OWNER TO mballard;
+ALTER TABLE public.messages_id_seq OWNER TO postgres;
 
 --
--- Name: messages_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mballard
+-- Name: messages_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.messages_id_seq OWNED BY public.messages.id;
 
 
 --
--- Name: messages_to_send; Type: TABLE; Schema: public; Owner: mballard
+-- Name: messages_to_send; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.messages_to_send (
@@ -210,10 +210,10 @@ CREATE TABLE public.messages_to_send (
 );
 
 
-ALTER TABLE public.messages_to_send OWNER TO mballard;
+ALTER TABLE public.messages_to_send OWNER TO postgres;
 
 --
--- Name: messages_to_send_id_seq; Type: SEQUENCE; Schema: public; Owner: mballard
+-- Name: messages_to_send_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.messages_to_send_id_seq
@@ -225,17 +225,17 @@ CREATE SEQUENCE public.messages_to_send_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.messages_to_send_id_seq OWNER TO mballard;
+ALTER TABLE public.messages_to_send_id_seq OWNER TO postgres;
 
 --
--- Name: messages_to_send_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mballard
+-- Name: messages_to_send_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.messages_to_send_id_seq OWNED BY public.messages_to_send.id;
 
 
 --
--- Name: people; Type: TABLE; Schema: public; Owner: mballard
+-- Name: people; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.people (
@@ -264,10 +264,10 @@ CREATE TABLE public.people (
 );
 
 
-ALTER TABLE public.people OWNER TO mballard;
+ALTER TABLE public.people OWNER TO postgres;
 
 --
--- Name: people_id_seq; Type: SEQUENCE; Schema: public; Owner: mballard
+-- Name: people_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.people_id_seq
@@ -279,17 +279,17 @@ CREATE SEQUENCE public.people_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.people_id_seq OWNER TO mballard;
+ALTER TABLE public.people_id_seq OWNER TO postgres;
 
 --
--- Name: people_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mballard
+-- Name: people_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.people_id_seq OWNED BY public.people.id;
 
 
 --
--- Name: user_feedback; Type: TABLE; Schema: public; Owner: mballard
+-- Name: user_feedback; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.user_feedback (
@@ -302,10 +302,10 @@ CREATE TABLE public.user_feedback (
 );
 
 
-ALTER TABLE public.user_feedback OWNER TO mballard;
+ALTER TABLE public.user_feedback OWNER TO postgres;
 
 --
--- Name: user_feedback_id_seq; Type: SEQUENCE; Schema: public; Owner: mballard
+-- Name: user_feedback_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.user_feedback_id_seq
@@ -317,75 +317,75 @@ CREATE SEQUENCE public.user_feedback_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.user_feedback_id_seq OWNER TO mballard;
+ALTER TABLE public.user_feedback_id_seq OWNER TO postgres;
 
 --
--- Name: user_feedback_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mballard
+-- Name: user_feedback_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.user_feedback_id_seq OWNED BY public.user_feedback.id;
 
 
 --
--- Name: admin id; Type: DEFAULT; Schema: public; Owner: mballard
+-- Name: admin id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.admin ALTER COLUMN id SET DEFAULT nextval('public.admin_id_seq'::regclass);
 
 
 --
--- Name: admin_roles id; Type: DEFAULT; Schema: public; Owner: mballard
+-- Name: admin_roles id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.admin_roles ALTER COLUMN id SET DEFAULT nextval('public.admin_roles_id_seq'::regclass);
 
 
 --
--- Name: auth_groups id; Type: DEFAULT; Schema: public; Owner: mballard
+-- Name: auth_groups id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_groups ALTER COLUMN id SET DEFAULT nextval('public.auth_groups_id_seq'::regclass);
 
 
 --
--- Name: messages id; Type: DEFAULT; Schema: public; Owner: mballard
+-- Name: messages id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.messages ALTER COLUMN id SET DEFAULT nextval('public.messages_id_seq'::regclass);
 
 
 --
--- Name: messages_to_send id; Type: DEFAULT; Schema: public; Owner: mballard
+-- Name: messages_to_send id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.messages_to_send ALTER COLUMN id SET DEFAULT nextval('public.messages_to_send_id_seq'::regclass);
 
 
 --
--- Name: people id; Type: DEFAULT; Schema: public; Owner: mballard
+-- Name: people id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.people ALTER COLUMN id SET DEFAULT nextval('public.people_id_seq'::regclass);
 
 
 --
--- Name: user_feedback id; Type: DEFAULT; Schema: public; Owner: mballard
+-- Name: user_feedback id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.user_feedback ALTER COLUMN id SET DEFAULT nextval('public.user_feedback_id_seq'::regclass);
 
 
 --
--- Data for Name: admin; Type: TABLE DATA; Schema: public; Owner: mballard
+-- Data for Name: admin; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.admin (id, emp_id, name, super_admin, roles, created_date, team) FROM stdin;
-1	ad|Mozilla-LDAP|mballard	Marty Ballard	t	[,Admin,Managers,Super Admin}	2019-01-01 12:00:00	IT: InfoSec
+1	ad|Mozilla-LDAP|postgres	Marty Ballard	t	[,Admin,Managers,Super Admin}	2019-01-01 12:00:00	IT: InfoSec
 \.
 
 
 --
--- Data for Name: admin_roles; Type: TABLE DATA; Schema: public; Owner: mballard
+-- Data for Name: admin_roles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.admin_roles (id, role_name, role_description, created_date) FROM stdin;
@@ -396,7 +396,7 @@ COPY public.admin_roles (id, role_name, role_description, created_date) FROM std
 
 
 --
--- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: mballard
+-- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
@@ -405,7 +405,7 @@ cce1409604af
 
 
 --
--- Data for Name: messages; Type: TABLE DATA; Schema: public; Owner: mballard
+-- Data for Name: messages; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.messages (id, type, topic, title_link, send_day, send_hour, repeatable, repeat_number, repeat_type, repeat_times, text, send_date, send_once, created_date, country, callback_id, tags, team, owner, location, emp_type) FROM stdin;
@@ -452,7 +452,7 @@ COPY public.messages (id, type, topic, title_link, send_day, send_hour, repeatab
 
 
 --
--- Data for Name: messages_to_send; Type: TABLE DATA; Schema: public; Owner: mballard
+-- Data for Name: messages_to_send; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.messages_to_send (id, emp_id, message_id, send_dttm, send_order, send_status, cancel_status, last_updated, created_date) FROM stdin;
@@ -461,7 +461,7 @@ COPY public.messages_to_send (id, emp_id, message_id, send_dttm, send_order, sen
 
 
 --
--- Data for Name: user_feedback; Type: TABLE DATA; Schema: public; Owner: mballard
+-- Data for Name: user_feedback; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.user_feedback (id, action, emp_id, rating, comment, created_date) FROM stdin;
@@ -469,56 +469,56 @@ COPY public.user_feedback (id, action, emp_id, rating, comment, created_date) FR
 
 
 --
--- Name: admin_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mballard
+-- Name: admin_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.admin_id_seq', 199, true);
 
 
 --
--- Name: admin_roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mballard
+-- Name: admin_roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.admin_roles_id_seq', 3, true);
 
 
 --
--- Name: auth_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mballard
+-- Name: auth_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.auth_groups_id_seq', 2082, true);
 
 
 --
--- Name: messages_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mballard
+-- Name: messages_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.messages_id_seq', 1, false);
 
 
 --
--- Name: messages_to_send_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mballard
+-- Name: messages_to_send_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.messages_to_send_id_seq', 1, false);
 
 
 --
--- Name: people_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mballard
+-- Name: people_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.people_id_seq', 5295, true);
 
 
 --
--- Name: user_feedback_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mballard
+-- Name: user_feedback_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.user_feedback_id_seq', 1, false);
 
 
 --
--- Name: admin admin_emp_id_key; Type: CONSTRAINT; Schema: public; Owner: mballard
+-- Name: admin admin_emp_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.admin
@@ -526,7 +526,7 @@ ALTER TABLE ONLY public.admin
 
 
 --
--- Name: admin admin_pkey; Type: CONSTRAINT; Schema: public; Owner: mballard
+-- Name: admin admin_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.admin
@@ -534,7 +534,7 @@ ALTER TABLE ONLY public.admin
 
 
 --
--- Name: admin_roles admin_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: mballard
+-- Name: admin_roles admin_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.admin_roles
@@ -542,7 +542,7 @@ ALTER TABLE ONLY public.admin_roles
 
 
 --
--- Name: admin_roles admin_roles_role_name_key; Type: CONSTRAINT; Schema: public; Owner: mballard
+-- Name: admin_roles admin_roles_role_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.admin_roles
@@ -550,7 +550,7 @@ ALTER TABLE ONLY public.admin_roles
 
 
 --
--- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: mballard
+-- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.alembic_version
@@ -558,7 +558,7 @@ ALTER TABLE ONLY public.alembic_version
 
 
 --
--- Name: auth_groups auth_groups_groups_key; Type: CONSTRAINT; Schema: public; Owner: mballard
+-- Name: auth_groups auth_groups_groups_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_groups
@@ -566,7 +566,7 @@ ALTER TABLE ONLY public.auth_groups
 
 
 --
--- Name: auth_groups auth_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: mballard
+-- Name: auth_groups auth_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_groups
@@ -574,7 +574,7 @@ ALTER TABLE ONLY public.auth_groups
 
 
 --
--- Name: messages messages_pkey; Type: CONSTRAINT; Schema: public; Owner: mballard
+-- Name: messages messages_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.messages
@@ -582,7 +582,7 @@ ALTER TABLE ONLY public.messages
 
 
 --
--- Name: messages_to_send messages_to_send_pkey; Type: CONSTRAINT; Schema: public; Owner: mballard
+-- Name: messages_to_send messages_to_send_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.messages_to_send
@@ -590,7 +590,7 @@ ALTER TABLE ONLY public.messages_to_send
 
 
 --
--- Name: messages messages_topic_key; Type: CONSTRAINT; Schema: public; Owner: mballard
+-- Name: messages messages_topic_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.messages
@@ -598,7 +598,7 @@ ALTER TABLE ONLY public.messages
 
 
 --
--- Name: people people_emp_id_key; Type: CONSTRAINT; Schema: public; Owner: mballard
+-- Name: people people_emp_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.people
@@ -606,7 +606,7 @@ ALTER TABLE ONLY public.people
 
 
 --
--- Name: people people_pkey; Type: CONSTRAINT; Schema: public; Owner: mballard
+-- Name: people people_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.people
@@ -614,7 +614,7 @@ ALTER TABLE ONLY public.people
 
 
 --
--- Name: user_feedback user_feedback_pkey; Type: CONSTRAINT; Schema: public; Owner: mballard
+-- Name: user_feedback user_feedback_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.user_feedback
