@@ -61,6 +61,14 @@ li:hover {
     border: 1px solid rgba(0,0,0,.125);
     cursor: default;
 }
+.moz-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 2fr 1fr;
+}
+.bottom-row, .top-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 3fr;
+}
 li .moz-group-item:after {
     cursor: none;
 }

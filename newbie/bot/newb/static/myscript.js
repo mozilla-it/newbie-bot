@@ -187,6 +187,23 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
     }
     // end search for tags
 
+    // clear search
+    $(function (){
+        var searchBox = document.getElementById('message_search');
+        searchBox.addEventListener('keyup', () => {
+            if (searchBox.value.length > 0) {
+                [].forEach.call(document.querySelectorAll('.hide-on-search'), function (el) {
+                    el.style.visibility = 'hidden';
+                });
+            } else {
+                [].forEach.call(document.querySelectorAll('.hide-on-search'), function (el) {
+                    el.style.visibility = 'visible';
+                });
+            }
+        });
+    });
+    // end clear search
+
 }(window, jQuery));
 // add tool tip to http link
     $(function() {
@@ -194,7 +211,7 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
     });
 
 var options = {
-      valueNames: [ 'team', 'tags', 'owner', 'topic' ]
+      valueNames: [ 'team', 'tags', 'owner', 'topic', 'day', 'id' ]
     };
 
 var userList = new List('users', options);

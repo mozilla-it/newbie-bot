@@ -4,9 +4,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='slack_message.css') }}">
     <div class="container">
         <h1>Message List</h1>
-{#    <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">#}
-{#        Add Message#}
-{#      </button>#}
         <a class="btn btn-primary" href="/messages/add">Add Message</a>
     <div class="container collapse"  id="collapseExample" style="margin-top: 25px; margin-bottom: 25px;">
         {%  include 'message_form.html' %}
@@ -14,25 +11,31 @@
     <div  style="margin-top: 25px">
         <h1>Messages</h1>
         <div id="users" style="overflow: scroll; height: 600px; margin-top: 25px">
-{#        <div class="row moz-left">#}
-{#            <input class=" search" placeholder="Search" />#}
-{#        </div>#}
         <div class="row moz-left">
-            <button class="sort" data-sort="topic">Sort by Topic</button>
-            <button class="sort" data-sort="team">Sort by Team</button>
-            <button class="sort" data-sort="tags">Sort by Tags</button>
-            <button class="sort" data-sort="owner">Sort by Owner</button>
+            <input id="message_search" class="sort search" placeholder="Search" />
+        </div>
+        <div class="row moz-left">
+            <button id="message_id" class="sort" data-sort="id">Sort by ID</button>
+            <button id="topic" class="sort" data-sort="topic">Sort by Topic</button>
+            <button id="team" class="sort" data-sort="team">Sort by Team</button>
+            <button id="tags" class="sort" data-sort="tags">Sort by Tags</button>
+            <button id="owner" class="sort" data-sort="owner">Sort by Owner</button>
+            <button id="day" class="sort" data-sort="day">Sort by Day</button>
         </div>
 
             <ul class="list">
             {%  for message in messages|sort(attribute='id', reverse=True) %}
                 <li class="moz-group-item ">
-                <div class="row">
-                    <div class="col">
+                <div class="moz-row">
+                    <div class="top-row">
+                        <span disabled="True" class="id"><strong>ID: </strong>{{ message.id }}</span>
                         {% if message.team ==  admin.team or admin.super_admin %}
                             <a style="text-decoration: none;" href="/messages/{{ message.id }}/edit" data-toggle="tooltip" data-placement="top" title="Click here to edit {{ message.topic }} message."><i class="fas fa-edit" style="color: #000000"></i></a>
-                            <button type="button" class="moz-delete-button" data-toggle="modal" data-target="#deleteModal{{ message.id }}"><i class="fas fa-times" data-toggle="tooltip" data-placement="top" title="Click here to delete {{ message.topic }} message."></i></button>
+                            <button type="button" class="moz-delete-button hide-on-search" data-toggle="modal" data-target="#deleteModal{{ message.id }}"><i class="fas fa-times" data-toggle="tooltip" data-placement="top" title="Click here to delete {{ message.topic }} message."></i></button>
                         {% endif %}
+                    </div>
+                    <div class="col">
+                        <span ><strong>Send Day: </strong></span><span class="moz-left day">{{ message.send_day }}</span>
                     </div>
                     <div class="col">
                         <span ><strong>Topic: </strong></span><span class="moz-left topic"> {{ message.topic }}</span>
@@ -41,10 +44,14 @@
                         <span ><strong>Team: </strong></span><span class="moz-left team"> {{ message.team }}</span>
                     </div>
                 </div>
-                <div class="row">
+                <div class="moz-row">
+                    <div class="bottom-row">
+                        <span></span>
+                        <a type="button" data-toggle="modal" class=" hide-on-search" data-target="#viewModal{{ message.id }}"><i class="far fa-file fa-md" data-toggle="tooltip" data-placement="top" title="Click here to view {{ message.topic }} details."></i></a>
+                        <a class="moz-preview hide-on-search" type="button" data-toggle="modal" data-target="#previewModal{{ message.id }}"><i class="far fa-image fa-md" data-toggle="tooltip" data-placement="top" title="Click here to preview this message."></i></a>
+                    </div>
                     <div class="col">
-                        <a type="button" data-toggle="modal" data-target="#viewModal{{ message.id }}"><i class="far fa-file fa-md" data-toggle="tooltip" data-placement="top" title="Click here to view {{ message.topic }} details."></i></a>
-                        <a class="moz-preview" type="button" data-toggle="modal" data-target="#previewModal{{ message.id }}"><i class="far fa-image fa-md" data-toggle="tooltip" data-placement="top" title="Click here to preview this message."></i></a>
+                        <span><strong>Send Hour: </strong></span><span class="moz-left send">{{ message.send_hour }}</span>
                     </div>
                     <div class="col">
                         <span ><strong>Tags: </strong></span><span class="moz-left tags"> {% for tags in message.tags %} {{ tags }} {% endfor %}</span>

@@ -493,7 +493,7 @@ SELECT pg_catalog.setval('public.auth_groups_id_seq', 2082, true);
 -- Name: messages_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.messages_id_seq', 1, false);
+SELECT pg_catalog.setval('public.messages_id_seq', 101, false);
 
 
 --

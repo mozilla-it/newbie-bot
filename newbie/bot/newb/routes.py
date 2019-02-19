@@ -665,7 +665,9 @@ def view_messages():
             messages=messages,
             form=form,
             user=user,
-            admin=admin)
+            admin=admin,
+            searchTerm=''
+        )
 
 
 @app.route('/messages/add', methods=['GET', 'POST'])
