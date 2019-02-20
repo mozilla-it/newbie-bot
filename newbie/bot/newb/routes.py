@@ -178,11 +178,12 @@ def updates_from_slack():
     with app.app_context():
         actual_one_day_ago = measure_date()
         slack_users = slack_client.api_call('users.list')['members']
-        print(len(slack_users))
-        people = People.query.filter_by(slack_handle=None).all()
+        app.logger.info(f'slack users len(slack_users)')
+        people = People.query.filter_by(slack_handle='').all()
+        app.logger.info(f'people {len(people)}')
         for person in people:
             slackinfo = searchemail(slack_users, 'email', person.email)
-            print(slackinfo)
+            # app.logger.info(f'slackinfo {slackinfo}')
             if slackinfo:
                 try:
                     slack_handle = slackinfo['name']
@@ -1258,7 +1259,7 @@ def newbie_slash():
     with app.app_context():
         incoming_message = json.dumps(request.values['text']).replace('"', '').split(' ')
         user = json.dumps(request.values['user_name'])
-        user = user.replace('"','')
+        user = user.replace('"', '')
         if incoming_message[0] == 'opt-in':
             person = People.query.filter_by(slack_handle=user).first()
             person.user_opt_out = False
