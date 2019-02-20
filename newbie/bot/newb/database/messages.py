@@ -19,14 +19,14 @@ class Messages(db.Model):
     send_date = db.Column(db.DateTime, nullable=False)
     send_once = db.Column(db.Boolean, default=True, nullable=False)
     created_date = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
-    country = db.Column(db.String(3), nullable=False, default='ALL')
+    country = db.Column(db.String(1000), nullable=False, default='ALL')
     callback_id = db.Column(db.String(15), nullable=True)
     tags = db.Column(ARRAY(String))
     team = db.Column(db.String(100), nullable=True, default='HR')
     # topic = db.Column(db.String(50), nullable=True, default='ALL')
     owner = db.Column(db.String(50), nullable=True, default='Mozilla')
-    location = db.Column(db.String(50), nullable=True, default='Mozilla')
-    emp_type = db.Column(db.String(10), nullable=True, default='FTE')
+    location = db.Column(db.String(1000), nullable=True, default='Mozilla')
+    emp_type = db.Column(db.String(1000), nullable=True, default='FTE')
 
     def __repr__(self):
         return f"Messages('{self.type}', '{self.topic}', '{self.title_link}'" \
