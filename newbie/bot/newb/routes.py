@@ -119,7 +119,7 @@ def get_auth_zero():
     Get Auth0 users
     :return: Auth0 user list
     """
-    print('get auth zero')
+    app.logger.info(f'get auth zero')
     with app.app_context():
         config = {'client_id': client_id, 'client_secret': client_secret, 'uri': client_uri}
         az = AuthZero(config)
@@ -180,7 +180,7 @@ def get_auth_zero():
 
 
 def updates_from_slack():
-    print('updates from slack')
+    app.logger.info(f'updates from slack')
     with app.app_context():
         actual_one_day_ago = measure_date()
         slack_users = slack_client.api_call('users.list')['members']
@@ -203,13 +203,13 @@ def updates_from_slack():
                 person.timezone = timezone
                 person.last_modified = datetime.datetime.utcnow()
                 db.session.commit()
-                print(actual_one_day_ago)
+                app.logger.info(actual_one_day_ago)
                 start_date = person.start_date
                 # .strptime('%Y-%m-%d')
-                print('start_date {}'.format(start_date))
-                print(start_date > actual_one_day_ago)
+                app.logger.info('start_date {}'.format(start_date))
+                app.logger.info(start_date > actual_one_day_ago)
                 if start_date > actual_one_day_ago:
-                    print('start date within 30 days {}'.format(start_date > actual_one_day_ago))
+                    app.logger.info('start date within 30 days {}'.format(start_date > actual_one_day_ago))
                     add_messages_to_send(person)
 
 
@@ -277,38 +277,41 @@ def create_message_send_map(messages: Messages, start_date, my_country, my_timez
                 last_sent = new_date
     return updated_list
 
+
 def add_messages_to_send(person: People):
     """
     Add each message from the messages table to the messages_to_send table when a new user is added
     :param person:
     :return:
     """
-    employee_id = person.emp_id
-    start_date = person.start_date
-    my_timezone = pytz.timezone(person.timezone)
-    my_country = person.country
-    messages = Messages.query.order_by(Messages.send_day.asc())
-    send_day_check = 0
-    current_send_date_time = None
-    my_new_dates = create_message_send_map(messages, start_date, my_country, my_timezone)
-    for m in my_new_dates:
-        app.logger.info(f'new dates {m}')
-    for m in messages:
-        send_date_time = next((l['date'] for l in my_new_dates if l['id'] == m.id), None)
-        utc = pytz.UTC
-        send_date_time = send_date_time.astimezone(utc)
-        if 'ALL' in m.country:
-            if m.repeatable:
-                spin_out_repeats(employee_id, m.id, m.repeat_type, m.repeat_number, m.repeat_times, send_date_time)
+    with app.app_context():
+        employee_id = person.emp_id
+        start_date = person.start_date
+        my_timezone = pytz.timezone(person.timezone)
+        my_country = person.country
+        messages = Messages.query.order_by(Messages.send_day.asc())
+        send_day_check = 0
+        current_send_date_time = None
+        my_new_dates = create_message_send_map(messages, start_date, my_country, my_timezone)
+        app.logger.info(f'my new dates {my_new_dates}')
+        for m in my_new_dates:
+            app.logger.info(f'new dates {m}')
+        for m in messages:
+            send_date_time = next((l['date'] for l in my_new_dates if l['id'] == m.id), None)
+            utc = pytz.UTC
+            send_date_time = send_date_time.astimezone(utc)
+            if 'ALL' in m.country:
+                if m.repeatable:
+                    spin_out_repeats(employee_id, m.id, m.repeat_type, m.repeat_number, m.repeat_times, send_date_time)
+                else:
+                    save_send_message(employee_id, m.id, 0, send_date_time)
+            elif 'US' in m.country and my_country == 'US':
+                    save_send_message(employee_id, m.id, 0, send_date_time)
+            elif 'CA' in m.country and my_country == 'CA':
+                save_send_message(employee_id, m.id, 0, send_date_time)
             else:
-                save_send_message(employee_id, m.id, 0, send_date_time)
-        elif 'US' in m.country and my_country == 'US':
-                save_send_message(employee_id, m.id, 0, send_date_time)
-        elif 'CA' in m.country and my_country == 'CA':
-            save_send_message(employee_id, m.id, 0, send_date_time)
-        else:
-            app.logger.info('No message to be sent, user country {} and message country {} for message {}'
-                            .format(my_country, m.country, m.id))
+                app.logger.info('No message to be sent, user country {} and message country {} for message {}'
+                                .format(my_country, m.country, m.id))
 
 
 def spin_out_repeats(employee_id, message_id, message_type, number, times, current_send_date):
@@ -763,7 +766,7 @@ def add_new_message():
                 message = Messages(type=form.message_type.data, topic=form.topic.data,
                                       title_link=title_link, send_day=send_day, send_hour=9,
                                       send_date=send_date, send_once=send_once,
-                                      text=form.text.data, country=form.country.data.upper(), team=team[0], owner=owner,
+                                      text=form.text.data, country=form.country.data, team=team[0], owner=owner,
                                       tags=tag[:-1], location=form.location.data, emp_type=form.emp_type.data)
                 db.session.add(message)
                 try:

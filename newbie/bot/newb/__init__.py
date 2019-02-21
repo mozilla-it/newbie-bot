@@ -42,11 +42,10 @@ app.debug = True
 app.use_reloader = False
 app.jinja_env.cache = {}
 cors(app)
-app.logger.info(f'SQLALCHEMY_DATABASE_URI {app.config["SQLALCHEMY_DATABASE_URI"]}')
 db_url = app.config["SQLALCHEMY_DATABASE_URI"]
 if not database_exists(db_url):
     create_database(db_url)
-db = SQLAlchemy()
+db = SQLAlchemy(app, session_options={"expire_on_commit": False})
 db.init_app(app)
 migrate = Migrate(app, db)
 
@@ -142,10 +141,10 @@ if AUTH_AUDIENCE is '':
     AUTH_AUDIENCE = 'https://' + app.config.get('HOST') + '/userinfo'
 
 # This will be the callback URL Auth0 returns the authenticate to.
-# app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
+app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
 # app.config['AUTH_URL'] = 'http://{}:{}/callback/auth'.format(app.config.get('HOST'), 8000)
 # app.config['AUTH_URL'] = 'https://nhobot.ngrok.io/callback/auth'
-app.config['AUTH_URL'] = 'https://newbie-stage.mozilla-slack.app/callback/auth'
+# app.config['AUTH_URL'] = 'https://newbie-stage.mozilla-slack.app/callback/auth'
 
 
 oidc_config = config.OIDCConfig()
