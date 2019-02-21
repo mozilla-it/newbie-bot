@@ -26,4 +26,4 @@ class AddMessageForm(Form):
     tagitems = StringField('Tags')
     location = SelectMultipleField('Office Location', validators=[validators.data_required()],
                            choices=location_choices)
-    emp_type = SelectMultipleField('Employee Type', validators=[validators.data_required()],
+    emp_type = SelectMultipleField('Employee Type', validators=[validators.data_required()], choices=employee_type_choices)

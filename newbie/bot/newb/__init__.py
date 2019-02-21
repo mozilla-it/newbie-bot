@@ -55,6 +55,54 @@ client_secret = settings.CLIENT_SECRET
 client_uri = settings.CLIENT_URI
 client_audience = settings.CLIENT_AUDIENCE
 
+admin_team_choices = [
+    ('IT: InfoSec', 'IT: InfoSec'),
+    ('IT: Service Desk', 'IT: Service Desk'),
+    ('People: Benefits', 'People: Benefits'),
+    ('People: Onboarding', 'People: Onboarding'),
+    ('People: Diversity and Inclusion', 'People: Diversity and Inclusion'),
+    ('WPR', 'WPR')]
+
+location_choices = [
+    ('All', 'All'),
+    ('Remote Workers', 'Remote Workers'),
+    ('Berlin', 'Berlin'),
+    ('London', 'London'),
+    ('Mountain View', 'Mountain View'),
+    ('Paris', 'Paris'),
+    ('Portland', 'Portland'),
+    ('San Francisco', 'San Francisco'),
+    ('Toronto', 'Toronto'),
+    ('Vancouver', 'Vancouver'),
+    ('Taipei', 'Taipei'),
+    ('Tokyo', 'Tokyo')
+]
+
+country_choices = [
+    ('All', 'All'),
+    ('AU', 'Australia'),
+    ('BE', 'Belgium'),
+    ('CA', 'Canada'),
+    ('DK', 'Denmark'),
+    ('FI', 'Finland'),
+    ('FR', 'France'),
+    ('DE', 'Germany'),
+    ('NL', 'Netherlands'),
+    ('NZ', 'New Zealand'),
+    ('PL', 'Poland'),
+    ('ES', 'Spain'),
+    ('SE', 'Sweden'),
+    ('UK', 'United Kingdom'),
+    ('US', 'United States')
+]
+
+employee_type_choices = [
+    ('All', 'All'),
+    ('Full-time Employee', 'Full-time Employee'),
+    ('Contingent', 'Contingent'),
+    ('Intern', 'Intern')
+]
+
 slack_verification_token = settings.SLACK_VERIFICATION_TOKEN
 
 slack_client = slackclient.SlackClient(settings.SLACK_BOT_TOKEN)

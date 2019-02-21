@@ -1319,89 +1319,74 @@ def message_actions():
             feedback = UserFeedback.query.filter_by(emp_id=form_json['user']['name']).all()
             created = feedback[len(feedback) - 1].created_date
             for feed in feedback:
-                if feed.created_date == created:
-                    feed.comment = form_json['submission']['comment']
-                    db.session.commit()
+                submission = form_json['submission']
+                app.logger.info(f'submission {submission}')
+                if 'comment' in submission:
+                    if feed.created_date == created:
+                        feed.comment = form_json['submission']['comment']
+                        db.session.commit()
+                if 'newbie_issue' in submission:
+                    app.logger.info(f'Jira Issue {form_json}')
+                    slack_client.api_call(
+                        'chat.postMessage',
+                        channel='GE97V74BD',
+                        text=f'{form_json["submission"]["user_name"]} is reporting the following issue {form_json["submission"]["newbie_issue"]} ')
             if form_json['state'] == 'thumbsdown':
                 channel = form_json['channel']['id']
                 send_opt_out_message(channel)
             else:
-                message_text = 'Sorry, I didn\'t understand'
-                slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text, '')
-        return make_response(message_text, 200)
-    elif form_json['type'] == 'dialog_submission':
-        print('dialog {}'.format(form_json))
-        feedback = UserFeedback.query.filter_by(emp_id=form_json['user']['name']).all()
-        created = feedback[len(feedback) - 1].created_date
-        for feed in feedback:
-            submission = form_json['submission']
-            app.logger.info(f'submission {submission}')
-            if 'comment' in submission:
-                if feed.created_date == created:
-                    feed.comment = form_json['submission']['comment']
-                    db.session.commit()
-            if 'newbie_issue' in submission:
-                app.logger.info(f'Jira Issue {form_json}')
                 slack_client.api_call(
                     'chat.postMessage',
-                    channel='GE97V74BD',
-                    text=f'{form_json["submission"]["user_name"]} is reporting the following issue {form_json["submission"]["newbie_issue"]} ')
-        if form_json['state'] == 'thumbsdown':
-            channel = form_json['channel']['id']
-            send_opt_out_message(channel)
-        else:
-            slack_client.api_call(
-                'chat.postMessage',
-                channel=form_json['channel']['id'],
-                text='Thanks for your feedback!',
+                    channel=form_json['channel']['id'],
+                    text='Thanks for your feedback!',
+                    )
+            return make_response('', 200)
+        elif form_json['type'] == 'message_action':
+            if callback_id == 'newbie_ticket':
+                app.logger.info(f'newbie_ticket')
+                app.logger.info(f'form json {form_json}')
+                response_url = form_json['response_url']
+                response = {
+                    "text": "It's 80 degrees right now.",
+                    "attachments": [
+                        {
+                            "text":"Partly cloudy today and tomorrow"
+                        }
+                    ],
+                    "response_type": "in_channel"
+                }
+                token = form_json['token']
+                app.logger.info(f'token {token}')
+                headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + token}
+                # app.logger.info(f'headers {headers}')
+                # app.logger.info(f'response_url {response_url}')
+                # app.logger.info(f'response {response}')
+                r = requests.post(response_url, data = response, headers=headers)
+                app.logger.info(f'response status {r.status_code}')
+                app.logger.info(f'respone complete {r.json()}')
+                message_attachments = {"callback_id": callback_id,
+                    "title": "Report an Issue",
+                    "submit_label": "Send",
+                    "state": "Limo",
+                    "elements": [
+                        {
+                            "type": "text",
+                            "label": "User ID",
+                            "value": form_json['user']['name'],
+                            "name": "user_name"
+                        },
+                        {
+                            "type": "text",
+                            "label": "Jira Issue",
+                            "value": form_json['message']['text'],
+                            "name": "newbie_issue"
+                        }
+                    ]}
+                slack_client.api_call(
+                    "dialog.open",
+                    trigger_id=form_json["trigger_id"],
+                    dialog=message_attachments
                 )
-        return make_response('', 200)
-    elif form_json['type'] == 'message_action':
-        if callback_id == 'newbie_ticket':
-            app.logger.info(f'newbie_ticket')
-            app.logger.info(f'form json {form_json}')
-            response_url = form_json['response_url']
-            response = {
-                "text": "It's 80 degrees right now.",
-                "attachments": [
-                    {
-                        "text":"Partly cloudy today and tomorrow"
-                    }
-                ],
-                "response_type": "in_channel"
-            }
-            token = form_json['token']
-            app.logger.info(f'token {token}')
-            headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + token}
-            # app.logger.info(f'headers {headers}')
-            # app.logger.info(f'response_url {response_url}')
-            # app.logger.info(f'response {response}')
-            r = requests.post(response_url, data = response, headers=headers)
-            app.logger.info(f'response status {r.status_code}')
-            app.logger.info(f'respone complete {r.json()}')
-            message_attachments = {"callback_id": callback_id,
-                "title": "Report an Issue",
-                "submit_label": "Send",
-                "state": "Limo",
-                "elements": [
-                    {
-                        "type": "text",
-                        "label": "User ID",
-                        "value": form_json['user']['name'],
-                        "name": "user_name"
-                    },
-                    {
-                        "type": "text",
-                        "label": "Jira Issue",
-                        "value": form_json['message']['text'],
-                        "name": "newbie_issue"
-                    }
-                ]}
-            slack_client.api_call(
-                "dialog.open",
-                trigger_id=form_json["trigger_id"],
-                dialog=message_attachments
-            )
             return make_response('', 200)
 
 
