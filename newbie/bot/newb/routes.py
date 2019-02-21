@@ -34,6 +34,10 @@ import datetime
 import pytz
 from dateutil.relativedelta import relativedelta
 import requests
+from ruamel import yaml
+from config import CFG
+from utils.dictionary import merge
+from json import dumps
 
 import re
 from authzero import AuthZero
@@ -560,42 +564,40 @@ def get_user_info():
     return user
 
 
-# SCRIPT_FILE = os.path.abspath(__file__)
-# SCRIPT_NAME = os.path.basename(SCRIPT_FILE)
-# SCRIPT_PATH = os.path.dirname(SCRIPT_FILE)
-# CONTRIBUTE_JSON = yaml.safe_load(open(f'{SCRIPT_PATH}/contribute.json'))
+SCRIPT_FILE = os.path.abspath(__file__)
+SCRIPT_NAME = os.path.basename(SCRIPT_FILE)
+SCRIPT_PATH = os.path.dirname(SCRIPT_FILE)
+app.logger.info(f'script file {SCRIPT_FILE} name {SCRIPT_NAME} path {SCRIPT_PATH}')
+CONTRIBUTE_JSON = yaml.safe_load(open(f'{SCRIPT_PATH}/contribute.json'))
 
 
-# def jsonify(status=200, indent=4, sort_keys=True, **kwargs):
-#     '''
-#     jsonify
-#     '''
-#     response = make_response(dumps(dict(**kwargs), indent=indent, sort_keys=sort_keys)+'\n')
-#     response.headers['Content-Type'] = 'application/json; charset=utf-8'
-#     response.headers['mimetype'] = 'application/json'
-#     response.status_code = status
-#     return response
-#
-#
-# @app.route('/version', methods=['GET'])
-# def version():
-#     '''
-#     version route
-#     '''
-#     return f'{CFG.APP_VERSION}\n', 200
-#
-#
-# @app.route('/contribute.json', methods=['GET'])
-# def contribute_json():
-#     '''
-#     contribute.json route
-#     '''
-#     json = merge(CONTRIBUTE_JSON, dict(
-#         repository=dict(
-#             version=CFG.APP_VERSION,
-#             revision=CFG.APP_REVISION)))
-#     response = jsonify(**json), 200
-#     return response
+def jsonify(status=200, indent=4, sort_keys=True, **kwargs):
+    '''
+    jsonify
+    '''
+    response = make_response(dumps(dict(**kwargs), indent=indent, sort_keys=sort_keys)+'\n')
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    response.headers['mimetype'] = 'application/json'
+    response.status_code = status
+    return response
+
+
+@app.route('/version', methods=['GET'])
+def version():
+    '''
+    version route
+    '''
+    return f'{CFG.APP_VERSION}\n', 200
+
+
+@app.route('/contribute.json', methods=['GET'])
+def contribute_json():
+    '''
+    contribute.json route
+    '''
+    json = merge(CONTRIBUTE_JSON, dict(repository=dict(version=CFG.APP_VERSION,revision=CFG.APP_REVISION)))
+    response = jsonify(**json), 200
+    return response
 
 
 @app.route('/profile', methods=['GET', 'POST'])
