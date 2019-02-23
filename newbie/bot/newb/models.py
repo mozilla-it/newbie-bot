@@ -34,9 +34,8 @@ class People(db.Model):
             f"'{self.email}', '{self.slack_handle}', '{self.start_date}', '{self.last_modified}'," \
             f"'{self.timezone}', '{self.country}', '{self.manager_id}', '{self.manager_opt_out}', " \
             f"'{self.user_opt_out}', '{self.admin_opt_out}', '{self.created_date}'," \
-            f"'{self.admin_requested}', '{self.admin_role_requested}', '{self.admin_requested_date}', " \
-            f"'{self.admin_status}', '{self.admin_status_updated_date}'," \
-            f"'{self.admin_request_updated_by}', '{self.admin_team}')"
+               f"'{self.admin_requested}', '{self.admin_role_requested}', '{self.admin_requested_date}', '{self.admin_status}', '{self.admin_status_updated_date}'," \
+               f"'{self.admin_request_updated_by}', '{self.admin_team}')"
 
 
 class Messages(db.Model):
@@ -55,14 +54,14 @@ class Messages(db.Model):
     send_date = db.Column(db.DateTime, nullable=False)
     send_once = db.Column(db.Boolean, default=True, nullable=False)
     created_date = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
-    country = db.Column(db.String(3), nullable=False, default='ALL')
+    country = db.Column(db.String(1000), nullable=False, default='ALL')
     callback_id = db.Column(db.String(15), nullable=True)
     tags = db.Column(ARRAY(String))
     team = db.Column(db.String(100), nullable=True, default='HR')
     # topic = db.Column(db.String(50), nullable=True, default='ALL')
     owner = db.Column(db.String(50), nullable=True, default='Mozilla')
-    location = db.Column(db.String(50), nullable=True, default='Mozilla')
-    emp_type = db.Column(db.String(10), nullable=True, default='FTE')
+    location = db.Column(db.String(1000), nullable=True, default='Mozilla')
+    emp_type = db.Column(db.String(1000), nullable=True, default='FTE')
 
     def __repr__(self):
         return f"Messages('{self.type}', '{self.topic}', '{self.title_link}'" \
@@ -131,3 +130,12 @@ class AuthGroups(db.Model):
 
     def __repr__(self):
         return f"AuthGroups('{self.groups}', {self.created_date}')"
+
+
+class SearchTerms(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    search_term = db.Column(db.String(100), unique=False, nullable=False)
+    search_date = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
+
+    def __repr__(self):
+        return f"SearchTerms('{self.search_term}', '{self.search_date}')"

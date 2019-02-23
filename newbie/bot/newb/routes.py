@@ -1,10 +1,4 @@
-from newb.database.people import People
-from newb.database.messages import Messages
-from newb.database.messages_to_send import MessagesToSend as Send
-from newb.database.admin import Admin
-from newb.database.admin_roles import AdminRoles
-from newb.database.user_feedback import UserFeedback
-from newb.database.auth_groups import AuthGroups
+from newb.models import People, Messages, Admin, AdminRoles, UserFeedback, AuthGroups, SearchTerms, MessagesToSend as Send
 from newb import db
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
@@ -46,6 +40,7 @@ UPLOAD_FOLDER = '/tmp/'
 app.config['UPLOADS_DEFAULT_DEST'] = UPLOAD_FOLDER
 csvs = UploadSet('csvs', DATA)
 configure_uploads(app, csvs)
+people_to_update = []
 
 def get_user_admin():
     try:
@@ -185,28 +180,35 @@ def get_auth_zero():
 
 def updates_from_slack():
     app.logger.info(f'updates from slack')
+    people_to_update = []
     with app.app_context():
         actual_one_day_ago = measure_date()
         slack_users = slack_client.api_call('users.list')['members']
         app.logger.info(f'slack users len(slack_users)')
-        people = People.query.filter_by(slack_handle='').all()
-        app.logger.info(f'people {len(people)}')
-        for person in people:
+        people_to_update = People.query.filter_by(slack_handle='').all()
+        app.logger.info(f'people {len(people_to_update)}')
+        for person in people_to_update:
             slackinfo = searchemail(slack_users, 'email', person.email)
-            # app.logger.info(f'slackinfo {slackinfo}')
+            app.logger.info(f'slackinfo {slackinfo}')
             if slackinfo:
+                app.logger.info(f'slack name {slackinfo["name"]} person {person.email}')
+                person_selected = db.session.query(People).filter_by(email=person.email).first()
+                app.logger.info(f'person selected before {person_selected}')
                 try:
                     slack_handle = slackinfo['name']
-                    person.slack_handle = slack_handle
                 except:
-                    slack_handle = None
+                    app.logger.info(f'slack name {slackinfo["name"]}')
+                    slack_handle = ''
                 try:
                     timezone = slackinfo['tz']
                 except:
                     timezone = 'US/Pacific'
-                person.timezone = timezone
-                person.last_modified = datetime.datetime.utcnow()
+                person_selected.slack_handle = slack_handle
+                person_selected.timezone = timezone
+                person_selected.last_modified = datetime.datetime.utcnow()
+                app.logger.info(f'person selected after {person_selected}')
                 db.session.commit()
+                person.timezone = timezone
                 app.logger.info(actual_one_day_ago)
                 start_date = person.start_date
                 # .strptime('%Y-%m-%d')
@@ -1422,6 +1424,10 @@ def newbie_slash():
             message_response = ''
         elif incoming_message[0] == 'search':
             message_response = f'You searched for {" ".join(incoming_message[1:])}'
+            # TODO - add in search terms functionality
+            # st = SearchTerms()
+            # st.search_term = incoming_message[1:]
+
             incoming_search_term = filter_stopwords(incoming_message[1:])
             user = json.dumps(request.values['user_name'])
             user = user.replace('"', '')

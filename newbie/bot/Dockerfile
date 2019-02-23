@@ -39,4 +39,5 @@ RUN groupadd --gid $APP_GID $APP_USER && \
 # change user
 RUN chown $APP_USER:$APP_USER -R .
 USER $APP_USER
+RUN ["chmod", "+x", "/usr/src/app/boot.sh"]
 CMD sh -c "/usr/src/app/convert_env.sh && /usr/local/bin/gunicorn -w ${APP_WORKERS} -b :${APP_PORT} ${APP_MODULE}"

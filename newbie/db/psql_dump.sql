@@ -400,7 +400,7 @@ COPY public.admin_roles (id, role_name, role_description, created_date) FROM std
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
-cce1409604af
+dcd90c44806f
 \.
 
 

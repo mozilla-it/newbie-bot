@@ -1,20 +1,22 @@
 {
-    "name": "newbie-bot",
-    "description": "The Mozilla Newbie Bot",
-    "participate": {
-        "slack": "slack://mozilla.slack.com#slackbot-ideas",
-        "slack-contacts": ["jojo", "marty"]
-    },
-
-    "repository": {
-        "url": "https://github.com/mozilla-it/newbie-bot",
-        "license": "MPL 2.0"
-    },
-    "bugs": {
-        "list": "https://github.com/mozilla-it/newbie-bot/issues",
-        "report": "https://github.com/mozilla-it/newbie-bot/issues",
-    },
-    "urls": {
-        "prod": "https://newbie.mozilla-slack.app"
-    }
+  "name": "newbie-bot",
+  "description": "The Mozilla Newbie Bot",
+  "participate": {
+    "slack": "slack://mozilla.slack.com#slackbot-ideas",
+    "slack-contacts": [
+      "jojo",
+      "marty"
+    ]
+  },
+  "repository": {
+    "url": "https://github.com/mozilla-it/newbie-bot",
+    "license": "MPL 2.0"
+  },
+  "bugs": {
+    "list": "https://github.com/mozilla-it/newbie-bot/issues",
+    "report": "https://github.com/mozilla-it/newbie-bot/issues"
+  },
+  "urls": {
+    "prod": "https://newbie.mozilla-slack.app"
+  }
 }
