@@ -505,16 +505,20 @@ def send_newhire_messages():
                             user=user['id'],
                         )['channel']['id']
                         send_dm_message(dm, message)
-                        s.send_status = True
-                        s.last_updated = datetime.datetime.utcnow()
+                        sendmessage = db.session.query(Send).filter_by(message_id=s.message_id).filter_by(emp_id=s.emp_id).first()
+                        app.logger.info(f'sendmessage {sendmessage}')
+                        sendmessage.send_status = True
+                        sendmessage.last_updated = datetime.datetime.utcnow()
                         db.session.commit()
                 except NotFound as e:
                     print(e)
-                    s.send_status = True
-                    s.last_updated = datetime.datetime.utcnow()
+                    sendmessage = db.session.query(Send).filter_by(message_id=s.message_id).filter_by(emp_id=s.emp_id).first()
+                    sendmessage.send_status = True
+                    sendmessage.last_updated = datetime.datetime.utcnow()
                     db.session.commit()
             else:
-                s.cancel_status = True
+                sendmessage = db.session.query(Send).filter_by(message_id=s.message_id).filter_by(emp_id=s.emp_id).first()
+                sendmessage.cancel_status = True
                 db.session.commit()
                 print('User has opted out of notifications')
 

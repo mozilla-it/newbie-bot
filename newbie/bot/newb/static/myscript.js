@@ -189,18 +189,24 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
 
     // clear search
     $(function (){
-        var searchBox = document.getElementById('message_search');
-        searchBox.addEventListener('keyup', () => {
-            if (searchBox.value.length > 0) {
-                [].forEach.call(document.querySelectorAll('.hide-on-search'), function (el) {
-                    el.style.visibility = 'hidden';
-                });
-            } else {
-                [].forEach.call(document.querySelectorAll('.hide-on-search'), function (el) {
-                    el.style.visibility = 'visible';
-                });
-            }
-        });
+        try {
+          var searchBox = document.getElementById('message_search');
+            searchBox.addEventListener('keyup', () => {
+                if (searchBox.value.length > 0) {
+                    [].forEach.call(document.querySelectorAll('.hide-on-search'), function (el) {
+                        el.style.visibility = 'hidden';
+                    });
+                } else {
+                    [].forEach.call(document.querySelectorAll('.hide-on-search'), function (el) {
+                        el.style.visibility = 'visible';
+                    });
+                }
+            });
+        }
+        catch(err) {
+
+        }
+
     });
     // end clear search
 
