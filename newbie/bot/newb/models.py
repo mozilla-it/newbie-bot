@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 import datetime
 from sqlalchemy import String, ARRAY, JSON
+from sqlalchemy.inspection import inspect
 
 db = SQLAlchemy()
 
@@ -139,3 +140,5 @@ class SearchTerms(db.Model):
 
     def __repr__(self):
         return f"SearchTerms('{self.search_term}', '{self.search_date}')"
+
+

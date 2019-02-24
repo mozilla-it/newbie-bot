@@ -907,6 +907,25 @@ def delete_message(message_id):
         return redirect(url_for('view_messages'))
 
 
+@app.route('/pendingmessages', methods=['GET'])
+@requires_super
+def pending_messages():
+    """
+    Get pending messages
+    :return: JSON list of pending messages
+    """
+    with app.app_context():
+        user = get_user_info()
+        admin = get_user_admin()
+        pending = Send.query.all()
+        return render_template(
+            'pending_messages.html',
+            response=pending,
+            user=user,
+            admin=admin,
+        )
+
+
 @app.route('/employees', methods=['GET', 'POST'])
 @requires_manager
 def add_new_employee():
