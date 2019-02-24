@@ -26,7 +26,7 @@ SQLALCHEMY_DATABASE_DB = config('POSTGRES_DB')
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 APP_CONTAINER_NAME = config('APP_CONTAINER_NAME')
 AUTH_URL = config('AUTH_URL')
-
+SUPER_NEWBIE = config('SUPER_NEWBIE')
 
 all_timezones = [
     {'zone': 'Africa/Abidjan', 'name': 'Africa/Abidjan'},

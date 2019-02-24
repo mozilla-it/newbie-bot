@@ -32,6 +32,7 @@ from ruamel import yaml
 from config import CFG
 from utils.dictionary import merge
 from json import dumps
+import settings
 
 import re
 from authzero import AuthZero
@@ -625,7 +626,7 @@ def profile():
                 db.session.commit()
                 slack_client.api_call(
                     'chat.postMessage',
-                    channel='GE97V74BD',
+                    channel=settings.SUPER_NEWBIE,
                     text=f'{person.first_name} {person.last_name} has requested to be granted the '
                          f'following role(s) {requested_roles}.')
         return render_template('profile.html',
@@ -1355,7 +1356,7 @@ def message_actions():
                     app.logger.info(f'Jira Issue {form_json}')
                     slack_client.api_call(
                         'chat.postMessage',
-                        channel='GE97V74BD',
+                        channel=settings.SUPER_NEWBIE,
                         text=f'{form_json["submission"]["user_name"]} is reporting the following issue {form_json["submission"]["newbie_issue"]} ')
             if form_json['state'] == 'thumbsdown':
                 channel = form_json['channel']['id']
