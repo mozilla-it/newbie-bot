@@ -32,7 +32,7 @@ from ruamel import yaml
 from config import CFG
 from utils.dictionary import merge
 from json import dumps
-import settings
+from newb.settings import SUPER_NEWBIE
 
 import re
 from authzero import AuthZero
@@ -626,7 +626,7 @@ def profile():
                 db.session.commit()
                 slack_client.api_call(
                     'chat.postMessage',
-                    channel=settings.SUPER_NEWBIE,
+                    channel=SUPER_NEWBIE,
                     text=f'{person.first_name} {person.last_name} has requested to be granted the '
                          f'following role(s) {requested_roles}.')
         return render_template('profile.html',
@@ -1343,21 +1343,21 @@ def message_actions():
             return make_response(message_text, 200)
         elif form_json['type'] == 'dialog_submission':
             print('dialog {}'.format(form_json))
-            feedback = UserFeedback.query.filter_by(emp_id=form_json['user']['name']).all()
-            created = feedback[len(feedback) - 1].created_date
-            for feed in feedback:
-                submission = form_json['submission']
-                app.logger.info(f'submission {submission}')
-                if 'comment' in submission:
+            submission = form_json['submission']
+            if 'comment' in submission:
+                feedback = UserFeedback.query.filter_by(emp_id=form_json['user']['name']).all()
+                created = feedback[len(feedback) - 1].created_date
+                for feed in feedback:
+                    app.logger.info(f'submission {submission}')
                     if feed.created_date == created:
                         feed.comment = form_json['submission']['comment']
                         db.session.commit()
-                if 'newbie_issue' in submission:
-                    app.logger.info(f'Jira Issue {form_json}')
-                    slack_client.api_call(
-                        'chat.postMessage',
-                        channel=settings.SUPER_NEWBIE,
-                        text=f'{form_json["submission"]["user_name"]} is reporting the following issue {form_json["submission"]["newbie_issue"]} ')
+            if 'newbie_issue' in submission:
+                app.logger.info(f'Jira Issue {form_json}')
+                slack_client.api_call(
+                    'chat.postMessage',
+                    channel=SUPER_NEWBIE,
+                    text=f'{form_json["submission"]["user_name"]} is reporting the following issue {form_json["submission"]["newbie_issue"]} ')
             if form_json['state'] == 'thumbsdown':
                 channel = form_json['channel']['id']
                 send_opt_out_message(channel)
