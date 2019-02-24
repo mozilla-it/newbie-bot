@@ -142,10 +142,10 @@ if AUTH_AUDIENCE is '':
     AUTH_AUDIENCE = 'https://' + app.config.get('HOST') + '/userinfo'
 
 # This will be the callback URL Auth0 returns the authenticate to.
-app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
+# app.config['AUTH_URL'] = 'https://{}:{}/callback/auth'.format(app.config.get('HOST'), app.config.get('PORT'))
 # app.config['AUTH_URL'] = 'http://{}:{}/callback/auth'.format(app.config.get('HOST'), 8000)
 # app.config['AUTH_URL'] = 'https://nhobot.ngrok.io/callback/auth'
-# app.config['AUTH_URL'] = 'https://newbie-stage.mozilla-slack.app/callback/auth'
+app.config['AUTH_URL'] = settings.AUTH_URL
 
 
 oidc_config = config.OIDCConfig()
