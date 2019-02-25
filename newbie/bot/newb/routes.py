@@ -179,25 +179,42 @@ def get_auth_zero():
                         db.session.rollback()
 
 
+def get_slack_with_pagination(cursor):
+    cursor = cursor
+    slack_members = []
+    while cursor is not None:
+        slack_users = get_slack_users(cursor=cursor)
+        for user in slack_users["members"]:
+            slack_members.append(user)
+        cursor = slack_users['response_metadata']['next_cursor']
+        if cursor is '':
+            cursor = None
+    app.logger.info(f'slack members {len(slack_members)}')
+    found_slack_members = searchprofile(slack_members)
+    return found_slack_members
+
+def get_slack_users(cursor):
+    slack_users = slack_client.api_call('users.list', cursor=cursor)
+    app.logger.info(f'slack users {len(slack_users["members"])}')
+    return slack_users
+
+
+
 def updates_from_slack():
     app.logger.info(f'updates from slack')
     people_to_update = []
     with app.app_context():
         actual_one_day_ago = measure_date()
-        slack_users = slack_client.api_call('users.list')['members']
-        slack_members = []
-        slack_members = searchprofile(slack_users)
-
-        app.logger.info(f'slack users {len(slack_users)}')
-        app.logger.info(f'slack members {slack_members}')
+        slack_members = get_slack_with_pagination('')
+        # app.logger.info(f'slack members {slack_members}')
         people_to_update = People.query.filter_by(slack_handle='').all()
         app.logger.info(f'people {len(people_to_update)}')
         for person in people_to_update:
             for member in slack_members:
                 if member['email'] == person.email:
-                    app.logger.info(f'slack name {member["name"]} person {person.email}')
-                    person_selected = db.session.query(People).filter(People.email == person.email).one()
-                    app.logger.info(f'person selected before {person_selected}')
+                    # app.logger.info(f'slack name {member["name"]} person {person.email}')
+                    person_selected = db.session.query(People).filter(People.email == person.email).first()
+                    # app.logger.info(f'person selected before {person_selected}')
                     try:
                         slack_handle = member['name']
                     except:
@@ -210,14 +227,14 @@ def updates_from_slack():
                     person_selected.slack_handle = slack_handle
                     person_selected.timezone = timezone
                     person_selected.last_modified = datetime.datetime.utcnow()
-                    app.logger.info(f'person selected after {person_selected}')
+                    # app.logger.info(f'person selected after {person_selected}')
                     db.session.commit()
                     person.timezone = timezone
-                    app.logger.info(actual_one_day_ago)
+                    # app.logger.info(actual_one_day_ago)
                     start_date = person.start_date
                     # .strptime('%Y-%m-%d')
-                    app.logger.info('start_date {}'.format(start_date))
-                    app.logger.info(start_date > actual_one_day_ago)
+                    # app.logger.info('start_date {}'.format(start_date))
+                    # app.logger.info(start_date > actual_one_day_ago)
                     if start_date > actual_one_day_ago:
                         app.logger.info('start date within 30 days {}'.format(start_date > actual_one_day_ago))
                         add_messages_to_send(person)
@@ -416,8 +433,10 @@ def searchemail(dict_list, key, value):
 def searchprofile(dict_list):
     profile_list = []
     for item in dict_list:
+        app.logger.info(f'item {item}')
         try:
-            profile_list.append({'email': item['profile']['email'], 'name': item['name'], 'timezone': item['tz']})
+            found_user = {'email': item['profile']['email'], 'name': item['name'], 'timezone': item['tz']}
+            profile_list.append(found_user)
         except KeyError as err:
             pass
             # app.logger.info(f'keyerror search profile {item["profile"]}')
