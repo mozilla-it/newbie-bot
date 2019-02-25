@@ -1,7 +1,7 @@
 from newb.models import People, Messages, Admin, AdminRoles, UserFeedback, AuthGroups, SearchTerms, MessagesToSend as Send
 from newb import db
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func
+from sqlalchemy import func, update
 from werkzeug.exceptions import NotFound
 from flask_uploads import UploadSet, configure_uploads, DATA
 import os
@@ -193,7 +193,7 @@ def updates_from_slack():
             app.logger.info(f'slackinfo {slackinfo}')
             if slackinfo:
                 app.logger.info(f'slack name {slackinfo["name"]} person {person.email}')
-                person_selected = db.session.query(People).filter_by(email=person.email).first()
+                person_selected = db.session.query(People).filter(People.email == person.email).one()
                 app.logger.info(f'person selected before {person_selected}')
                 try:
                     slack_handle = slackinfo['name']
