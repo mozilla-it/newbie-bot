@@ -185,7 +185,7 @@ def updates_from_slack():
     with app.app_context():
         actual_one_day_ago = measure_date()
         slack_users = slack_client.api_call('users.list')['members']
-        app.logger.info(f'slack users len(slack_users)')
+        app.logger.info(f'slack users {len(slack_users)}')
         people_to_update = People.query.filter_by(slack_handle='').all()
         app.logger.info(f'people {len(people_to_update)}')
         for person in people_to_update:
