@@ -195,7 +195,7 @@ def get_slack_with_pagination(cursor):
 
 def get_slack_users(cursor):
     slack_users = slack_client.api_call('users.list', cursor=cursor)
-    app.logger.info(f'slack users {len(slack_users["members"])}')
+    # app.logger.info(f'slack users {len(slack_users["members"])}')
     return slack_users
 
 
@@ -236,7 +236,7 @@ def updates_from_slack():
                     # app.logger.info('start_date {}'.format(start_date))
                     # app.logger.info(start_date > actual_one_day_ago)
                     if start_date > actual_one_day_ago:
-                        app.logger.info('start date within 30 days {}'.format(start_date > actual_one_day_ago))
+                        # app.logger.info('start date within 30 days {}'.format(start_date > actual_one_day_ago))
                         add_messages_to_send(person)
 
 
@@ -320,7 +320,7 @@ def add_messages_to_send(person: People):
         send_day_check = 0
         current_send_date_time = None
         my_new_dates = create_message_send_map(messages, start_date, my_country, my_timezone)
-        app.logger.info(f'my new dates {my_new_dates}')
+        # app.logger.info(f'my new dates {my_new_dates}')
         for m in my_new_dates:
             app.logger.info(f'new dates {m}')
         for m in messages:
@@ -381,7 +381,7 @@ def adjust_send_date_for_holidays_and_weekends(send_date_time, country):
             send_date_time = send_date_time + datetime.timedelta(days=1)
             current_send_date_time = send_date_time
             adjust_send_date_for_holidays_and_weekends(send_date_time, country)
-    app.logger.info(f'adjust end send date {send_date_time}')
+    # app.logger.info(f'adjust end send date {send_date_time}')
     return send_date_time
 
 
