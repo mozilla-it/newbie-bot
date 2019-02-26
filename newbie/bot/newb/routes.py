@@ -433,9 +433,10 @@ def searchemail(dict_list, key, value):
 def searchprofile(dict_list):
     profile_list = []
     for item in dict_list:
-        app.logger.info(f'item {item}')
+        # app.logger.info(f'item {item}')
         try:
-            found_user = {'email': item['profile']['email'], 'name': item['name'], 'timezone': item['tz']}
+            found_user = {'email': item['profile']['email'], 'name': item['name'], 'timezone': item['tz'],
+                          'id': item['id']}
             profile_list.append(found_user)
         except KeyError as err:
             pass
@@ -524,7 +525,8 @@ def send_newhire_messages():
         lasthour = now - datetime.timedelta(minutes=59, seconds=59, days=7)
         send = Send.query.filter(Send.send_dttm > lasthour).filter(Send.send_dttm < now).filter(Send.send_status.is_(False))
         slack_client.rtm_connect()
-        users = slack_client.api_call('users.list')['members']
+        # users = slack_client.api_call('users.list')['members']
+        users = get_slack_with_pagination('')
         for s in send:
             emp = People.query.filter_by(emp_id=s.emp_id).first()
             if emp.user_opt_out is False and emp.manager_opt_out is False and emp.admin_opt_out is False:
@@ -533,6 +535,7 @@ def send_newhire_messages():
                     message_user = emp.slack_handle
                     user = search(users, 'name', message_user)
                     if user is not None:
+                        app.logger.info(f'send newhire {user["id"]}')
                         dm = slack_client.api_call(
                             'im.open',
                             user=user['id'],
