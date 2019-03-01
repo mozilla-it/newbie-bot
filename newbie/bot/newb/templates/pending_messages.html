@@ -1,8 +1,8 @@
 {%  extends 'layout.html' %}
 {% block body %}
-    <div class="results">
+    <pre class="results">
         {% for r in response %}
             <div>{{ r }}</div>
         {% endfor %}
-    </div>
+    </pre>
 {% endblock %}

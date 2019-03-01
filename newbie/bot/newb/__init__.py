@@ -129,7 +129,7 @@ auth0 = oauth.register(
 app.config.update(collect(
     get('DEBUG', default=True, convert=word_for_true),
     get('HOST', default='localhost'),
-    get('PORT', default=5000, convert=int),
+    get('PORT', default=8000, convert=int),
     get('AUTH_ID', default=settings.AUTH_ID),
     get('AUTH_SECRET', default=settings.AUTH_SECRET),
     get('AUTH_HOST', default=settings.AUTH_HOST),

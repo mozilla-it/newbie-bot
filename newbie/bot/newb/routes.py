@@ -1475,9 +1475,7 @@ def newbie_slash():
             db.session.commit()
             message_response = "Welcome back! You'll receive any scheduled notifications."
         elif incoming_message[0] == 'help':
-            message_response = "To explore how I can help you, try using the slash command for searching my topics. " \
-                               "It's easy, just type /newbie search followed by the topic(s) that you need more " \
-                               "information on. I'll respond with any relevant information I find."
+            message_response = "Visit the Newbie Help page to learn more about me or report a bug https://mana.mozilla.org/wiki/display/CW/Newbie+Help+Page"
         elif incoming_message[0] == 'opt-out':
             channel = request.values['channel_id']
             send_opt_out_message(channel)
