@@ -561,6 +561,7 @@ def send_newhire_messages():
 
 def send_dm_message(dm, message):
     print(f'send message {message}')
+    print(f'send dm {dm}')
     message_text = message.text.split('button:')
     message_link = message.title_link
     message_attachments = []
@@ -1475,7 +1476,9 @@ def newbie_slash():
             db.session.commit()
             message_response = "Welcome back! You'll receive any scheduled notifications."
         elif incoming_message[0] == 'help':
-            message_response = "Visit the Newbie Help page to learn more about me or report a bug https://mana.mozilla.org/wiki/display/CW/Newbie+Help+Page"
+            message_response = "Visit the Newbie Help page to learn more about me or report a " \
+                               "bug https://mana.mozilla.org/wiki/display/CW/Newbie+Help+Page"
+
         elif incoming_message[0] == 'opt-out':
             channel = request.values['channel_id']
             send_opt_out_message(channel)
