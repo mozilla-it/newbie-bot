@@ -242,7 +242,7 @@ def updates_from_slack():
 
 def measure_date():
     current_day = datetime.datetime.today()
-    thirty_days_ago = datetime.timedelta(days=31)
+    thirty_days_ago = datetime.timedelta(days=30)
     actual_thirty_days_ago = datetime.datetime.strptime(
         datetime.datetime.strftime(current_day - thirty_days_ago, '%Y-%m-%d'), '%Y-%m-%d')
     return actual_thirty_days_ago

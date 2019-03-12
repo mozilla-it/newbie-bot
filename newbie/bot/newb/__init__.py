@@ -43,8 +43,8 @@ app.use_reloader = False
 app.jinja_env.cache = {}
 cors(app)
 db_url = app.config["SQLALCHEMY_DATABASE_URI"]
-if not database_exists(db_url):
-    create_database(db_url)
+# if not database_exists(db_url):
+#     create_database(db_url)
 # db = SQLAlchemy(app, session_options={"expire_on_commit": False})
 db = SQLAlchemy(app)
 db.init_app(app)

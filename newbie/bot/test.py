@@ -1,8 +1,8 @@
 import pytest
 import datetime
-from newbie.bot.newb import app, db
-from newbie.bot.newb.models import People, Messages
-from newbie.bot.newb.routes import adjust_send_date_for_holidays_and_weekends
+from .newb import app, db, session
+from .newb.models import People, Messages
+from .newb.routes import adjust_send_date_for_holidays_and_weekends, get_user_admin, requires_super, requires_admin, measure_date
 
 
 """
@@ -125,3 +125,18 @@ class TestClass(object):
         print('send date {}'.format(send_date))
         assert send_date.weekday() <= 4
         assert send_date == datetime.date(2018, 11, 19)
+
+    # def test_get_user_admin(self):
+    #     with app.test_request_context():
+    #         user_name = {'user_id':'ad|LDAP-Mozilla-mballard' }
+    #         session['profile'] = user_name
+    #         user = session.get('profile')['user_id']
+    #         print(f'session {user}')
+    #         admin = get_user_admin()
+    #         print(f'admin {admin}')
+
+    def test_measure_date(self):
+        thirty = measure_date()
+        current_day = datetime.datetime.today()
+        delta = current_day - thirty
+        assert delta.days == 30
