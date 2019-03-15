@@ -988,7 +988,8 @@ def user_feedback():
         for feedback in feedbacks:
             if user is None:
                 user = People.query.filter_by(emp_id=feedback.emp_id).first()
-                send_day = feedback.created_date - user.start_date
+                if user is not None:
+                    send_day = feedback.created_date - user.start_date
             result_row = {'id': feedback.id, 'first_name': user.first_name, 'last_name': user.last_name,
                           'country': user.country, 'action': feedback.action, 'comment': feedback.comment,
                           'send_day': send_day.days}
@@ -1016,7 +1017,8 @@ def download_feedback():
         for feedback in feedbacks:
             if user is None:
                 user = People.query.filter_by(emp_id=feedback.emp_id).first()
-                send_day = feedback.created_date - user.start_date
+                if user is not None:
+                    send_day = feedback.created_date - user.start_date
             result_row = {'id': feedback.id, 'first_name': user.first_name, 'last_name': user.last_name,
                           'country': user.country, 'action': feedback.action, 'comment': feedback.comment,
                           'send_day': send_day.days}
