@@ -6,7 +6,7 @@
 
     </div>
     <div id="navbarSupportedContent" class="collapse navbar-collapse">
-        <ul class="navbar-nav mr-auto">
+        <ul class="nav navbar-nav mr-auto">
             <li class="nav-item active"><a class="nav-link" href="/">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="/help">Help</a></li>
             {% if user is not none %}
@@ -17,6 +17,8 @@
             <li class="nav-item"><a class="nav-link" href="/messages">Messages</a></li>
                     {% endif %}
                 {% if admin.super_admin %}
+            <li class="nav-item"><a class="nav-link" href="/pendingmessages">Pending Messages</a></li>
+            <li class="nav-item"><a class="nav-link" href="/userfeedback">User Feedback</a></li>
             <li class="nav-item"><a class="nav-link" href="/slackMessage">Send Slack Message</a></li>
             <li class="nave-item"><a class="nav-link" href="/admin">Admin</a></li>
                     {% endif %}

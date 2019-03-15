@@ -1,0 +1,42 @@
+{%  extends 'layout.html' %}
+{% block body %}
+<div class="container">
+  <div class="download">
+    <div id="downloadbutton" class="btn btn-secondary">Download</div>
+  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Name</th>
+        <th scope="col">Rating</th>
+        <th scope="col">Send Day</th>
+        <th scope="col">Country</th>
+        <th scope="col">Comment</th>
+
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in response %}
+      <tr>
+        <th scope="row">{{r.id}}</th>
+        <td>{{r.first_name}} {{r.last_name}}</td>
+        <td>{% if 'thumbsup' in r.action %}
+            👍
+            {% else %}
+            👎
+            {% endif %}
+        </td>
+          <td>{{r.send_day}}</td>
+        <td>{{r.country}}</td>
+        <td>{{r.comment}}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+
+<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+<script src="{{ url_for('static', filename='feedback.js') }}"></script>
+{% endblock %}

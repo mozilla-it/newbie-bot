@@ -3,6 +3,7 @@ from newb import db
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, update
 from werkzeug.exceptions import NotFound
+from werkzeug.datastructures import Headers
 from flask_uploads import UploadSet, configure_uploads, DATA
 import os
 
@@ -20,7 +21,7 @@ from newb.forms.pending_requests_form import PendingRequestsForm
 from newb import app, session, redirect, current_host, wraps, slack_client, \
     client_id, client_secret, client_uri, us_holidays, ca_holidays, \
     make_response, slack_verification_token, render_template, auth0, request, \
-    Response, url_for, all_timezones, flash, admin_team_choices, sdu
+    Response, url_for, all_timezones, flash, admin_team_choices, sdu, stream_with_context, send_file
 from newb.nltk_processing import NltkProcess, get_tag_suggestions, filter_stopwords
 from profanity_check import predict_prob
 import json
@@ -33,6 +34,8 @@ from config import CFG
 from utils.dictionary import merge
 from json import dumps
 from newb.settings import SUPER_NEWBIE
+import csv
+import io
 
 import re
 from authzero import AuthZero
@@ -965,6 +968,91 @@ def pending_messages():
             response=pending,
             user=user,
             admin=admin,
+        )
+
+
+@app.route('/userfeedback', methods=['GET'])
+@requires_super
+def user_feedback():
+    """
+    Get user feedback
+    :return: List of user Feedback
+    """
+    with app.app_context():
+        users = get_user_info()
+        admin = get_user_admin()
+        feedbacks = UserFeedback.query.all()
+        results = []
+        user = None
+        for feedback in feedbacks:
+            if user is None:
+                user = People.query.filter_by(emp_id=feedback.emp_id).first()
+            send_day = feedback.created_date - user.start_date
+            result_row = {'id': feedback.id, 'first_name': user.first_name, 'last_name': user.last_name,
+                          'country': user.country, 'action': feedback.action, 'comment': feedback.comment,
+                          'send_day': send_day.days}
+            results.append(result_row)
+        return render_template(
+            'user_feedback.html',
+            response=results,
+            user=users,
+            admin=admin,
+        )
+
+
+@app.route('/downloadfeedback', methods=['GET'])
+@requires_super
+def download_feedback():
+    """
+    Get a list of user feedback and download to csv
+    :return: user_feedback.csv
+    """
+    with app.app_context():
+        feedbacks = UserFeedback.query.all()
+        results = []
+        user = None
+        for feedback in feedbacks:
+            if user is None:
+                user = People.query.filter_by(emp_id=feedback.emp_id).first()
+            send_day = feedback.created_date - user.start_date
+            result_row = {'id': feedback.id, 'first_name': user.first_name, 'last_name': user.last_name,
+                          'country': user.country, 'action': feedback.action, 'comment': feedback.comment,
+                          'send_day': send_day.days}
+            results.append(result_row)
+        si = io.StringIO()
+        cw = csv.writer(si)
+        for result in results:
+            cw.writerows(result)
+
+        def generate():
+            data = io.StringIO()
+            w = csv.writer(data)
+
+            # write header
+            w.writerow(('id', 'first_name', 'last_name', 'country', 'action', 'comment', 'send_day',))
+            yield data.getvalue()
+            data.seek(0)
+            data.truncate(0)
+
+            # write each log item
+            for item in results:
+                w.writerow((
+                    item['id'],
+                    item['first_name'],
+                    item['last_name'],
+                    item['country'],
+                    item['action'],
+                    item['comment'],
+                    item['send_day'],
+                ))
+                yield data.getvalue()
+                data.seek(0)
+                data.truncate(0)
+        headers = Headers()
+        headers.set('Content-Disposition', 'attachment', filename='user_feedback.csv')
+        return Response(
+            stream_with_context(generate()),
+            mimetype='text/csv', headers=headers
         )
 
 

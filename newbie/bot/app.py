@@ -34,5 +34,5 @@ if __name__ != '__main__':
 
 if __name__ == '__main__':
     print('starting app')
-    # app.run(ssl_context=('cert.pem', 'key.pem'), host='0.0.0.0', port=8000)
-    app.run(host='0.0.0.0', port=8000)
+    app.run(ssl_context=('cert.pem', 'key.pem'), host='0.0.0.0', port=5000)
+    # app.run(host='0.0.0.0', port=8000)

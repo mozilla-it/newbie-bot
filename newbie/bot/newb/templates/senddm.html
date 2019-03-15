@@ -11,7 +11,7 @@
                         <div class="form-group">
 {#                            {{ render_field(form.message_user, class_="form_control") }}#}
                             <div><label for="message_user">Select User</label></div>
-                            <select name="message_user" class="custom-select" id="inputGroupSelect01">
+                            <select id="message_user" name="message_user" class="custom-select" id="inputGroupSelect01">
                             <option selected>Choose...</option>
                             {% for user in users %}
                             <option value="{{ user['name'] }}">{{ user['profile']['real_name'] }}</option>

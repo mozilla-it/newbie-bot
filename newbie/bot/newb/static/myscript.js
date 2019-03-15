@@ -210,6 +210,8 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
     });
     // end clear search
 
+
+
 }(window, jQuery));
 // add tool tip to http link
     $(function() {
