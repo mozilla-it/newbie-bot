@@ -982,18 +982,18 @@ def user_feedback():
         users = get_user_info()
         admin = get_user_admin()
         feedbacks = UserFeedback.query.all()
+        users = People.query.all()
         results = []
         user = None
         send_day = 0
         for feedback in feedbacks:
-            if user is None:
-                user = People.query.filter_by(emp_id=feedback.emp_id).first()
-                if user is not None:
-                    send_day = feedback.created_date - user.start_date
-            result_row = {'id': feedback.id, 'first_name': user.first_name, 'last_name': user.last_name,
+            user = next((u for u in users if u.emp_id == feedback.emp_id), None)
+            if user is not None:
+                send_day = feedback.created_date - user.start_date
+                result_row = {'id': feedback.id, 'first_name': user.first_name, 'last_name': user.last_name,
                           'country': user.country, 'action': feedback.action, 'comment': feedback.comment,
                           'send_day': send_day.days}
-            results.append(result_row)
+                results.append(result_row)
         return render_template(
             'user_feedback.html',
             response=results,
@@ -1011,18 +1011,18 @@ def download_feedback():
     """
     with app.app_context():
         feedbacks = UserFeedback.query.all()
+        users = People.query.all()
         results = []
         user = None
         send_day = 0
         for feedback in feedbacks:
-            if user is None:
-                user = People.query.filter_by(emp_id=feedback.emp_id).first()
-                if user is not None:
-                    send_day = feedback.created_date - user.start_date
-            result_row = {'id': feedback.id, 'first_name': user.first_name, 'last_name': user.last_name,
-                          'country': user.country, 'action': feedback.action, 'comment': feedback.comment,
-                          'send_day': send_day.days}
-            results.append(result_row)
+            user = next((u for u in users if u.emp_id == feedback.emp_id), None)
+            if user is not None:
+                send_day = feedback.created_date - user.start_date
+                result_row = {'id': feedback.id, 'first_name': user.first_name, 'last_name': user.last_name,
+                              'country': user.country, 'action': feedback.action, 'comment': feedback.comment,
+                              'send_day': send_day.days}
+                results.append(result_row)
         si = io.StringIO()
         cw = csv.writer(si)
         for result in results:
