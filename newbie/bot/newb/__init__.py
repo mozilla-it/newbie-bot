@@ -38,7 +38,7 @@ sdu = settings.SQLALCHEMY_DATABASE_URI + settings.SQLALCHEMY_DATABASE_USER \
       + settings.SQLALCHEMY_DATABASE_DB
 app.config['SQLALCHEMY_DATABASE_URI'] = sdu
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/newbie'
-app.debug = True
+app.debug = False
 app.use_reloader = False
 app.jinja_env.cache = {}
 cors(app)

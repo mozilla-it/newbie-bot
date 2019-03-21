@@ -795,7 +795,11 @@ def add_new_message():
         elif request.method == 'POST':
             if form.validate():
                 send_day = db.session.query(func.max(Messages.send_day)).scalar() + 1
-                title_link = json.loads(form.linkitems.data)
+                title_link = ''
+                try:
+                    title_link = json.loads(form.linkitems.data)
+                except:
+                    title_link = ''
                 date_start = form.send_date.data.split('-')
                 if date_start[0] == '':
                     sdate = datetime.date.today()
@@ -943,8 +947,7 @@ def delete_message(message_id):
     :return:
     """
     with app.app_context():
-        messages = Messages.query.get_or_404(message_id)
-        db.session.delete(messages)
+        db.session.query(Messages).filter(Messages.id == message_id).delete()
         db.session.commit()
         flash("The message has been deleted.", 'success')
         if current_host:
@@ -1263,8 +1266,7 @@ def delete_role(role_id):
     :return:
     """
     with app.app_context():
-        role = AdminRoles.query.get_or_404(role_id)
-        db.session.delete(role)
+        db.session.query(AdminRoles).filter(AdminRoles.id == role_id).delete()
         db.session.commit()
         flash("Admin role successfully deleted.", 'success')
         if current_host:
@@ -1329,8 +1331,7 @@ def delete_admin(admin_id):
     :return:
     """
     with app.app_context():
-        admin = Admin.query.get_or_404(admin_id)
-        db.session.delete(admin)
+        db.session.query(Admin).filter(Admin.id == admin_id).delete()
         db.session.commit()
         flash("Admin has been successfully deleted.", 'success')
         if current_host:

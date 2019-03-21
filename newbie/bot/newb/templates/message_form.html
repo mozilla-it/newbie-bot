@@ -72,8 +72,8 @@
         </div>
         <div class="col-6">
             <div class="form-group multi-collapse collapse" id="multiCollapseYes">
-                <div><label for="start_date">Send Date</label></div>
-                <input id="start_date" data-provide="datepicker" data-date-format="mm/dd/yyyy" id="send_date" type="date" name="send_date"  />
+                <div><label for="send_date">Send Date</label></div>
+                <input data-provide="datepicker" data-date-format="mm/dd/yyyy" id="send_date" type="date" name="send_date"  />
             </div>
         </div>
     </div>
@@ -83,7 +83,7 @@
                 <div class="row moz-left-pad">
                     <input type=text id=link_name name=link_name class="form-control moz-input" placeholder="Name" data-toggle="tooltip" data-placement="top" title="This value will be displayed as a button title.  Links require a name and a link value, once both fields have values you must click the Add Link button below. Links are not required for every message." >
                     <input type="text" id="link_url" name="link_url" placeholder="Link" data-toggle="tooltip" data-placement="top" title="URL must begin with http or https - ex https://mozilla.com  Links require a name and a link value, once both fields have values you must click the Add Link button below.  Links are not required for every message.">
-                    <input name="linkitems" id="linkitems" type="hidden">
+                    <input name="linkitems" id="linkitems" >
                 </div>
                 <a class="btn btn-sm btn-outline-primary moz-drop-sm moz-disabled" name=add_link id=add_link >Add Link</a>
             </div>

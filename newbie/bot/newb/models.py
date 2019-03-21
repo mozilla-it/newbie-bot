@@ -65,7 +65,7 @@ class Messages(db.Model):
     emp_type = db.Column(db.String(1000), nullable=True, default='FTE')
 
     def __repr__(self):
-        return f"Messages('{self.type}', '{self.topic}', '{self.title_link}'" \
+        return f"Messages('{self.type}', '{self.topic}', '{self.title_link}', " \
             f"'{self.send_day}', '{self.send_hour}', " \
             f"'{self.text}', '{self.send_date}', '{self.created_date}', '{self.country}', " \
             f"'{self.callback_id}', '{self.tags}', '{self.team}', '{self.owner}', '{self.location}', '{self.emp_type}')"
