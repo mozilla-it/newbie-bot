@@ -563,10 +563,11 @@ def send_newhire_messages():
 
 
 def send_dm_message(dm, message):
-    print(f'send message {message}')
-    print(f'send dm {dm}')
+    app.logger.info(f'send message {message}')
+    app.logger.info(f'send dm {dm}')
     message_text = message.text.split('button:')
     message_link = message.title_link
+    app.logger.info(f'message link {message_link}')
     message_attachments = []
     callback = message.topic.lower()
     if len(message_link) > 0:
@@ -1400,12 +1401,11 @@ def message_actions():
         if form_json['type'] == 'interactive_message':
             actions = form_json['actions'][0]['value']
             user = form_json['user']['name']
-            print(f'user {user}')
-            print(f'callback id {callback_id}')
+            app.logger.info(f'user {user}')
+            app.logger.info(f'callback id {callback_id}')
             message_text = ''
             if callback_id == 'opt_out':
                 if 'keep' in actions.lower():
-                    print('keep')
                     message_text = 'We\'ll keep sending you onboarding messages!'
                     # People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
                     person = People.query.filter_by(slack_handle=user).first()
@@ -1415,11 +1415,9 @@ def message_actions():
                     slack_call_api('chat.update', form_json['channel']['id'], form_json['message_ts'], message_text,
                                    '')
                 elif 'stop' in actions.lower():
-                    print('stop')
                     message_text = 'We\'ve unsubscribed you from onboarding messages.'
-                    # People.objects(Q(slack_handle=user)).update(set__user_opt_out=True)
                     person = People.query.filter_by(slack_handle=user).first()
-                    print(f'person {person.emp_id} {person.id}')
+                    # app.logger.info(f'person {person.emp_id} {person.id}')
                     person.user_opt_out = True
                     person.last_modified = datetime.datetime.utcnow()
                     db.session.commit()
@@ -1519,9 +1517,6 @@ def message_actions():
                 token = form_json['token']
                 app.logger.info(f'token {token}')
                 headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + token}
-                # app.logger.info(f'headers {headers}')
-                # app.logger.info(f'response_url {response_url}')
-                # app.logger.info(f'response {response}')
                 r = requests.post(response_url, data = response, headers=headers)
                 app.logger.info(f'response status {r.status_code}')
                 app.logger.info(f'respone complete {r.json()}')
