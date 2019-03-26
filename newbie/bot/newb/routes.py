@@ -30,7 +30,7 @@ import pytz
 from dateutil.relativedelta import relativedelta
 import requests
 from ruamel import yaml
-from config import CFG
+from cfg import CFG
 from utils.dictionary import merge
 from json import dumps
 from newb.settings import SUPER_NEWBIE

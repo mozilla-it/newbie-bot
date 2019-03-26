@@ -148,23 +148,14 @@ class AutoConfigPlus(AutoConfig): #pylint: disable=too-many-public-methods
         '''
         reporoot
         '''
-        try:
-            return git('rev-parse', '--show-toplevel')
-        except NotGitRepoError:
-            return self('APP_REPOROOT')
+        return git('rev-parse', '--show-toplevel')
 
     @property
-    def APP_TAGNAME(self):
+    def APP_INSTALLPATH(self):
         '''
-        tagname
+        install path
         '''
-        tag = self.APP_VERSION.split('-')[0]
-        depenv = {
-            'prod': '',
-            'stage': '-stage',
-            'dev': '-dev'
-        }[self.APP_DEPENV]
-        return f'{tag}{depenv}'
+        return self('APP_INSTALLPATH', '/usr/src/app')
 
     @property
     def APP_VERSION(self):
@@ -189,14 +180,14 @@ class AutoConfigPlus(AutoConfig): #pylint: disable=too-many-public-methods
     @property
     def APP_DEPENV(self):
         '''
-        depenv
+        deployment environment
         '''
-        env = 'dev'
-        if self.APP_BRANCH == 'master':
-            env = 'prod'
-        elif self.APP_BRANCH.startswith('stage/'):
-            env = 'stage'
-        return env
+        branch = self.APP_BRANCH
+        if branch == 'master':
+            return 'prod'
+        elif branch.startswith('stage/'):
+            return 'stage'
+        return 'dev'
 
     @property
     def APP_SRCTAR(self):

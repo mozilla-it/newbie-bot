@@ -114,8 +114,8 @@ venv.bak/
 .doit.db
 
 # env files
-git.env
-env-file
+secrets.env
+generated.env
 
 # ignore the source tarball
 .src.tar.gz

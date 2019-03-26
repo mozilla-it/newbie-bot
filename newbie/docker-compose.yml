@@ -1,15 +1,12 @@
 version: '3.3'
 services:
   db:
+    env_file:
+      - secrets.env
+      - generated.env
     build:
       context: ./db
-      labels:
-        APP_PROJNAME: ${APP_PROJNAME}
-        APP_VERSION: ${APP_VERSION}
-        APP_BRANCH: ${APP_BRANCH}
-        APP_REVISION: ${APP_REVISION}
-        APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
-    image: itcw/${APP_PROJNAME}_db:${APP_VERSION:-latest}
+    image: itcw/${APP_PROJNAME}_db:${APP_VERSION}
     restart: always
     networks:
       db-tunnel:
@@ -17,24 +14,15 @@ services:
           - db
     ports:
     - 5433:5432
-    environment:
-      APP_PROJNAME: ${APP_PROJNAME}
-      APP_VERSION: ${APP_VERSION}
-      APP_BRANCH: ${APP_BRANCH}
-      APP_REVISION: ${APP_REVISION}
-      APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
     volumes:
     - database_data:/var/lib/postgresql/data
   bot:
+    env_file:
+      - secrets.env
+      - generated.env
     build:
       context: ./bot
-      labels:
-        APP_PROJNAME: ${APP_PROJNAME}
-        APP_VERSION: ${APP_VERSION}
-        APP_BRANCH: ${APP_BRANCH}
-        APP_REVISION: ${APP_REVISION}
-        APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
-    image: itcw/${APP_PROJNAME}_bot:${APP_VERSION:-latest}
+    image: itcw/${APP_PROJNAME}_bot:${APP_VERSION}
     networks:
       - db-tunnel
     expose:
@@ -45,14 +33,6 @@ services:
       - db
     links:
     - db:newbie_db
-    environment:
-      APP_PROJNAME: ${APP_PROJNAME}
-      APP_VERSION: ${APP_VERSION}
-      APP_BRANCH: ${APP_BRANCH}
-      APP_REVISION: ${APP_REVISION}
-      APP_CONTAINER_NAME: ${APP_CONTAINER_NAME}
-    volumes:
-    - ${APP_PROJPATH}/bot/.env:/usr/src/app/.env
 networks:
   db-tunnel:
 volumes:
