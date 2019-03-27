@@ -322,7 +322,7 @@ def task_tar():
     for svc in SVCS:
         ## it is important to not that this is required to keep the tarballs from
         ## genereating different checksums and therefore different layers in docker
-        cmd = f'cd {CFG.APP_PROJPATH}/{svc} && echo "$(git status -s)" > {CFG.APP_REVISION} && tar cvh {excludes} . | gzip -n > {CFG.APP_SRCTAR} && rm {CFG.APP_REVISION}'
+        cmd = f'cd {CFG.APP_PROJPATH}/{svc} && tar cvh {excludes} . | gzip -n > {CFG.APP_SRCTAR}'
         yield {
             'name': svc,
             'task_dep': [
