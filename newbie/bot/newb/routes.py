@@ -1218,7 +1218,7 @@ def admin_request(person_id):
                         db.session.commit()
                     except IntegrityError:
                         db.session.rollback()
-                person = People.query.get_or_404(person_id)
+                person = db.session.query(People).filter(People.id == person_id).one()
                 person.admin_status = decision.capitalize()
                 person.admin_status_updated_date = datetime.datetime.utcnow()
                 current_admin = People.query.filter_by(emp_id=session.get('profile')['user_id']).first()
@@ -1413,8 +1413,7 @@ def message_actions():
             if callback_id == 'opt_out':
                 if 'keep' in actions.lower():
                     message_text = 'We\'ll keep sending you onboarding messages!'
-                    # People.objects(Q(slack_handle=user)).update(set__user_opt_out=False)
-                    person = People.query.filter_by(slack_handle=user).first()
+                    person = db.session.query(People).filter_by(slack_handle=user).first()
                     person.user_opt_out = False
                     person.last_modified = datetime.datetime.utcnow()
                     db.session.commit()
@@ -1422,7 +1421,7 @@ def message_actions():
                                    '')
                 elif 'stop' in actions.lower():
                     message_text = 'We\'ve unsubscribed you from onboarding messages.'
-                    person = People.query.filter_by(slack_handle=user).first()
+                    person = db.session.query(People).filter_by(slack_handle=user).first()
                     # app.logger.info(f'person {person.emp_id} {person.id}')
                     person.user_opt_out = True
                     person.last_modified = datetime.datetime.utcnow()
@@ -1483,7 +1482,7 @@ def message_actions():
             print('dialog {}'.format(form_json))
             submission = form_json['submission']
             if 'comment' in submission:
-                feedback = UserFeedback.query.filter_by(emp_id=form_json['user']['name']).all()
+                feedback = db.session.query(UserFeedback).filter_by(emp_id=form_json['user']['name']).all()
                 created = feedback[len(feedback) - 1].created_date
                 for feed in feedback:
                     app.logger.info(f'submission {submission}')
@@ -1568,7 +1567,7 @@ def newbie_slash():
         user = json.dumps(request.values['user_name'])
         user = user.replace('"', '')
         if incoming_message[0] == 'opt-in':
-            person = People.query.filter_by(slack_handle=user).first()
+            person = db.session.query(People).filter_by(slack_handle=user).first()
             person.user_opt_out = False
             person.last_modified = datetime.datetime.utcnow()
             db.session.commit()
