@@ -908,22 +908,28 @@ def edit_message(message_id):
             return render_template('message_edit.html', form=form, user=user, admin=admin, message=messages, messageaction=messageaction)
         elif request.method == 'POST':
             if form.validate():
+                message = Messages.query.get(message_id)
+                messages = db.session.query(Messages).filter(Messages.id == message.id).one()
+
                 messages.type = form.message_type.data
                 messages.topic = form.topic.data
+                app.logger.info(f'title_link {json.loads(form.linkitems.data)}')
                 messages.title_link = json.loads(form.linkitems.data)
                 # messages.send_day = form.send_day.data
-                messages.send_hour = 9
+                #messages.send_hour = 9
                 date_start = form.send_date.data.split('-')
                 sdate = datetime.datetime(int(date_start[0]), int(date_start[1]), int(date_start[2]), 0, 0, 0)
                 messages.send_date = datetime.datetime.strftime(sdate, '%Y-%m-%dT%H:%M:%S')
                 messages.send_once = True if form.send_once.data is True else False
                 messages.text = form.text.data
                 messages.country = form.country.data
+                app.logger.info(f'pre tag {messages.tags}')
                 tagitems = form.tagitems.data
-                print(f'tags items {tagitems}')
+                app.logger.info(f'tags items {tagitems}')
                 tag = tagitems.split('|')
                 tag = [re.sub(r'\r\n\s+', '', x) for x in tag]
                 messages.tags = tag[:-1]
+                app.logger.info(f'final tags {tag[:-1]}')
                 messages.location = form.location.data
                 messages.emp_type = form.emp_type.data
                 db.session.commit()
@@ -1545,6 +1551,10 @@ def message_actions():
                 )
             return make_response('', 200)
 
+def test_search():
+    with app.app_context():
+        messages = Messages.query.get_or_404(104)
+        send_dm_message('1', messages)
 
 
 @app.route('/slack/newbie', methods=['POST'])

@@ -26,9 +26,11 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
     $('#tagitems').val(tagitems);
     $("li.lilink").each(function(e){
         var datas = $(this)[0].childNodes[1].data.split(' ');
+        console.log('datas: '+ $(this)[0].childNodes[1].data.split(' '));
         link = {};
-        link['name'] = datas[0];
-        link['url'] = datas[1];
+        var lastItem = datas.pop();
+        link['name'] = datas.join(' ');
+        link['url'] = lastItem;
         links.push(link);
     });
     $('#linkitems').val(JSON.stringify(links));
