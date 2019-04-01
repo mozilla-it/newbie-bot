@@ -26,7 +26,7 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
     $('#tagitems').val(tagitems);
     $("li.lilink").each(function(e){
         var datas = $(this)[0].childNodes[1].data.split(' ');
-        console.log('datas: '+ $(this)[0].childNodes[1].data.split(' '));
+        // console.log('datas: '+ $(this)[0].childNodes[1].data.split(' '));
         link = {};
         var lastItem = datas.pop();
         link['name'] = datas.join(' ');
@@ -39,14 +39,14 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
     $(function (){
         $('#add_tag').bind('click', function () {
             var tags = $('input[name="tag_val"]').val().split(',');
-            console.log('tags ', tags);
+            // console.log('tags ', tags);
             for (let x = 0; x < tags.length; x++){
                 $('<li name="tag_item" class="list-group-item litags">' +
                 '<a style="margin-left: 20px; margin-right: 20px; text-decoration: none;" class="clearitem" ><i class="fas fa-times tags" style="color:red"></i></a>' +
                 tags[x] + '</li>').appendTo($("#tag_list"));
             tagitems = tags[x] + '|' + tagitems;
             }
-            console.log('tag items ', tagitems);
+            // console.log('tag items ', tagitems);
             var tag_strings = JSON.stringify(tagitems);
             $('#tagitems').val(tagitems);
             $('input[name="tag_val"]').val('');
@@ -96,9 +96,11 @@ document.getElementById('send_date').value = new Date().toDateInputValue();
             if (classes[x] == 'links'){
                 $('#linkitems').val(null);
                 var liVal = target.parentNode.parentNode.valueOf().innerText.split(' ');
+                var lastItem = liVal.pop();
+
                 var liId = target.parentNode.parentNode.valueOf();
                 for (var i = 0; i < links.length; i++){
-                    if(links[i]["name"] === liVal[0]){
+                    if(links[i]["name"] === liVal.join(' ')){
                         links.splice(i, 1);
                     }
                 }
