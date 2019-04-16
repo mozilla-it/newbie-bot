@@ -43,7 +43,7 @@ Hypercorn==0.4.6
 hyperframe==5.1.0
 idna==2.7
 itsdangerous==0.24
-Jinja2==2.10
+Jinja2==2.10.1
 jose==1.0.0
 josepy==1.1.0
 Mako==1.0.7
@@ -90,7 +90,7 @@ sklearn==0.0
 slack-export-viewer==0.8.1
 slackclient==1.3.0
 sortedcontainers==2.1.0
-SQLAlchemy==1.2.15
+SQLAlchemy==1.3.0
 SQLAlchemy-Utils==0.33.11
 text-unidecode==1.2
 tinydb==3.11.1
