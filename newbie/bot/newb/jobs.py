@@ -38,14 +38,15 @@ def send_newhire_messages():
                 message_user = emp.slack_handle
                 user = search(users, 'name', message_user)
                 if user is not None:
+                    s.send_status = True
+                    s.last_updated = datetime.datetime.utcnow()
+                    db.session.commit()
                     dm = slack_client.api_call(
                         'im.open',
                         user=user['id'],
                     )['channel']['id']
                     send_dm_message(dm, message)
-                    s.send_status = True
-                    s.last_updated = datetime.datetime.utcnow()
-                    db.session.commit()
+
             except NotFound as e:
                 logging.error(f'NotFound {e}')
                 s.send_status = True
