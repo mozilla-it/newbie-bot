@@ -526,7 +526,7 @@ def send_newhire_messages():
     with app.app_context():
         now = datetime.datetime.utcnow()
         lasthour = now - datetime.timedelta(minutes=59, seconds=59, days=7)
-        send = Send.query.filter(Send.send_dttm > lasthour).filter(Send.send_dttm < now).filter(Send.send_status.is_(False))
+        send = Send.query.filter(Send.send_dttm > lasthour).filter(Send.send_dttm < now).filter(Send.send_status.is_(False)).filter(Send.cancel_status.is_(False))
         slack_client.rtm_connect()
         # users = slack_client.api_call('users.list')['members']
         users = get_slack_with_pagination('')
