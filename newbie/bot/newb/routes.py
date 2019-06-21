@@ -1395,6 +1395,7 @@ def message_options():
         }
     return Response(json.dumps(message_attachments), mimetype='application/json')
 
+
 @app.route('/slack/message_actions', methods=['POST'])
 def message_actions():
     """
