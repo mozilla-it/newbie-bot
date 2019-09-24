@@ -28,8 +28,7 @@ RUN pip install nltk && \
     python -c "import nltk; nltk.download(['punkt', 'wordnet', 'stopwords'], download_dir='/usr/local/share/nltk_data')"
 
 # add bundled source code
-ADD . /usr/src/app
-# ADD $APP_SRCTAR /usr/src/app/
+ADD $APP_SRCTAR /usr/src/app/
 
 RUN pip install --no-cache-dir -r requirements.txt
 
