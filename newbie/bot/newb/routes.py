@@ -31,7 +31,7 @@ from dateutil.relativedelta import relativedelta
 import requests
 from ruamel import yaml
 from config import CFG
-from utils.dictionary import merge
+#from utils.dictionary import merge
 from json import dumps
 from newb.settings import SUPER_NEWBIE
 import csv
@@ -616,7 +616,8 @@ SCRIPT_FILE = os.path.abspath(__file__)
 SCRIPT_NAME = os.path.basename(SCRIPT_FILE)
 SCRIPT_PATH = os.path.dirname(SCRIPT_FILE)
 app.logger.info(f'script file {SCRIPT_FILE} name {SCRIPT_NAME} path {SCRIPT_PATH}')
-CONTRIBUTE_JSON = yaml.safe_load(open(f'{SCRIPT_PATH}/contribute.json'))
+#CONTRIBUTE_JSON = yaml.safe_load(open(f'{SCRIPT_PATH}/contribute.json'))
+CONTRIBUTE_JSON = json.loads(open(f'{SCRIPT_PATH}/contribute.json').read())
 
 
 def jsonify(status=200, indent=4, sort_keys=True, **kwargs):
@@ -643,7 +644,11 @@ def contribute_json():
     '''
     contribute.json route
     '''
-    json = merge(CONTRIBUTE_JSON, dict(repository=dict(version=CFG.APP_VERSION,revision=CFG.APP_REVISION)))
+    #json = merge(CONTRIBUTE_JSON, dict(repository=dict(version=CFG.APP_VERSION,revision=CFG.APP_REVISION)))
+    try:
+        json = CONTRIBUTE_JSON.update(dict(repository=dict(version=CFG.APP_VERSION,revision=CFG.APP_REVISION)))
+    except:
+        json = CONTRIBUTE_JSON
     response = jsonify(**json), 200
     return response
 
