@@ -37,7 +37,7 @@ RUN groupadd --gid $APP_GID $APP_USER && \
     adduser --uid $APP_UID --disabled-password --gecos '' --ingroup $APP_USER --no-create-home $APP_USER
 
 # change user
-RUN chown $APP_USER:$APP_USER -R .
+RUN chown -R $APP_USER:$APP_USER . && \
+    chown -R $APP_USER:$APP_USER /usr/local/share/nltk_data
 USER $APP_USER
-RUN ["chmod", "+x", "/usr/src/app/boot.sh"]
 CMD sh -c "/usr/src/app/convert_env.sh && /usr/local/bin/gunicorn -w ${APP_WORKERS} -b :${APP_PORT} ${APP_MODULE}"
