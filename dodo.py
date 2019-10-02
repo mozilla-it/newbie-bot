@@ -369,7 +369,7 @@ def task_publish():
             ],
         }
 
-def task_deploy():
+def task_local():
     '''
     deloy flask|quart app via docker-compose
     '''
