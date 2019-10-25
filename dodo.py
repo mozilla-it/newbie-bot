@@ -3,7 +3,6 @@
 
 import os
 import re
-import sh
 import pwd
 import sys
 import glob
@@ -13,7 +12,7 @@ from ruamel import yaml
 from pathlib import Path
 from subprocess import check_call, check_output, CalledProcessError, PIPE
 
-from newbie.bot.config import CFG
+from newbie.bot.config import CFG, call, CalledProcessError
 
 ## https://docs.docker.com/compose/compose-file/compose-versioning/
 MINIMUM_DOCKER_COMPOSE_VERSION = '1.13' # allows compose format 3.0
@@ -241,12 +240,9 @@ def task_test():
     '''
     def has_tests(svc):
         try:
-            sh.pytest(
-                '--collect-only',
-                f'{CFG.APP_TESTPATH}/{svc}',
-                _env={'PYTHONPATH':f'{CFG.APP_PROJPATH}/{svc}'})
+            call('env PYTHONPATH={CFG.APP_PROJPATH}/{svc} pytest --collect-only {CFG.APP_TESTPATH}')
             return True
-        except (sh.ErrorReturnCode_4, sh.ErrorReturnCode_5):
+        except CalledProcessError as cpe:
             return False
     for svc in SVCS:
         PYTHONPATH = f'PYTHONPATH=.:{CFG.APP_PROJPATH}:{CFG.APP_PROJPATH}/{svc}:$PYTHONPATH'

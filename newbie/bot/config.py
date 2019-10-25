@@ -10,9 +10,11 @@ import pwd
 import sys
 import time
 import logging
-import sh
 
+from datetime import datetime
 from decouple import UndefinedValueError, AutoConfig, config
+from functools import lru_cache
+from subprocess import Popen, CalledProcessError, PIPE
 
 LOG_LEVELS = [
     'DEBUG',
@@ -43,41 +45,62 @@ class ProjNameSplitError(Exception):
         super(ProjNameSplitError, self).__init__(msg)
 
 class NotGitRepoError(Exception):
-    '''
-    NotGitRepoError
-    '''
-    def __init__(self):
-        '''
-        init
-        '''
-        msg = 'not a git repository error'
-        super(NotGitRepoError, self).__init__(msg)
+    def __init__(self, cwd=os.getcwd()):
+        msg = f"not a git repository error cwd={cwd}"
+        super().__init__(msg)
 
-class NoGitRepoOrEnvError(Exception):
-    '''
-    NoGitRepoOrEnvError
-    '''
-    def __init__(self):
-        '''
-        init
-        '''
-        msg = 'no git repo or env found error'
-        super(NoGitRepoOrEnvError, self).__init__(msg)
 
-def git(*args, strip=True, **kwargs):
-    '''
-    git
-    '''
+class GitCommandNotFoundError(Exception):
+    def __init__(self):
+        msg = "git: command not found"
+        super().__init__(msg)
+
+
+def call(
+    cmd, stdout=PIPE, stderr=PIPE, shell=True, nerf=False, throw=True, verbose=False
+):
+    if verbose or nerf:
+        logger.info(f"verbose cmd={cmd}")
+        pass
+    if nerf:
+        return (None, "nerfed", "nerfed")
+    process = Popen(cmd, stdout=stdout, stderr=stderr, shell=shell)
+    _stdout, _stderr = [
+        stream.decode("utf-8") if stream != None else None
+        for stream in process.communicate()
+    ]
+    exitcode = process.poll()
+    if verbose:
+        if _stdout:
+            logger.info(f"verbose stdout={_stdout}")
+        if _stderr:
+            logger.info(f"verbose stderr={_stderr}")
+            pass
+    if throw and exitcode:
+        raise CalledProcessError(
+            exitcode, f"cmd={cmd}; stdout={_stdout}; stderr={_stderr}"
+        )
+    return exitcode, _stdout, _stderr
+
+
+def git(args, strip=True, **kwargs):
     try:
-        result = str(sh.contrib.git(*args, **kwargs)) #pylint: disable=no-member
-        if strip:
+        _, stdout, stderr = call("git rev-parse --is-inside-work-tree")
+    except CalledProcessError as ex:
+        if "not a git repository" in str(ex):
+            raise NotGitRepoError
+        elif "git: command not found" in str(ex):
+            raise GitCommandNotFoundError
+        else:
+            logger.error("failed repo check but NOT a NotGitRepoError???", ex=ex)
+    try:
+        _, result, _ = call(f"git {args}", **kwargs)
+        if result:
             result = result.strip()
         return result
-    except sh.ErrorReturnCode as e:
-        stderr = e.stderr.decode('utf-8')
-        if 'not a git repository' in stderr.lower():
-            raise NotGitRepoError
-        log.error(e)
+    except CalledProcessError as ex:
+        logger.error(ex)
+        raise ex
 
 class AutoConfigPlus(AutoConfig): #pylint: disable=too-many-public-methods
     '''
@@ -149,7 +172,7 @@ class AutoConfigPlus(AutoConfig): #pylint: disable=too-many-public-methods
         reporoot
         '''
         try:
-            return git('rev-parse', '--show-toplevel')
+            return git('rev-parse --show-toplevel')
         except NotGitRepoError:
             return self('APP_REPOROOT')
 
@@ -172,7 +195,7 @@ class AutoConfigPlus(AutoConfig): #pylint: disable=too-many-public-methods
         version
         '''
         try:
-            return git('describe', '--abbrev=7', '--always')
+            return git('describe --abbrev=7 --always')
         except NotGitRepoError:
             return self('APP_VERSION')
 
@@ -182,7 +205,7 @@ class AutoConfigPlus(AutoConfig): #pylint: disable=too-many-public-methods
         branch
         '''
         try:
-            return git('rev-parse', '--abbrev-ref', 'HEAD')
+            return git('rev-parse --abbrev-ref HEAD')
         except NotGitRepoError:
             return self('APP_BRANCH')
 
@@ -214,7 +237,7 @@ class AutoConfigPlus(AutoConfig): #pylint: disable=too-many-public-methods
         revision
         '''
         try:
-            return git('rev-parse', 'HEAD')
+            return git('rev-parse HEAD')
         except NotGitRepoError:
             return self('APP_REVISION')
 
@@ -224,7 +247,7 @@ class AutoConfigPlus(AutoConfig): #pylint: disable=too-many-public-methods
         remote origin url
         '''
         try:
-            return git('config', '--get', 'remote.origin.url')
+            return git('config --get remote.origin.url')
         except NotGitRepoError:
             return self('APP_REMOTE_ORIGIN_URL')
 
@@ -282,7 +305,7 @@ class AutoConfigPlus(AutoConfig): #pylint: disable=too-many-public-methods
         ls-remote
         '''
         try:
-            result = git('ls-remote', f'https://github.com/{self.APP_REPONAME}')
+            result = git(f'ls-remote https://github.com/{self.APP_REPONAME}')
         except NotGitRepoError:
             result = self('APP_LS_REMOTE')
         return {
@@ -295,7 +318,7 @@ class AutoConfigPlus(AutoConfig): #pylint: disable=too-many-public-methods
         gsm status
         '''
         try:
-            result = git('submodule', 'status', strip=False)
+            result = git('submodule status', strip=False)
         except NotGitRepoError:
             result = self('APP_GSM_STATUS')
         pattern = r'([ +-])([a-f0-9]{40}) ([A-Za-z0-9\/\-_.]+)( .*)?'
