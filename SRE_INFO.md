@@ -20,6 +20,9 @@ Secrets are handled by k8s builtin secrets handling
 
 ## Monitoring
 
+### Determining bot health
+open a Slack conversation with @newbie and type "/newbie help" to prove responsiveness
+
 ### SSL Expiry checks in New Relic
 [newbie.mozilla-slack.app](https://synthetics.newrelic.com/accounts/2239138/monitors/554cb212-7ab3-494d-af42-73495bf01ac7)
 ## SSL Certificates
